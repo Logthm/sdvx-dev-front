@@ -43,10 +43,6 @@ export function noteX(span: MeasureSpan, trackName: string): { x: number; w: num
   return null;
 }
 
-function isFx(trackName: string): boolean {
-  return trackName === "FX-L" || trackName === "FX-R";
-}
-
 function drawChip(
   ctx: CanvasRenderingContext2D,
   ev: ButtonEvent,
