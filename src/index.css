@@ -1,0 +1,330 @@
+@import "tailwindcss";
+
+/*
+ * Cosmic Astrologer Theme — "占星师的宇宙数据库"
+ *
+ * Deep indigo cosmos backgrounds, gold/champagne accents,
+ * silver-white & lavender secondary, stardust particles,
+ * star chart geometry, glitch art touches.
+ *
+ * All palette colors in OKLCH for perceptual uniformity.
+ */
+
+@theme {
+  /* ── Gold / Champagne accent scale ── */
+  --color-gold-50: oklch(0.97 0.03 85);
+  --color-gold-100: oklch(0.93 0.06 80);
+  --color-gold-200: oklch(0.86 0.1 75);
+  --color-gold-300: oklch(0.78 0.14 72);
+  --color-gold-400: oklch(0.72 0.155 70);   /* primary gold */
+  --color-gold-500: oklch(0.65 0.16 68);
+  --color-gold-600: oklch(0.55 0.14 65);
+  --color-gold-700: oklch(0.45 0.12 62);
+  --color-gold-800: oklch(0.36 0.09 60);
+  --color-gold-900: oklch(0.28 0.06 58);
+
+  /* ── Deep cosmos backgrounds (indigo hue ~275°) ── */
+  --color-cosmos-950: oklch(0.09 0.04 275);  /* deepest void */
+  --color-cosmos-900: oklch(0.12 0.05 275);
+  --color-cosmos-800: oklch(0.16 0.06 275);
+  --color-cosmos-700: oklch(0.20 0.065 275);
+  --color-cosmos-600: oklch(0.25 0.07 275);
+
+  /* ── Indigo / nebula blue ── */
+  --color-indigo-400: oklch(0.65 0.2 275);
+  --color-indigo-500: oklch(0.55 0.22 275);
+  --color-indigo-600: oklch(0.45 0.2 275);
+
+  /* ── Lavender accent ── */
+  --color-lavender-300: oklch(0.78 0.1 300);
+  --color-lavender-400: oklch(0.68 0.12 300);
+
+  /* ── Semantic tokens ── */
+  --color-surface: oklch(0.12 0.05 275);
+  --color-surface-raised: oklch(0.16 0.06 275);
+  --color-surface-overlay: oklch(0.20 0.065 275);
+  --color-border: oklch(0.28 0.05 275);
+  --color-border-bright: oklch(0.72 0.155 70);
+  --color-text-primary: oklch(0.94 0.01 275);
+  --color-text-secondary: oklch(0.72 0.025 275);
+  --color-text-muted: oklch(0.50 0.03 275);
+  --color-accent: oklch(0.72 0.155 70);
+  --color-accent-hover: oklch(0.78 0.14 72);
+  --color-accent-glow: oklch(0.72 0.155 70 / 0.25);
+
+  /* ── Difficulty colors (preserved for game semantics) ── */
+  --color-diff-novice: oklch(0.62 0.24 300);
+  --color-diff-advanced: oklch(0.78 0.18 80);
+  --color-diff-exhaust: oklch(0.63 0.24 25);
+  --color-diff-infinite: oklch(0.68 0.22 340);
+  --color-diff-maximum: oklch(0.95 0.01 275);
+  --color-diff-ultimate: oklch(0.75 0.15 70);
+
+  /* ── Typography ── */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Radius ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+/* ── Base resets ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-cosmos-600) transparent;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse 120% 60% at 20% 100%, oklch(0.14 0.08 275 / 0.6), transparent 60%),
+    radial-gradient(ellipse 80% 50% at 80% 0%, oklch(0.12 0.06 300 / 0.4), transparent 50%),
+    var(--color-cosmos-950);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Observatory panel ── */
+.obs-panel {
+  background: oklch(0.11 0.045 275 / 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.25 0.05 275 / 0.5);
+  border-radius: var(--radius-md);
+}
+
+.obs-panel-section {
+  border-bottom: 1px solid oklch(0.22 0.05 275 / 0.4);
+  padding: 0.75rem;
+}
+.obs-panel-section:last-child {
+  border-bottom: none;
+}
+
+::selection {
+  background: var(--color-accent-glow);
+  color: var(--color-gold-100);
+}
+
+/* ── Glass: cosmic frosted panel ── */
+.glass {
+  background: linear-gradient(
+    135deg,
+    oklch(0.14 0.06 275 / 0.85),
+    oklch(0.10 0.05 275 / 0.92)
+  );
+  backdrop-filter: blur(16px);
+  border: 1px solid oklch(0.30 0.06 275 / 0.5);
+}
+
+/* ── Gold glow ── */
+.glow-gold {
+  box-shadow:
+    0 0 20px oklch(0.72 0.155 70 / 0.2),
+    0 0 60px oklch(0.72 0.155 70 / 0.08);
+}
+
+/* ── Text gradient: gold to lavender ── */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-gold-400), var(--color-lavender-300));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Stardust background noise ── */
+.stardust {
+  position: relative;
+}
+.stardust::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, oklch(0.95 0.01 70 / 0.4), transparent),
+    radial-gradient(1px 1px at 40% 70%, oklch(0.90 0.02 275 / 0.3), transparent),
+    radial-gradient(1.5px 1.5px at 60% 15%, oklch(0.85 0.05 70 / 0.5), transparent),
+    radial-gradient(1px 1px at 80% 55%, oklch(0.90 0.01 300 / 0.3), transparent),
+    radial-gradient(1px 1px at 10% 85%, oklch(0.88 0.03 70 / 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 70% 90%, oklch(0.92 0.02 275 / 0.25), transparent),
+    radial-gradient(1px 1px at 50% 50%, oklch(0.95 0.01 70 / 0.3), transparent),
+    radial-gradient(1px 1px at 90% 20%, oklch(0.88 0.04 300 / 0.3), transparent);
+  pointer-events: none;
+  z-index: 0;
+  animation: stardust-drift 60s linear infinite;
+}
+
+@keyframes stardust-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 100px 200px; }
+}
+
+/* ── Star orbit ring (decorative) ── */
+.star-orbit {
+  border: 1px solid oklch(0.72 0.155 70 / 0.12);
+  border-radius: 50%;
+  animation: orbit-breathe 8s ease-in-out infinite;
+}
+
+@keyframes orbit-breathe {
+  0%, 100% { opacity: 0.3; border-color: oklch(0.72 0.155 70 / 0.12); }
+  50% { opacity: 0.6; border-color: oklch(0.72 0.155 70 / 0.25); }
+}
+
+/* ── Glitch flash (on interaction) ── */
+@keyframes glitch-flash {
+  0% { opacity: 0; transform: translateX(-2px) scaleY(1.02); }
+  10% { opacity: 1; }
+  20% { transform: translateX(1px) scaleY(0.98); }
+  30% { opacity: 0.7; transform: translateX(-1px); }
+  50% { opacity: 0; transform: translateX(0); }
+  100% { opacity: 0; }
+}
+
+.glitch-trigger:active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 30%,
+    oklch(0.65 0.2 275 / 0.15) 45%,
+    oklch(0.72 0.155 70 / 0.1) 55%,
+    transparent 70%
+  );
+  animation: glitch-flash 0.3s ease-out;
+  pointer-events: none;
+}
+
+/* ── Scan line overlay ── */
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    oklch(0.09 0.04 275 / 0.06) 2px,
+    oklch(0.09 0.04 275 / 0.06) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Mobile overlay animations ── */
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-in-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-slide-in-bottom {
+  animation: slide-in-bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Scan-in entrance ── */
+@keyframes scan-in {
+  0% { clip-path: inset(0 100% 0 0); opacity: 0.5; }
+  60% { clip-path: inset(0 0 0 0); opacity: 0.8; }
+  100% { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+
+.animate-scan-in {
+  animation: scan-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Mobile safe-area support ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ── Corner brackets (仪器化定位框) ── */
+.corner-brackets {
+  position: relative;
+}
+.corner-brackets::before,
+.corner-brackets::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+}
+.corner-brackets::before {
+  top: 0; left: 0;
+  width: 18px;
+  height: 18px;
+  border-top: 2.5px solid var(--color-gold-400);
+  border-left: 2.5px solid var(--color-gold-400);
+}
+.corner-brackets::after {
+  bottom: 0; right: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-bottom: 2.5px solid var(--color-gold-400);
+  border-right: 2.5px solid var(--color-gold-400);
+  border-bottom-right-radius: var(--radius-lg);
+}
+.group:hover .corner-brackets::before,
+.group:hover .corner-brackets::after,
+.corner-brackets:hover::before,
+.corner-brackets:hover::after {
+  opacity: 0.7;
+}
+
+/* ── Card gold fill on hover (top-left → bottom-right) ── */
+.gold-fill-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, oklch(0.72 0.155 70 / 0.10), oklch(0.72 0.155 70 / 0.04));
+  clip-path: polygon(0 0, 0 0, 0 0, 0 0);
+  transition: clip-path 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+.group:hover .gold-fill-bg {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* ── Coordinate grid (极淡坐标网) ── */
+.coord-grid {
+  position: relative;
+}
+.coord-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(oklch(0.72 0.155 70 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.72 0.155 70 / 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 70%);
+}
