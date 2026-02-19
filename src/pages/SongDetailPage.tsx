@@ -152,6 +152,7 @@ export function SongDetailPage() {
                   <img
                     src={coverSrc}
                     alt={music.title_name}
+                    decoding="async"
                     className="w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
