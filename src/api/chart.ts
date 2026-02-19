@@ -63,7 +63,7 @@ export function useChartImage(
         music_id: musicId,
         difstr: difstr,
         arrangement_mode: hasCustomMapping ? "normal" : options.arrangementMode,
-        output_format: "WEBP",
+        output_format: "JPEG",
         quality: 80,
         px_per_second: options.pxPerSecond,
         column_height: options.columnHeight,
@@ -121,7 +121,7 @@ export function useEditedChartImage(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chart_data: chartData,
-          output_format: "WEBP",
+          output_format: "JPEG",
           quality: 80,
           laser_l_color: options.laserLColor,
           laser_r_color: options.laserRColor,
