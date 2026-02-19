@@ -21,7 +21,7 @@ import {
   type MeasureSpan,
 } from "./layout";
 
-export const CHIP_HEIGHT = 7;
+export const CHIP_HEIGHT = 4;
 
 export function noteX(span: MeasureSpan, trackName: string): { x: number; w: number } | null {
   const cx = trackCenterX(span.col);

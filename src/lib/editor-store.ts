@@ -44,8 +44,8 @@ export const DEFAULT_RENDER_OPTIONS: RenderOptions = {
   mirrorLaser: false,
   laserLColor: "BLUE",
   laserRColor: "RED",
-  pxPerSecond: 600,
-  columnHeight: 2800,
+  pxPerSecond: 300,
+  columnHeight: 1400,
 };
 
 export type { EditFlags };

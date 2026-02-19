@@ -12,28 +12,28 @@ import { TimeMapper, type Time3 } from "./time-mapper";
 
 // ── Layout constants (matching backend) ─────────────────────────
 
-export const LANE_WIDTH = 193;
-export const OOB_WIDTH = 96.5;
-export const TRACK_WIDTH = LANE_WIDTH + OOB_WIDTH * 2; // 386
-export const GUTTER_WIDTH = 120;
-export const MARGIN = 20;
-export const DEFAULT_PX_PER_SECOND = 600;
-export const DEFAULT_COLUMN_HEIGHT = 2800;
+export const LANE_WIDTH = 96.5;
+export const OOB_WIDTH = 48.25;
+export const TRACK_WIDTH = LANE_WIDTH + OOB_WIDTH * 2; // 193
+export const GUTTER_WIDTH = 60;
+export const MARGIN = 10;
+export const DEFAULT_PX_PER_SECOND = 300;
+export const DEFAULT_COLUMN_HEIGHT = 1400;
 
 // ── Lane geometry (from track center) ───────────────────────────
 
 export const BT_POSITIONS: Record<string, number> = {
-  A: -51,
-  B: -17,
-  C: 17,
-  D: 51,
+  A: -25.5,
+  B: -8.5,
+  C: 8.5,
+  D: 25.5,
 };
-export const FX_POSITIONS: Record<string, number> = { L: -33.5, R: 33.5 };
-export const BT_WIDTH = 30;
-export const FX_WIDTH = 68;
-export const LINE_WIDTH = 190;
+export const FX_POSITIONS: Record<string, number> = { L: -16.75, R: 16.75 };
+export const BT_WIDTH = 15;
+export const FX_WIDTH = 34;
+export const LINE_WIDTH = 95;
 
-export const LASER_WIDTH = 24;
+export const LASER_WIDTH = 12;
 
 // ── MeasureSpan ─────────────────────────────────────────────────
 

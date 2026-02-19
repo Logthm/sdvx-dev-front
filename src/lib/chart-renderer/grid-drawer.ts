@@ -74,12 +74,12 @@ export function drawGrid(ctx: CanvasRenderingContext2D, layout: LayoutResult) {
 
     // Measure number (left of lane)
     ctx.fillStyle = C.MEASURE_TEXT;
-    ctx.font = "600 24px 'JetBrains Mono', monospace";
+    ctx.font = "600 12px 'JetBrains Mono', monospace";
     ctx.textAlign = "right";
     ctx.textBaseline = "bottom";
     ctx.fillText(
       String(span.measure).padStart(2, "0"),
-      lineLeft - 8,
+      lineLeft - 4,
       span.y1 + 1,
     );
   }
@@ -111,7 +111,7 @@ function drawBpmMarkersFromData(
 ) {
   const { spans, timeMapper: tm, pxPerSecond } = layout;
 
-  ctx.font = "500 24px 'JetBrains Mono', monospace";
+  ctx.font = "500 12px 'JetBrains Mono', monospace";
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
   ctx.fillStyle = C.BPM_TEXT;
@@ -215,7 +215,7 @@ export function drawHiSpeedMarks(
 
         // Hi-speed text on the LEFT
         ctx.fillStyle = C.HISPEED_TEXT;
-        ctx.font = "500 22px 'JetBrains Mono', monospace";
+        ctx.font = "500 11px 'JetBrains Mono', monospace";
         ctx.textAlign = "right";
         ctx.textBaseline = "bottom";
         ctx.fillText(`x${mark.hiSpeed.toFixed(1)}`, trackLeft - 4, yStart + 1);
