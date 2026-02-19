@@ -32,5 +32,5 @@ export async function apiFetch<T>(
 }
 
 export function coverUrl(musicId: number, difstr: string): string {
-  return `${BASE_URL}/cover/${musicId}_${difstr}.png`;
+  return `${BASE_URL}/cover/${musicId}_${difstr}.webp`;
 }
