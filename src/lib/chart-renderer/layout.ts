@@ -29,7 +29,7 @@ export const BT_POSITIONS: Record<string, number> = {
   D: 25.5,
 };
 export const FX_POSITIONS: Record<string, number> = { L: -16.75, R: 16.75 };
-export const BT_WIDTH = 15;
+export const BT_WIDTH = 11;
 export const FX_WIDTH = 34;
 export const LINE_WIDTH = 95;
 

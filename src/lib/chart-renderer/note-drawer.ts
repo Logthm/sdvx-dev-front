@@ -1,7 +1,7 @@
 /**
  * Draws BT and FX notes as simple solid rectangles.
  *
- * Drawing order: FX holds -> FX chips -> BT holds -> BT chips -> hold caps
+ * Drawing order: FX holds -> FX chips/caps -> BT holds -> BT chips/caps
  * Hold notes that span multiple measures are drawn segment-by-segment,
  * matching the backend's _draw_hold_segments logic.
  */
@@ -141,9 +141,12 @@ export function drawNotes(
     if (ev.hold_len > 0) drawHoldSegments(ctx, ev, layout, true);
   }
 
-  // Layer 2: FX chips
+  // Layer 2: FX chips + FX hold caps
   for (const ev of fxEvents) {
     if (ev.hold_len <= 0) drawChip(ctx, ev, layout, true);
+  }
+  for (const ev of fxEvents) {
+    if (ev.hold_len > 0) drawChip(ctx, ev, layout, true);
   }
 
   // Layer 3: BT holds
@@ -152,13 +155,11 @@ export function drawNotes(
     if (ev.hold_len > 0) drawHoldSegments(ctx, ev, layout, false);
   }
 
-  // Layer 4: BT chips
+  // Layer 4: BT chips + BT hold caps
   for (const ev of btEvents) {
     if (ev.hold_len <= 0) drawChip(ctx, ev, layout, false);
   }
-
-  // Layer 5: hold start caps
-  for (const ev of [...fxEvents, ...btEvents]) {
-    if (ev.hold_len > 0) drawChip(ctx, ev, layout, isFx(ev.track_name));
+  for (const ev of btEvents) {
+    if (ev.hold_len > 0) drawChip(ctx, ev, layout, false);
   }
 }
