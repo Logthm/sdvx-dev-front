@@ -63,7 +63,7 @@ export function useChartImage(
         music_id: musicId,
         difstr: difstr,
         arrangement_mode: hasCustomMapping ? "normal" : options.arrangementMode,
-        output_format: "JPEG",
+        output_format: "WEBP",
         quality: 80,
         px_per_second: options.pxPerSecond,
         column_height: options.columnHeight,
