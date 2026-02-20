@@ -112,6 +112,14 @@
     "editPointerMode": {
       "title": "編輯模式",
       "description": "點擊 Hold 頭或者按鍵可以在 Hold 和單鍵之間切換。\n\n點擊變速標記可以編輯數值。"
+    },
+    "resetSelected": {
+      "title": "復原選中的物件",
+      "description": "選中物件後，點擊此按鈕可將其恢復為原始狀態（位置和長條長度）。"
+    },
+    "deleteSelected": {
+      "title": "刪除選中的物件",
+      "description": "選中物件後，點擊此按鈕可將其刪除。也可以按 Delete 或 Backspace 鍵。"
     }
   },
   "chart": {
@@ -154,6 +162,7 @@
     "chartPreview": "譜面預覽",
     "addNotes": "新增音符",
     "resetToOriginal": "重置為原始狀態",
+    "deleteSelected": "刪除選中的物件",
     "panView": "平移（拖動視圖）",
     "moveSelect": "移動（選擇並拖動）",
     "editHs": "編輯（切換長按/編輯變速）"

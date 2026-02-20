@@ -105,7 +105,7 @@ export function SongDetailPage() {
   }, [chart, setOriginalChartData]);
 
   // Auto-switch mode/arrangement/mouseTool based on tutorial step
-  // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=pan,8=move,9=move2,10=editPointer,11=add,12=finish
+  // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=pan,8=move,9=move2,10=editPointer,11=add,12=reset,13=delete,14=finish
   // !canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=finish
   useEffect(() => {
     if (!chartTutorial.isOpen) return;
@@ -117,12 +117,13 @@ export function SongDetailPage() {
       setSidebarCollapsed(true); setToolbarCollapsed(false);
     }
     // Mode & tools
-    if (canEdit && step >= 6 && step <= 11) {
-      setMode("edit");
+    if (canEdit && step >= 6 && step <= 13) {
+      if (mode !== "edit") setMode("edit");
       if (step === 7) { setMouseTool("pan"); setExpandedTool(null); }
       else if (step === 8 || step === 9) { setMouseTool("move"); setExpandedTool("drag"); }
       else if (step === 10) { setMouseTool("edit-hs"); setExpandedTool(null); }
       else if (step === 11) { setMouseTool("add-bt"); setExpandedTool("add"); }
+      else if (step === 12 || step === 13) { setMouseTool("move"); setExpandedTool(null); }
       else { setExpandedTool(null); }
     } else if (step === 4) {
       setMode("preview");

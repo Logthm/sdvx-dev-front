@@ -112,6 +112,14 @@
     "editPointerMode": {
       "title": "Edit Mode",
       "description": "Click a hold head or chip to toggle between hold and chip.\n\nClick a speed mark to edit its values."
+    },
+    "resetSelected": {
+      "title": "Reset Selected",
+      "description": "When an object is selected, click this button to restore it to its original state (position and hold length)."
+    },
+    "deleteSelected": {
+      "title": "Delete Selected",
+      "description": "When an object is selected, click this button to delete it. You can also press Delete or Backspace."
     }
   },
   "chart": {
@@ -154,6 +162,7 @@
     "chartPreview": "Chart preview",
     "addNotes": "Add notes",
     "resetToOriginal": "Reset selected to original",
+    "deleteSelected": "Delete selected",
     "panView": "Pan (drag view)",
     "moveSelect": "Move (select & drag)",
     "editHs": "Edit (toggle hold, edit HS)"

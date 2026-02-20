@@ -1,6 +1,26 @@
-import { X, ChevronLeft, ChevronRight, Search, SlidersHorizontal, Grid3x3, Info, Eye, Pencil, Shuffle, Hand, ZoomIn, MousePointer, Move, Plus, HelpCircle } from "lucide-react";
+import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
-import { useEffect, useState, useRef } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Grid3x3,
+  Hand,
+  HelpCircle,
+  Info,
+  MousePointer,
+  Move,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Search,
+  Shuffle,
+  SlidersHorizontal,
+  Trash2,
+  X,
+  ZoomIn,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface TutorialStep {
@@ -10,6 +30,7 @@ export interface TutorialStep {
   highlightSelector?: string;
   position?: "center" | "top" | "bottom" | "left" | "right";
   positionDelay?: number;
+  onEnter?: () => void;
 }
 
 interface TutorialProps {
@@ -46,8 +67,13 @@ export function Tutorial({
   onSkip,
 }: TutorialProps) {
   const { t } = useTranslation();
-  const [highlightRect, setHighlightRect] = useState<HighlightRect | null>(null);
-  const [cardPosition, setCardPosition] = useState<{ top: number; left: number } | null>(null);
+  const [highlightRect, setHighlightRect] = useState<HighlightRect | null>(
+    null,
+  );
+  const [cardPosition, setCardPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [isCardReady, setIsCardReady] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -70,11 +96,16 @@ export function Tutorial({
     if (!isOpen || currentStep >= steps.length || !isCardReady) return;
 
     const step = steps[currentStep];
+    step.onEnter?.();
     const measure = () => {
       if (step.highlightSelector) {
         const element = queryVisible(step.highlightSelector);
         if (element) {
-          element.scrollIntoView({ block: "nearest" });
+          const el = element as HTMLElement;
+          const prev = el.style.scrollMargin;
+          el.style.scrollMargin = "16px";
+          el.scrollIntoView({ block: "nearest" });
+          el.style.scrollMargin = prev;
           const rect = element.getBoundingClientRect();
           const padding = 8;
 
@@ -98,35 +129,82 @@ export function Tutorial({
               switch (step.position) {
                 case "top":
                   top = Math.max(20, rect.top - cardRect.height - 20);
-                  left = Math.max(20, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, viewportWidth - cardRect.width - 20));
+                  left = Math.max(
+                    20,
+                    Math.min(
+                      rect.left + rect.width / 2 - cardRect.width / 2,
+                      viewportWidth - cardRect.width - 20,
+                    ),
+                  );
                   break;
                 case "bottom":
-                  top = Math.min(viewportHeight - cardRect.height - 20, rect.bottom + 20);
-                  left = Math.max(20, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, viewportWidth - cardRect.width - 20));
+                  top = Math.min(
+                    viewportHeight - cardRect.height - 20,
+                    rect.bottom + 20,
+                  );
+                  left = Math.max(
+                    20,
+                    Math.min(
+                      rect.left + rect.width / 2 - cardRect.width / 2,
+                      viewportWidth - cardRect.width - 20,
+                    ),
+                  );
                   break;
                 case "left":
-                  top = Math.max(20, Math.min(rect.top + rect.height / 2 - cardRect.height / 2, viewportHeight - cardRect.height - 20));
+                  top = Math.max(
+                    20,
+                    Math.min(
+                      rect.top + rect.height / 2 - cardRect.height / 2,
+                      viewportHeight - cardRect.height - 20,
+                    ),
+                  );
                   left = Math.max(20, rect.left - cardRect.width - 20);
                   break;
                 case "right":
-                  top = Math.max(20, Math.min(rect.top + rect.height / 2 - cardRect.height / 2, viewportHeight - cardRect.height - 20));
-                  left = Math.min(viewportWidth - cardRect.width - 20, rect.right + 20);
+                  top = Math.max(
+                    20,
+                    Math.min(
+                      rect.top + rect.height / 2 - cardRect.height / 2,
+                      viewportHeight - cardRect.height - 20,
+                    ),
+                  );
+                  left = Math.min(
+                    viewportWidth - cardRect.width - 20,
+                    rect.right + 20,
+                  );
                   break;
                 default:
                   top = viewportHeight / 2 - cardRect.height / 2;
                   left = viewportWidth / 2 - cardRect.width / 2;
               }
 
-              top = Math.max(16, Math.min(top, viewportHeight - cardRect.height - 16));
-              left = Math.max(16, Math.min(left, viewportWidth - cardRect.width - 16));
+              top = Math.max(
+                16,
+                Math.min(top, viewportHeight - cardRect.height - 16),
+              );
+              left = Math.max(
+                16,
+                Math.min(left, viewportWidth - cardRect.width - 16),
+              );
 
               // If card overlaps highlight, reposition below it
               if (
-                top < rect.bottom + 8 && top + cardRect.height > rect.top - 8 &&
-                left < rect.right + 8 && left + cardRect.width > rect.left - 8
+                top < rect.bottom + 8 &&
+                top + cardRect.height > rect.top - 8 &&
+                left < rect.right + 8 &&
+                left + cardRect.width > rect.left - 8
               ) {
-                top = Math.min(viewportHeight - cardRect.height - 16, rect.bottom + 20);
-                left = Math.max(16, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, viewportWidth - cardRect.width - 16));
+                top = Math.min(
+                  viewportHeight - cardRect.height - 16,
+                  rect.bottom + 20,
+                );
+                left = Math.max(
+                  16,
+                  Math.min(
+                    rect.left + rect.width / 2 - cardRect.width / 2,
+                    viewportWidth - cardRect.width - 16,
+                  ),
+                );
               }
 
               setCardPosition({ top, left });
@@ -172,12 +250,23 @@ export function Tutorial({
     const padding = 8;
     const update = () => {
       const r = el.getBoundingClientRect();
-      setHighlightRect({ top: r.top - padding, left: r.left - padding, width: r.width + padding * 2, height: r.height + padding * 2 });
+      setHighlightRect({
+        top: r.top - padding,
+        left: r.left - padding,
+        width: r.width + padding * 2,
+        height: r.height + padding * 2,
+      });
     };
     const ro = new ResizeObserver(update);
     ro.observe(el);
-    document.addEventListener("scroll", update, { capture: true, passive: true });
-    return () => { ro.disconnect(); document.removeEventListener("scroll", update, { capture: true }); };
+    document.addEventListener("scroll", update, {
+      capture: true,
+      passive: true,
+    });
+    return () => {
+      ro.disconnect();
+      document.removeEventListener("scroll", update, { capture: true });
+    };
   }, [isOpen, currentStep, steps]);
 
   if (!isOpen || currentStep >= steps.length) return null;
@@ -200,8 +289,8 @@ export function Tutorial({
               width: highlightRect.width,
               height: highlightRect.height,
               zIndex: 101,
-              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)',
-              borderRadius: '8px',
+              boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.7)",
+              borderRadius: "8px",
             }}
           />
 
@@ -236,7 +325,7 @@ export function Tutorial({
         ref={cardRef}
         className={cn(
           "fixed w-[calc(100vw-32px)] max-w-md bg-cosmos-900 border border-cosmos-600/30 rounded-lg shadow-2xl overflow-hidden transition-all duration-500 ease-out",
-          cardPosition ? "opacity-100" : "opacity-0"
+          cardPosition ? "opacity-100" : "opacity-0",
         )}
         style={{
           top: cardPosition ? `${cardPosition.top}px` : "50%",
@@ -258,7 +347,7 @@ export function Tutorial({
           <button
             onClick={onSkip}
             className="p-1.5 rounded-md text-text-muted hover:text-text-primary hover:bg-cosmos-700/50 transition-colors"
-            aria-label={t('tutorial.closeTutorial')}
+            aria-label={t("tutorial.closeTutorial")}
           >
             <X size={18} />
           </button>
@@ -281,7 +370,7 @@ export function Tutorial({
                   "h-1.5 rounded-full transition-all",
                   index === currentStep
                     ? "w-6 bg-accent"
-                    : "w-1.5 bg-cosmos-600/40"
+                    : "w-1.5 bg-cosmos-600/40",
                 )}
               />
             ))}
@@ -294,7 +383,7 @@ export function Tutorial({
                 className="flex-1 sm:flex-none px-3 py-1.5 rounded-md text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-cosmos-700/50 transition-colors flex items-center justify-center gap-1.5"
               >
                 <ChevronLeft size={16} />
-                {t('tutorial.previous')}
+                {t("tutorial.previous")}
               </button>
             )}
             {isLastStep ? (
@@ -302,14 +391,14 @@ export function Tutorial({
                 onClick={onClose}
                 className="flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium bg-accent text-cosmos-950 hover:bg-accent/90 transition-colors"
               >
-                {t('tutorial.start')}
+                {t("tutorial.start")}
               </button>
             ) : (
               <button
                 onClick={onNext}
                 className="flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium bg-accent text-cosmos-950 hover:bg-accent/90 transition-colors flex items-center justify-center gap-1.5"
               >
-                {t('tutorial.next')}
+                {t("tutorial.next")}
                 <ChevronRight size={16} />
               </button>
             )}
@@ -326,35 +415,36 @@ export function useTutorialSteps() {
 
   return [
     {
-      title: t('tutorial.welcome.title'),
-      description: t('tutorial.welcome.description'),
+      title: t("tutorial.welcome.title"),
+      description: t("tutorial.welcome.description"),
       icon: <Info size={20} />,
       position: "center" as const,
     },
     {
-      title: t('search.title'),
-      description: t('search.description'),
+      title: t("search.title"),
+      description: t("search.description"),
       icon: <Search size={20} />,
       highlightSelector: "[data-tutorial='search-bar']",
       position: "bottom" as const,
     },
     {
-      title: t('filter.title'),
-      description: t('filter.description'),
+      title: t("filter.title"),
+      description: t("filter.description"),
       icon: <SlidersHorizontal size={20} />,
-      highlightSelector: "[data-tutorial='filter-sidebar'], [data-tutorial='filter-button']",
+      highlightSelector:
+        "[data-tutorial='filter-sidebar'], [data-tutorial='filter-button']",
       position: "right" as const,
     },
     {
-      title: t('tutorial.musicGrid.title'),
-      description: t('tutorial.musicGrid.description'),
+      title: t("tutorial.musicGrid.title"),
+      description: t("tutorial.musicGrid.description"),
       icon: <Grid3x3 size={20} />,
       highlightSelector: "[data-tutorial='music-grid']",
       position: "top" as const,
     },
     {
-      title: t('tutorial.finish.title'),
-      description: t('tutorial.finish.description'),
+      title: t("tutorial.finish.title"),
+      description: t("tutorial.finish.description"),
       icon: <HelpCircle size={20} />,
       highlightSelector: "[data-tutorial='tutorial-button']",
       position: "bottom" as const,
@@ -366,98 +456,130 @@ export function useTutorialSteps() {
 export function useChartTutorialSteps() {
   const { t } = useTranslation();
 
+  const selectFirstNote = () => {
+    const s = useEditorStore.getState();
+    if (s.selectedPoint) return;
+    const chart = s.chartData;
+    if (!chart) return;
+    for (const track of ["3", "4", "5", "6", "2", "7"]) {
+      if ((chart.tracks[track] ?? []).some((e) => e.type === "button")) {
+        s.setSelectedPoint({ type: "button", track, index: 0 });
+        return;
+      }
+    }
+  };
+
   return [
     {
-      title: t('chartTutorial.welcome.title'),
-      description: t('chartTutorial.welcome.description'),
+      title: t("chartTutorial.welcome.title"),
+      description: t("chartTutorial.welcome.description"),
       icon: <Info size={20} />,
       position: "center" as const,
     },
     {
-      title: t('chartTutorial.difficulty.title'),
-      description: t('chartTutorial.difficulty.description'),
+      title: t("chartTutorial.difficulty.title"),
+      description: t("chartTutorial.difficulty.description"),
       icon: <MousePointer size={20} />,
-      highlightSelector: "[data-tutorial='chart-difficulty'], [data-tutorial='chart-difficulty-mobile']",
+      highlightSelector:
+        "[data-tutorial='chart-difficulty'], [data-tutorial='chart-difficulty-mobile']",
       position: "bottom" as const,
       positionDelay: 20,
     },
     {
-      title: t('chartTutorial.sidebar.title'),
-      description: t('chartTutorial.sidebar.description'),
+      title: t("chartTutorial.sidebar.title"),
+      description: t("chartTutorial.sidebar.description"),
       icon: <Info size={20} />,
       highlightSelector: "[data-tutorial='chart-sidebar']",
       position: "right" as const,
     },
     {
-      title: t('chartTutorial.modeToggle.title'),
-      description: t('chartTutorial.modeToggle.description'),
+      title: t("chartTutorial.modeToggle.title"),
+      description: t("chartTutorial.modeToggle.description"),
       icon: <Eye size={20} />,
       highlightSelector: "[data-tutorial='chart-mode-toggle']",
       position: "right" as const,
     },
     {
-      title: t('chartTutorial.previewMode.title'),
-      description: t('chartTutorial.previewMode.description'),
+      title: t("chartTutorial.previewMode.title"),
+      description: t("chartTutorial.previewMode.description"),
       icon: <Shuffle size={20} />,
       highlightSelector: "[data-tutorial='chart-render-options']",
       position: "right" as const,
     },
     {
-      title: t('chartTutorial.editMode.title'),
-      description: t('chartTutorial.editMode.description'),
+      title: t("chartTutorial.editMode.title"),
+      description: t("chartTutorial.editMode.description"),
       icon: <Pencil size={20} />,
       highlightSelector: "[data-tutorial='chart-render-options']",
       position: "right" as const,
     },
     {
-      title: t('chartTutorial.drawArea.title'),
-      description: t('chartTutorial.drawArea.description'),
+      title: t("chartTutorial.drawArea.title"),
+      description: t("chartTutorial.drawArea.description"),
       icon: <ZoomIn size={20} />,
       highlightSelector: "[data-tutorial='chart-zoom-controls']",
       position: "left" as const,
     },
     {
-      title: t('chartTutorial.panMode.title'),
-      description: t('chartTutorial.panMode.description'),
+      title: t("chartTutorial.panMode.title"),
+      description: t("chartTutorial.panMode.description"),
       icon: <Hand size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
       position: "top" as const,
     },
     {
-      title: t('chartTutorial.moveMode.title'),
-      description: t('chartTutorial.moveMode.description'),
+      title: t("chartTutorial.moveMode.title"),
+      description: t("chartTutorial.moveMode.description"),
       icon: <Move size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
       position: "top" as const,
       positionDelay: 20,
     },
     {
-      title: t('chartTutorial.moveMode2.title'),
-      description: t('chartTutorial.moveMode2.description'),
+      title: t("chartTutorial.moveMode2.title"),
+      description: t("chartTutorial.moveMode2.description"),
       icon: <Move size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
       position: "top" as const,
       positionDelay: 20,
     },
     {
-      title: t('chartTutorial.editPointerMode.title'),
-      description: t('chartTutorial.editPointerMode.description'),
+      title: t("chartTutorial.editPointerMode.title"),
+      description: t("chartTutorial.editPointerMode.description"),
       icon: <Pencil size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
       position: "top" as const,
       positionDelay: 20,
     },
     {
-      title: t('chartTutorial.addMode.title'),
-      description: t('chartTutorial.addMode.description'),
+      title: t("chartTutorial.addMode.title"),
+      description: t("chartTutorial.addMode.description"),
       icon: <Plus size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
       position: "top" as const,
       positionDelay: 20,
     },
     {
-      title: t('tutorial.finish.title'),
-      description: t('tutorial.finish.description'),
+      title: t("chartTutorial.resetSelected.title"),
+      description: t("chartTutorial.resetSelected.description"),
+      icon: <RotateCcw size={20} />,
+      highlightSelector: "[data-tutorial='chart-reset-selected']",
+      position: "top" as const,
+      positionDelay: 20,
+      onEnter: selectFirstNote,
+    },
+    {
+      title: t("chartTutorial.deleteSelected.title"),
+      description: t("chartTutorial.deleteSelected.description"),
+      icon: <Trash2 size={20} />,
+      highlightSelector: "[data-tutorial='chart-delete-selected']",
+      position: "top" as const,
+      positionDelay: 20,
+      onEnter: selectFirstNote,
+    },
+    {
+      title: t("tutorial.finish.title"),
+      description: t("tutorial.finish.description"),
       icon: <HelpCircle size={20} />,
       highlightSelector: "[data-tutorial='tutorial-button']",
       position: "bottom" as const,

@@ -24,7 +24,7 @@ import { DRAG_RANGE_MS, useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import type { ButtonEvent, ChartData, LaserEvent } from "@/types/chart";
 import type { Time3 } from "@/lib/chart-renderer/time-mapper";
-import { Hand, Maximize, Minimize, Move, Pencil, Plus, RotateCcw, UnfoldVertical } from "lucide-react";
+import { Hand, Maximize, Minimize, Move, Pencil, Plus, RotateCcw, Trash2, UnfoldVertical } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -79,6 +79,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   const bpmDisplayMode = useEditorStore((s) => s.bpmDisplayMode);
 
   const resetSelectedPoint = useEditorStore((s) => s.resetSelectedPoint);
+  const deleteSelectedPoint = useEditorStore((s) => s.deleteSelectedPoint);
 
   const expandedTool = useEditorStore((s) => s.expandedTool);
   const setExpandedTool = useEditorStore((s) => s.setExpandedTool);
@@ -451,7 +452,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
 
   // ── Shared hit-test helpers ──
   function clientToChart(clientX: number, clientY: number) {
-    const rect = containerRef.current!.getBoundingClientRect();
+    const rect = (canvasRef.current ?? containerRef.current!).getBoundingClientRect();
     const s = useEditorStore.getState();
     return {
       x: s.panX + (clientX - rect.left) / s.zoom,
@@ -495,7 +496,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const geo = noteX(span, ev.track_name);
         if (!geo) continue;
         const ey = yInMeasure(span, ev.time as Time3, layout.timeMapper, layout.pxPerSecond);
-        if (cx >= geo.x - margin && cx <= geo.x + geo.w + margin && cy >= ey - CHIP_HEIGHT / 2 - margin && cy <= ey + CHIP_HEIGHT / 2 + margin) {
+        if (cx >= geo.x && cx <= geo.x + geo.w && cy >= ey - CHIP_HEIGHT / 2 - margin && cy <= ey + CHIP_HEIGHT / 2 + margin) {
           return { track: trackNum, index: i, col: span.col };
         }
       }
@@ -559,7 +560,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const geo = noteX(span, ev.track_name);
         if (!geo) continue;
         const y = yInMeasure(span, endTime, layout.timeMapper, layout.pxPerSecond);
-        if (cx >= geo.x - margin && cx <= geo.x + geo.w + margin && cy >= y - margin && cy <= y + margin) {
+        if (cx >= geo.x && cx <= geo.x + geo.w && cy >= y - margin && cy <= y + margin) {
           return { track: trackNum, index: i, col: span.col };
         }
       }
@@ -627,19 +628,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             }
           }
 
-          // 2) Hold tail hit test
-          const tailHit = hitTestHoldTail(x, y);
-          if (tailHit) {
-            const chart = s.chartData!;
-            const bev = (chart.tracks[tailHit.track] ?? [])[tailHit.index] as ButtonEvent;
-            s.pushHistory();
-            s.setSelectedPoint({ type: "button", track: tailHit.track, index: tailHit.index });
-            tailSelectedRef.current = true;
-            holdTailDragRef.current = { active: true, track: tailHit.track, index: tailHit.index, col: tailHit.col, startTime: bev.time as [number, number, number] };
-            return;
-          }
-
-          // 3) Button hit test
+          // 2) Button hit test (before hold tail so BT chips take priority over FX tails)
           const btnHit = hitTestButtonNotes(x, y);
           if (btnHit) {
             const chart = s.chartData!;
@@ -675,6 +664,18 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             s.setSelectedPoint({ type: "button", track: btnHit.track, index: btnHit.index });
             tailSelectedRef.current = false;
             btnDragRef.current = { active: true, track: btnHit.track, index: btnHit.index, col: btnHit.col, origSec };
+            return;
+          }
+
+          // 3) Hold tail hit test
+          const tailHit = hitTestHoldTail(x, y);
+          if (tailHit) {
+            const chart = s.chartData!;
+            const bev = (chart.tracks[tailHit.track] ?? [])[tailHit.index] as ButtonEvent;
+            s.pushHistory();
+            s.setSelectedPoint({ type: "button", track: tailHit.track, index: tailHit.index });
+            tailSelectedRef.current = true;
+            holdTailDragRef.current = { active: true, track: tailHit.track, index: tailHit.index, col: tailHit.col, startTime: bev.time as [number, number, number] };
             return;
           }
 
@@ -908,18 +909,31 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const s = useEditorStore.getState();
 
         if (s.mode === "edit" && s.mouseTool === "move") {
+          e.preventDefault();
           const { x, y } = clientToChart(lastX, lastY);
           const TOUCH_MARGIN = 30 / s.zoom;
           if (s.editFlags.simplifyLasers) {
             const hit = hitTestLaserPoints(x, y, TOUCH_MARGIN);
             if (hit) {
-              e.preventDefault(); // suppress synthetic mouse events
+              e.preventDefault();
               const chart = s.chartData!;
               const layout = computeLayout(chart);
               const events = (chart.tracks[hit.track] ?? []).filter(
                 (ev): ev is LaserEvent => ev.type === "laser",
               );
               const rp = resolveEvent(events[hit.index], layout.timeMapper, layout.spans, layout.pxPerSecond);
+
+              const first = s.firstSelectedNote;
+              if (first && (first.track !== hit.track || first.index !== hit.index)) {
+                const firstEv = (chart.tracks[first.track] ?? [])[first.index] as LaserEvent;
+                const interval = calculateInterval(firstEv.time as Time3, events[hit.index].time as Time3, layout.timeMapper, chart.beat_resolution ?? null);
+                s.setIntervalInfo(interval);
+                s.setFirstSelectedNote(null);
+              } else if (!first) {
+                s.setFirstSelectedNote({ type: "laser", track: hit.track, index: hit.index });
+                s.setIntervalInfo(null);
+              }
+
               s.pushHistory();
               s.setSelectedPoint({ type: "laser", track: hit.track, index: hit.index });
               pointDragRef.current = { active: true, track: hit.track, index: hit.index, col: rp?.col ?? 0, isOob: events[hit.index].is_out_of_bounds };
@@ -939,13 +953,26 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           }
           const btnHit = hitTestButtonNotes(x, y, TOUCH_MARGIN);
           if (btnHit) {
-            e.preventDefault(); // suppress synthetic mouse events
+            e.preventDefault();
             const chart = s.chartData!;
             const layout = computeLayout(chart);
             const bev = (chart.tracks[btnHit.track] ?? [])[btnHit.index] as ButtonEvent;
             const origEv = s.originalChartData?.tracks[btnHit.track]?.[btnHit.index];
             const origTime = origEv ? origEv.time as Time3 : bev.time as Time3;
             const origSec = layout.timeMapper.secondsOf(origTime);
+
+            const first = s.firstSelectedNote;
+            if (first && (first.track !== btnHit.track || first.index !== btnHit.index)) {
+              const firstEv = (chart.tracks[first.track] ?? [])[first.index];
+              const firstTime = firstEv.type === "laser" ? (firstEv as LaserEvent).time : (firstEv as ButtonEvent).time;
+              const interval = calculateInterval(firstTime as Time3, bev.time as Time3, layout.timeMapper, chart.beat_resolution ?? null);
+              s.setIntervalInfo(interval);
+              s.setFirstSelectedNote(null);
+            } else if (!first) {
+              s.setFirstSelectedNote({ type: "button", track: btnHit.track, index: btnHit.index });
+              s.setIntervalInfo(null);
+            }
+
             s.pushHistory();
             s.setSelectedPoint({ type: "button", track: btnHit.track, index: btnHit.index });
             tailSelectedRef.current = false;
@@ -960,6 +987,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             return;
           }
           s.clearSelectedPoint();
+          s.setFirstSelectedNote(null);
+          s.setIntervalInfo(null);
           return;
         }
 
@@ -1251,10 +1280,22 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           {selectedPoint && (
             <button
               onClick={() => resetSelectedPoint()}
-              className="p-3 md:p-1.5 rounded transition-colors touch-manipulation text-red-400 hover:bg-red-500/15"
+              className="p-3 md:p-1.5 rounded transition-colors touch-manipulation text-blue-400 hover:bg-blue-500/15"
               title={t('chart.resetToOriginal')}
+              data-tutorial="chart-reset-selected"
             >
               <RotateCcw size={16} />
+            </button>
+          )}
+          {/* Delete selected */}
+          {selectedPoint && (
+            <button
+              onClick={() => deleteSelectedPoint()}
+              className="p-3 md:p-1.5 rounded transition-colors touch-manipulation text-red-400 hover:bg-red-500/15"
+              title={t('chart.deleteSelected')}
+              data-tutorial="chart-delete-selected"
+            >
+              <Trash2 size={16} />
             </button>
           )}
         </div>

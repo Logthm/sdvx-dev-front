@@ -275,9 +275,11 @@ export const useEditorStore = create<EditorState>((set) => ({
       if (type === "button") {
         const origEv = s.originalChartData.tracks[track]?.[index];
         if (!origEv || origEv.type !== "button") return s;
+        let cd = moveButtonEvent(s.chartData, track, index, origEv.time);
+        cd = setHoldLen(cd, track, index, origEv.hold_len);
         return {
           history: [...s.history, s.chartData],
-          chartData: moveButtonEvent(s.chartData, track, index, origEv.time),
+          chartData: cd,
           editVersion: s.editVersion + 1,
         };
       }

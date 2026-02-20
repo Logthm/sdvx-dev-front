@@ -112,6 +112,14 @@
     "editPointerMode": {
       "title": "編集モード",
       "description": "ホールド頭やノーツをクリックしてホールドとチップを切り替えます。\n\n速度マークをクリックして値を編集できます。"
+    },
+    "resetSelected": {
+      "title": "選択を元に戻す",
+      "description": "オブジェクトを選択した状態で、このボタンをクリックすると元の状態（位置とホールド長）に戻します。"
+    },
+    "deleteSelected": {
+      "title": "選択を削除",
+      "description": "オブジェクトを選択した状態で、このボタンをクリックすると削除します。DeleteまたはBackspaceキーでも削除できます。"
     }
   },
   "chart": {
@@ -154,6 +162,7 @@
     "chartPreview": "譜面プレビュー",
     "addNotes": "ノーツを追加",
     "resetToOriginal": "元に戻す",
+    "deleteSelected": "選択を削除",
     "panView": "パン（ビューをドラッグ）",
     "moveSelect": "移動（選択してドラッグ）",
     "editHs": "編集（ホールド切替/HS編集）"

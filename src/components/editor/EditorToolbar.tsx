@@ -7,8 +7,6 @@ export function EditorToolbar() {
   const { t } = useTranslation();
   const simplifyLasers = useEditorStore((s) => s.editFlags.simplifyLasers);
   const toggleEdit = useEditorStore((s) => s.toggleEdit);
-  const selectedPoint = useEditorStore((s) => s.selectedPoint);
-  const deleteSelectedPoint = useEditorStore((s) => s.deleteSelectedPoint);
   const undo = useEditorStore((s) => s.undo);
   const resetAll = useEditorStore((s) => s.resetAll);
   const hasHistory = useEditorStore((s) => s.history.length > 0);
@@ -99,14 +97,6 @@ export function EditorToolbar() {
           </div>
         )}
       </div>
-      {selectedPoint && (
-        <button
-          onClick={deleteSelectedPoint}
-          className="w-full px-3 py-1.5 rounded text-xs font-medium border transition-colors bg-red-500/15 text-red-400 border-red-500/30 hover:bg-red-500/25"
-        >
-          {selectedPoint.type === "laser" ? t('chart.deletePoint') : selectedPoint.type === "hispeed" ? t('chart.deleteSpeedMark') : t('chart.deleteNote')}
-        </button>
-      )}
       {hasHistory && (
         <>
           <button
