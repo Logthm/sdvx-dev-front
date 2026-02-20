@@ -14,7 +14,6 @@ dist-ssr
 
 # Editor / IDE
 .vscode/*
-!.vscode/extensions.json
 .idea
 *.suo
 *.ntvs*
@@ -29,5 +28,5 @@ Thumbs.db
 # AI tools
 .claude
 
-# Docs (generated)
+# Docs
 docs

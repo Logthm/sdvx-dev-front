@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npx tsc:*)",
       "Bash(npx vite build:*)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(git add:*)"
     ]
   }
 }
