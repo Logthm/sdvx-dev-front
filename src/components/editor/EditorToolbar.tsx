@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useEditorStore, type BpmDisplayMode } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export function EditorToolbar() {
+  const { t } = useTranslation();
   const simplifyLasers = useEditorStore((s) => s.editFlags.simplifyLasers);
   const toggleEdit = useEditorStore((s) => s.toggleEdit);
   const selectedPoint = useEditorStore((s) => s.selectedPoint);
@@ -27,7 +29,7 @@ export function EditorToolbar() {
     <div className="flex flex-col gap-2">
       {/* Speed input */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-text-muted font-mono">Speed</span>
+        <span className="text-xs text-text-muted font-mono">{t('chart.speed')}</span>
         <input
           type="number"
           min="1"
@@ -71,25 +73,25 @@ export function EditorToolbar() {
             : "bg-cosmos-700/60 text-text-secondary hover:text-text-primary hover:bg-cosmos-600/60 border-cosmos-600/30",
         )}
       >
-        Simplify & Edit Lasers
+        {t('chart.simplifyLasers')}
       </button>
       {/* Interval info display - fixed height container */}
       <div className="h-[60px] overflow-hidden">
         {!firstSelectedNote && !intervalInfo && (
           <div className="px-3 py-1 rounded text-xs border bg-cosmos-700/60 text-text-secondary border-cosmos-600/30 h-full flex flex-col justify-center">
-            <div className="font-medium mb-1">Interval Measurement</div>
-            <div className="text-[10px] text-text-muted">Click two notes to measure interval</div>
+            <div className="font-medium mb-1">{t('chart.intervalMeasurement')}</div>
+            <div className="text-[10px] text-text-muted">{t('chart.clickTwoNotes')}</div>
           </div>
         )}
         {firstSelectedNote && !intervalInfo && (
           <div className="px-3 py-1 rounded text-xs border bg-blue-500/15 text-blue-400 border-blue-500/30 h-full flex flex-col justify-center">
-            <div className="font-medium mb-1">First note selected</div>
-            <div className="text-[10px] text-blue-300">Click another note to measure interval</div>
+            <div className="font-medium mb-1">{t('chart.firstNoteSelected')}</div>
+            <div className="text-[10px] text-blue-300">{t('chart.clickAnotherNote')}</div>
           </div>
         )}
         {intervalInfo && (
           <div className="px-3 py-1 rounded text-xs border bg-green-500/15 text-green-400 border-green-500/30 h-full flex flex-col justify-center">
-            <div className="font-medium mb-1">Interval</div>
+            <div className="font-medium mb-1">{t('chart.interval')}</div>
             <div className="flex justify-between items-center">
               <span>{intervalInfo.ms.toFixed(2)} ms</span>
               <span className="font-mono">{intervalInfo.notation}</span>
@@ -102,7 +104,7 @@ export function EditorToolbar() {
           onClick={deleteSelectedPoint}
           className="w-full px-3 py-1.5 rounded text-xs font-medium border transition-colors bg-red-500/15 text-red-400 border-red-500/30 hover:bg-red-500/25"
         >
-          Delete {selectedPoint.type === "laser" ? "Point" : selectedPoint.type === "hispeed" ? "Speed Mark" : "Note"}
+          {selectedPoint.type === "laser" ? t('chart.deletePoint') : selectedPoint.type === "hispeed" ? t('chart.deleteSpeedMark') : t('chart.deleteNote')}
         </button>
       )}
       {hasHistory && (
@@ -111,13 +113,13 @@ export function EditorToolbar() {
             onClick={undo}
             className="w-full px-3 py-1.5 rounded text-xs font-medium border transition-colors bg-cosmos-700/60 text-text-secondary hover:text-text-primary hover:bg-cosmos-600/60 border-cosmos-600/30"
           >
-            Undo
+            {t('chart.undo')}
           </button>
           <button
             onClick={resetAll}
             className="w-full px-3 py-1.5 rounded text-xs font-medium border transition-colors bg-cosmos-700/60 text-text-secondary hover:text-text-primary hover:bg-cosmos-600/60 border-cosmos-600/30"
           >
-            Reset All
+            {t('common.resetAll')}
           </button>
         </>
       )}

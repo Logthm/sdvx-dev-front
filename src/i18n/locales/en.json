@@ -1,0 +1,165 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "clear": "Clear",
+    "resetAll": "Reset All",
+    "records": "records"
+  },
+  "search": {
+    "placeholder": "Search music...",
+    "title": "Search Function",
+    "description": "Use the search bar to quickly find songs.\n\n• Searches both song title and artist name\n• Use romaji or Japanese kana to match readings\n• Chinese simplified/traditional can match Japanese kanji (\u201c东云\u201d -> \u201c東雲\u201d)\n\nTry typing your favorite song name!"
+  },
+  "filter": {
+    "sort": "Sort",
+    "version": "Version",
+    "difficulty": "Difficulty",
+    "radarPeak": "Radar Peak",
+    "level": "Level",
+    "bpm": "BPM",
+    "sortBy": {
+      "difficulty": "Difficulty",
+      "date": "Date",
+      "title": "Title",
+      "artist": "Artist"
+    },
+    "levelMode": {
+      "exact": "Exact",
+      "int": "Int",
+      "range": "Range"
+    },
+    "placeholder": {
+      "min": "min",
+      "max": "max",
+      "exactLevel": "18 or 18.5",
+      "intLevel": "18"
+    },
+    "radarPeaks": {
+      "notes": "NOTES",
+      "peak": "PEAK",
+      "tsumami": "TSUMAMI",
+      "tricky": "TRICKY",
+      "handTrip": "HAND-TRIP",
+      "oneHand": "ONE-HAND"
+    },
+    "title": "Filters",
+    "description": "Click the filter button to open the advanced filter panel.\n\nYou can filter songs by difficulty level, version, BPM, radar chart, and more.\n\nYou can also sort the results!"
+  },
+  "tutorial": {
+    "viewTutorial": "View Tutorial",
+    "closeTutorial": "Close Tutorial",
+    "previous": "Previous",
+    "next": "Next",
+    "start": "Get Started",
+    "welcome": {
+      "title": "Welcome",
+      "description": "This is a chart browsing tool designed for Sound Voltex players.\n\nLet's take a quick look at the main features!"
+    },
+    "musicGrid": {
+      "title": "Music List",
+      "description": "All songs matching your criteria are displayed as cards.\n\nClick the artist name to quickly search for songs by the same artist.\n\nClick a difficulty to view detailed information and chart preview.\n\nScroll down to automatically load more songs."
+    },
+    "finish": {
+      "title": "View Tutorial",
+      "description": "Click this button to view this tutorial again."
+    }
+  },
+  "chartTutorial": {
+    "welcome": {
+      "title": "Chart Preview Page",
+      "description": "This is the detailed chart preview and editing page.\n\nLet's take a quick look at each feature area!"
+    },
+    "difficulty": {
+      "title": "Switch Charts",
+      "description": "Click the difficulty badges at the top to switch between different charts."
+    },
+    "sidebar": {
+      "title": "Info Panel",
+      "description": "The info panel on the right shows detailed song information. Click radar chart vertices to view specific values."
+    },
+    "modeToggle": {
+      "title": "Preview / Edit Mode",
+      "description": "Switch between chart preview and edit mode here.\n\nAfter editing, switching back to preview mode will render the edited chart in real time."
+    },
+    "previewMode": {
+      "title": "Preview Mode",
+      "description": "Choose an arrangement mode and adjust laser colors here.\n\nIn Random mode, you can click BT buttons to manually edit the order, swap FX or lasers."
+    },
+    "editMode": {
+      "title": "Edit Mode",
+      "description": "• Speed Calculator: Enter your in-game Speed setting to view BPM / Hi-Speed multiplier / actual speed at different speed change points\n• Simplify & Edit Lasers: Simplifies curved lasers and allows editing laser start/end points and inflection points in move mode\n• Interval Calculator: Select two objects in move mode to calculate interval time and beat notation"
+    },
+    "drawArea": {
+      "title": "Preview Controls",
+      "description": "Adjust zoom and enter fullscreen here.\n\nIn the chart viewing area, use scroll wheel for horizontal scrolling, Shift+wheel for vertical, Ctrl+wheel to zoom.\n\nIn pan mode, you can also drag to move the view."
+    },
+    "panMode": {
+      "title": "Pan Mode",
+      "description": "Drag to move the view."
+    },
+    "moveMode": {
+      "title": "Move Mode",
+      "description": "Drag objects; moved objects get a blue border.\n\nDrag hold tails to change length, drag hold heads or chips vertically to reposition.\n\nWith \"Simplify & Edit Lasers\" on, freely drag laser start/end points and inflection points.\n\nDrag range limits available below — when enabled, dragging is restricted to the allowed judgment range."
+    },
+    "addMode": {
+      "title": "Add Mode",
+      "description": "Add BT, FX notes and speed marks.\n\nWhen adding a speed mark, enter the target Hi-Speed and the duration for the speed change. It will affect the HS after the operation completes."
+    },
+    "editPointerMode": {
+      "title": "Edit Mode",
+      "description": "Click a hold head or chip to toggle between hold and chip.\n\nClick a speed mark to edit its values."
+    }
+  },
+  "chart": {
+    "songNotFound": "Song not found",
+    "loadingChart": "Loading chart...",
+    "loadFailed": "Failed to load chart",
+    "retry": "Retry",
+    "preview": "Preview",
+    "edit": "Edit",
+    "version": "Version",
+    "genre": "Genre",
+    "exScore": "EX Score",
+    "chain": "Chain",
+    "chips": "Chips",
+    "holds": "Holds",
+    "tsumami": "Tsumami",
+    "illustrator": "Illust.",
+    "effector": "Effector",
+    "speed": "Speed",
+    "simplifyLasers": "Simplify & Edit Lasers",
+    "intervalMeasurement": "Interval Measurement",
+    "clickTwoNotes": "Click two notes to measure interval",
+    "firstNoteSelected": "First note selected",
+    "clickAnotherNote": "Click another note to measure interval",
+    "interval": "Interval",
+    "deletePoint": "Delete Point",
+    "deleteSpeedMark": "Delete Speed Mark",
+    "deleteNote": "Delete Note",
+    "undo": "Undo",
+    "normal": "Normal",
+    "mirror": "Mirror",
+    "random": "Random",
+    "sRandom": "S-Ran",
+    "swapFx": "Swap FX-L and FX-R",
+    "mirrorLasers": "Mirror lasers",
+    "randomizeAll": "Randomize all tracks",
+    "fitHeight": "Fit height",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen",
+    "chartPreview": "Chart preview",
+    "addNotes": "Add notes",
+    "resetToOriginal": "Reset selected to original",
+    "panView": "Pan (drag view)",
+    "moveSelect": "Move (select & drag)",
+    "editHs": "Edit (toggle hold, edit HS)"
+  },
+  "difficulty": {
+    "novice": "NOV",
+    "advanced": "ADV",
+    "exhaust": "EXH",
+    "infinite": "INF",
+    "maximum": "MXM",
+    "ultimate": "ULT"
+  }
+}

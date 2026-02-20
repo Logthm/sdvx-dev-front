@@ -1,0 +1,165 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "clear": "クリア",
+    "resetAll": "すべてリセット",
+    "records": "件"
+  },
+  "search": {
+    "placeholder": "楽曲を検索...",
+    "title": "検索機能",
+    "description": "検索バーを使用して楽曲を素早く検索できます。\n\n• 楽曲名とアーティスト名を同時に検索\n• ローマ字・日本語仮名で読みをマッチング\n• 中国語簡体字/繁体字で日本語漢字をマッチング（\u201c东云\u201d→\u201c東雲\u201d）\n\nお気に入りの楽曲名を入力してみてください！"
+  },
+  "filter": {
+    "sort": "並び替え",
+    "version": "バージョン",
+    "difficulty": "難易度",
+    "radarPeak": "レーダーピーク",
+    "level": "レベル",
+    "bpm": "BPM",
+    "sortBy": {
+      "difficulty": "難易度",
+      "date": "日付",
+      "title": "タイトル",
+      "artist": "アーティスト"
+    },
+    "levelMode": {
+      "exact": "完全一致",
+      "int": "整数",
+      "range": "範囲"
+    },
+    "placeholder": {
+      "min": "最小",
+      "max": "最大",
+      "exactLevel": "18 または 18.5",
+      "intLevel": "18"
+    },
+    "radarPeaks": {
+      "notes": "NOTES",
+      "peak": "PEAK",
+      "tsumami": "TSUMAMI",
+      "tricky": "TRICKY",
+      "handTrip": "HAND-TRIP",
+      "oneHand": "ONE-HAND"
+    },
+    "title": "フィルター",
+    "description": "フィルターボタンをクリックすると、高度なフィルターパネルが開きます。\n\n難易度レベル、バージョン、BPM、レーダーチャートなどの条件で楽曲を絞り込めます。\n\n結果の並び替えも可能です！"
+  },
+  "tutorial": {
+    "viewTutorial": "チュートリアルを見る",
+    "closeTutorial": "チュートリアルを閉じる",
+    "previous": "前へ",
+    "next": "次へ",
+    "start": "始める",
+    "welcome": {
+      "title": "ようこそ",
+      "description": "これは Sound Voltex プレイヤー向けに設計された譜面検索ツールです。\n\n主な機能を簡単に見ていきましょう！"
+    },
+    "musicGrid": {
+      "title": "楽曲リスト",
+      "description": "条件に一致するすべての楽曲がカード形式で表示されます。\n\nアーティスト名をクリックすると、同じアーティストの楽曲を素早く検索できます。\n\n難易度をクリックすると、詳細情報と譜面プレビューが表示されます。\n\n下にスクロールすると、自動的に楽曲が追加読み込みされます。"
+    },
+    "finish": {
+      "title": "チュートリアルを見る",
+      "description": "このボタンをクリックすると、チュートリアルをもう一度見ることができます。"
+    }
+  },
+  "chartTutorial": {
+    "welcome": {
+      "title": "譜面プレビューページ",
+      "description": "譜面の詳細プレビューと編集ページです。\n\n各機能エリアを簡単に見ていきましょう！"
+    },
+    "difficulty": {
+      "title": "譜面の切り替え",
+      "description": "上部の難易度バッジをクリックして、表示する譜面を切り替えられます。"
+    },
+    "sidebar": {
+      "title": "情報パネル",
+      "description": "右側の情報パネルに楽曲の詳細情報が表示されます。レーダーチャートの頂点をクリックすると具体的な数値を確認できます。"
+    },
+    "modeToggle": {
+      "title": "プレビュー / 編集モード",
+      "description": "ここでプレビューモードと編集モードを切り替えられます。\n\n編集後にプレビューモードに戻ると、編集した譜面がリアルタイムでレンダリングされます。"
+    },
+    "previewMode": {
+      "title": "プレビューモード",
+      "description": "ここでランダム方式の選択とレーザー色の調整ができます。\n\nRandomモードでは、BTボタンをクリックして手動で順序を編集、FXやレーザーの入れ替えが可能です。"
+    },
+    "editMode": {
+      "title": "編集モード",
+      "description": "• 変速計算機：ゲーム設定の Speed を入力すると、変速譜面の各変速ポイントの BPM / 速度倍率（Hi-Speed） / 実際の速度を確認できます\n• レーザー簡略化 & 編集：曲線レーザーを簡略化し、移動モードでレーザーの始終点や屈折点を編集可能に\n• 間隔計算：移動モードで2つのオブジェクトを選択して間隔時間と拍子を計算"
+    },
+    "drawArea": {
+      "title": "プレビューコントロール",
+      "description": "ここでズーム調整やフルスクリーンへの切り替えができます。\n\n譜面閲覧エリアではスクロールホイールで水平スクロール、Shift+ホイールで垂直、Ctrl+ホイールでズーム。\n\nパンモードではドラッグでビューを移動できます。"
+    },
+    "panMode": {
+      "title": "パンモード",
+      "description": "ビューをドラッグして移動します。"
+    },
+    "moveMode": {
+      "title": "移動モード",
+      "description": "オブジェクトをドラッグします。移動済みのオブジェクトには青い枠が表示されます。\n\nホールド末尾をドラッグして長さを変更、ホールド頭やチップを上下ドラッグして位置を変更できます。\n\n「レーザー簡略化 & 編集」を有効にすると、レーザーの始終点や屈折点も自由にドラッグできます。\n\n下部でドラッグ範囲制限を選択でき、有効にすると判定許容範囲内でのみドラッグ可能です。"
+    },
+    "addMode": {
+      "title": "追加モード",
+      "description": "BT、FXノーツと速度マークを追加します。\n\n速度マーク追加時、目標Hi-Speedと変速に必要な時間を入力します。操作完了後のHSが変更されます。"
+    },
+    "editPointerMode": {
+      "title": "編集モード",
+      "description": "ホールド頭やノーツをクリックしてホールドとチップを切り替えます。\n\n速度マークをクリックして値を編集できます。"
+    }
+  },
+  "chart": {
+    "songNotFound": "楽曲が見つかりません",
+    "loadingChart": "譜面を読み込み中...",
+    "loadFailed": "譜面の読み込みに失敗しました",
+    "retry": "再試行",
+    "preview": "プレビュー",
+    "edit": "編集",
+    "version": "バージョン",
+    "genre": "ジャンル",
+    "exScore": "EX Score",
+    "chain": "Chain",
+    "chips": "Chips",
+    "holds": "Holds",
+    "tsumami": "Tsumami",
+    "illustrator": "イラスト",
+    "effector": "Effector",
+    "speed": "Speed",
+    "simplifyLasers": "レーザー簡略化 & 編集",
+    "intervalMeasurement": "間隔測定",
+    "clickTwoNotes": "2つのノーツをクリックして間隔を測定",
+    "firstNoteSelected": "最初のノーツを選択済み",
+    "clickAnotherNote": "別のノーツをクリックして間隔を測定",
+    "interval": "間隔",
+    "deletePoint": "ポイントを削除",
+    "deleteSpeedMark": "速度マークを削除",
+    "deleteNote": "ノーツを削除",
+    "undo": "元に戻す",
+    "normal": "Normal",
+    "mirror": "Mirror",
+    "random": "Random",
+    "sRandom": "S-Ran",
+    "swapFx": "FX-L と FX-R を入れ替え",
+    "mirrorLasers": "レーザーをミラー",
+    "randomizeAll": "全トラックをランダム化",
+    "fitHeight": "高さに合わせる",
+    "fullscreen": "フルスクリーン",
+    "exitFullscreen": "フルスクリーン解除",
+    "chartPreview": "譜面プレビュー",
+    "addNotes": "ノーツを追加",
+    "resetToOriginal": "元に戻す",
+    "panView": "パン（ビューをドラッグ）",
+    "moveSelect": "移動（選択してドラッグ）",
+    "editHs": "編集（ホールド切替/HS編集）"
+  },
+  "difficulty": {
+    "novice": "NOV",
+    "advanced": "ADV",
+    "exhaust": "EXH",
+    "infinite": "INF",
+    "maximum": "MXM",
+    "ultimate": "ULT"
+  }
+}

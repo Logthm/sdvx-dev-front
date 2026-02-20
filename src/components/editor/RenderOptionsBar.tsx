@@ -16,12 +16,13 @@ import {
 import { cn } from "@/lib/utils";
 import { ArrowLeftRight, Shuffle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-const ARRANGEMENT_MODES: { value: ArrangementMode; label: string }[] = [
-  { value: "normal", label: "Normal" },
-  { value: "mirror", label: "Mirror" },
-  { value: "random", label: "Random" },
-  { value: "s-random", label: "S-Ran" },
+const ARRANGEMENT_MODES: { value: ArrangementMode; labelKey: string }[] = [
+  { value: "normal", labelKey: "chart.normal" },
+  { value: "mirror", labelKey: "chart.mirror" },
+  { value: "random", labelKey: "chart.random" },
+  { value: "s-random", labelKey: "chart.sRandom" },
 ];
 
 const LASER_COLORS: { value: LaserColor; hex: string }[] = [
@@ -96,6 +97,7 @@ function BtDropdown({
 }
 
 export function RenderOptionsBar() {
+  const { t } = useTranslation();
   const opts = useEditorStore((s) => s.renderOptions);
   const setOpts = useEditorStore((s) => s.setRenderOptions);
   const isRandom = opts.arrangementMode === "random";
@@ -161,7 +163,7 @@ export function RenderOptionsBar() {
     <div className="flex flex-col gap-3 text-sm w-full">
       {/* Arrangement mode */}
       <div className="grid grid-cols-4 gap-1">
-        {ARRANGEMENT_MODES.map(({ value, label }) => (
+        {ARRANGEMENT_MODES.map(({ value, labelKey }) => (
           <button
             key={value}
             onClick={() => handleModeChange(value)}
@@ -172,7 +174,7 @@ export function RenderOptionsBar() {
                 : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
             )}
           >
-            {label}
+            {t(labelKey)}
           </button>
         ))}
       </div>
@@ -214,7 +216,7 @@ export function RenderOptionsBar() {
                 "flex items-center gap-1 px-3 py-1.5 rounded transition-colors",
                 opts.fxSwap ? "bg-gold-400/15 text-gold-400" : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
               )}
-              title="Swap FX-L and FX-R"
+              title={t('chart.swapFx')}
             >
               <ArrowLeftRight size={14} />
               <span>FX</span>
@@ -225,7 +227,7 @@ export function RenderOptionsBar() {
                 "flex items-center gap-1 px-3 py-1.5 rounded transition-colors",
                 opts.mirrorLaser ? "bg-gold-400/15 text-gold-400" : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
               )}
-              title="Mirror lasers"
+              title={t('chart.mirrorLasers')}
             >
               <ArrowLeftRight size={14} />
               <span>Laser</span>
@@ -233,7 +235,7 @@ export function RenderOptionsBar() {
             <button
               onClick={handleShuffle}
               className="px-3 py-1.5 rounded text-text-muted hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-              title="Randomize all tracks"
+              title={t('chart.randomizeAll')}
             >
               <Shuffle size={14} />
             </button>

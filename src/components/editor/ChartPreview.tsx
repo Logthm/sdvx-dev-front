@@ -12,6 +12,7 @@ import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import { Loader2, Maximize, Minimize, UnfoldVertical } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ChartPreviewProps {
   musicId: number;
@@ -30,6 +31,7 @@ export function ChartPreview({
   renderOptions,
   className,
 }: ChartPreviewProps) {
+  const { t } = useTranslation();
   const chartData = useEditorStore((s) => s.chartData);
   const editFlags = useEditorStore((s) => s.editFlags);
   const editVersion = useEditorStore((s) => s.editVersion);
@@ -287,20 +289,20 @@ export function ChartPreview({
       {imageQuery.isLoading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <Loader2 size={28} className="animate-spin text-accent" />
-          <span className="text-sm text-text-muted">Rendering chart...</span>
+          <span className="text-sm text-text-muted">{t('chart.loadingChart')}</span>
         </div>
       )}
 
       {imageQuery.isError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <span className="text-sm text-diff-exhaust">
-            Failed to render chart
+            {t('chart.loadFailed')}
           </span>
           <button
             onClick={() => imageQuery.refetch()}
             className="text-xs text-accent hover:underline"
           >
-            Retry
+            {t('chart.retry')}
           </button>
         </div>
       )}
@@ -317,7 +319,7 @@ export function ChartPreview({
           <img
             ref={imgRef}
             src={imageQuery.data}
-            alt="Chart preview"
+            alt={t('chart.chartPreview')}
             onLoad={onImageLoad}
             draggable={false}
             className="block max-w-none"
@@ -345,14 +347,14 @@ export function ChartPreview({
           <button
             onClick={fitHeight}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-            title="Fit height"
+            title={t('chart.fitHeight')}
           >
             <UnfoldVertical size={14} />
           </button>
           <button
             onClick={toggleFullscreen}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-            title={isFullscreen || mobileFs ? "Exit fullscreen" : "Fullscreen"}
+            title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
           >
             {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
           </button>

@@ -7,6 +7,7 @@ import {
 } from "@/types/music";
 import type { SortDirection, SortField } from "@/api/music";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export type RadarPeakKey = keyof RadarSchema;
 
@@ -18,15 +19,6 @@ export const RADAR_PEAK_KEYS: RadarPeakKey[] = [
   "hand_trip",
   "one_hand",
 ];
-
-const RADAR_PEAK_LABELS: Record<RadarPeakKey, string> = {
-  notes: "NOTES",
-  peak: "PEAK",
-  tsumami: "TSUMAMI",
-  tricky: "TRICKY",
-  hand_trip: "HAND-TRIP",
-  one_hand: "ONE-HAND",
-};
 
 const VERSION_OPTIONS = Array.from({ length: 7 }, (_, idx) => idx + 1);
 
@@ -117,6 +109,7 @@ function ClearBtn({
   hasSelection: boolean;
   onClear: () => void;
 }) {
+  const { t } = useTranslation();
   if (!hasSelection) return null;
   return (
     <button
@@ -124,19 +117,20 @@ function ClearBtn({
       onClick={onClear}
       className="text-[11px] min-h-7 text-text-muted hover:text-gold-400 transition-colors"
     >
-      Clear
+      {t('common.clear')}
     </button>
   );
 }
 
 const SORT_OPTIONS: [SortField, string][] = [
-  ["difficulty", "Difficulty"],
-  ["distribution_date", "Date"],
-  ["title_name", "Title"],
-  ["artist_name", "Artist"],
+  ["difficulty", "filter.sortBy.difficulty"],
+  ["distribution_date", "filter.sortBy.date"],
+  ["title_name", "filter.sortBy.title"],
+  ["artist_name", "filter.sortBy.artist"],
 ];
 
 export function FilterBar({ filters, onChange, sortField, sortDirection, onToggleSort, onClearSort, className }: FilterBarProps) {
+  const { t } = useTranslation();
   function clampLevel(n: number) {
     return Math.round(Math.max(1, Math.min(n, 20.9)) * 10) / 10;
   }
@@ -223,9 +217,9 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
       <div className="obs-panel-section">
         <SectionLabel
           action={<ClearBtn hasSelection={sortField !== null} onClear={onClearSort} />}
-        >Sort</SectionLabel>
+        >{t('filter.sort')}</SectionLabel>
         <div className="grid grid-cols-2 gap-1">
-          {SORT_OPTIONS.map(([field, label]) => (
+          {SORT_OPTIONS.map(([field, labelKey]) => (
             <button
               key={field}
               type="button"
@@ -237,7 +231,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
                   : "bg-transparent border-cosmos-600/30 text-text-muted hover:text-text-primary hover:border-cosmos-600/60 hover:bg-cosmos-800/40",
               )}
             >
-              {label}
+              {t(labelKey)}
               {sortField === field && (
                 sortDirection === "desc"
                   ? <ArrowDownWideNarrow size={12} />
@@ -253,7 +247,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
         <SectionLabel
           action={<ClearBtn hasSelection={filters.versions.size > 0} onClear={() => onChange({ ...filters, versions: new Set<number>() })} />}
         >
-          Version
+          {t('filter.version')}
         </SectionLabel>
         <div className="grid grid-cols-4 gap-1">
           {VERSION_OPTIONS.map((v) => (
@@ -279,7 +273,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
         <SectionLabel
           action={<ClearBtn hasSelection={filters.difficulties.size > 0} onClear={() => onChange({ ...filters, difficulties: new Set<DifficultyName>() })} />}
         >
-          Difficulty
+          {t('filter.difficulty')}
         </SectionLabel>
         <div className="grid grid-cols-3 gap-1">
           {DIFFICULTY_ORDER.map((d) => (
@@ -304,7 +298,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
       <div className="obs-panel-section">
         <SectionLabel
           action={<ClearBtn hasSelection={filters.radarPeaks.size > 0} onClear={() => onChange({ ...filters, radarPeaks: new Set<RadarPeakKey>() })} />}
-        >Radar Peak</SectionLabel>
+        >{t('filter.radarPeak')}</SectionLabel>
         <div className="grid grid-cols-2 gap-1">
           {RADAR_PEAK_KEYS.map((key) => (
             <button
@@ -318,7 +312,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
                   : "bg-transparent border-cosmos-600/30 text-text-muted hover:text-text-primary hover:border-cosmos-600/60 hover:bg-cosmos-800/40",
               )}
             >
-              {RADAR_PEAK_LABELS[key]}
+              {t(`filter.radarPeaks.${key === 'hand_trip' ? 'handTrip' : key === 'one_hand' ? 'oneHand' : key}`)}
             </button>
           ))}
         </div>
@@ -329,10 +323,10 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
         <SectionLabel
           action={<ClearBtn hasSelection={filters.levelMin !== null || filters.levelMax !== null} onClear={() => onChange({ ...filters, levelInput: '', levelMinRaw: '', levelMaxRaw: '', levelMin: null, levelMax: null })} />}
         >
-          Level
+          {t('filter.level')}
         </SectionLabel>
         <div className="grid grid-cols-3 gap-1 mb-2">
-          {([['exact', 'Exact'], ['int', 'Int'], ['range', 'Range']] as const).map(([mode, label]) => (
+          {([['exact', 'filter.levelMode.exact'], ['int', 'filter.levelMode.int'], ['range', 'filter.levelMode.range']] as const).map(([mode, labelKey]) => (
             <button
               key={mode}
               type="button"
@@ -344,15 +338,15 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
                   : "bg-transparent border-cosmos-600/30 text-text-muted hover:text-text-primary hover:border-cosmos-600/60 hover:bg-cosmos-800/40",
               )}
             >
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </div>
         {filters.levelMode === 'range' ? (
           <div className="flex items-center gap-1.5">
-            <input type="text" inputMode="decimal" value={filters.levelMinRaw} onChange={(e) => updateLevelMin(e.target.value)} placeholder="min" className={inputCls} />
+            <input type="text" inputMode="decimal" value={filters.levelMinRaw} onChange={(e) => updateLevelMin(e.target.value)} placeholder={t('filter.placeholder.min')} className={inputCls} />
             <span className="text-xs text-cosmos-600 shrink-0">—</span>
-            <input type="text" inputMode="decimal" value={filters.levelMaxRaw} onChange={(e) => updateLevelMax(e.target.value)} placeholder="max" className={inputCls} />
+            <input type="text" inputMode="decimal" value={filters.levelMaxRaw} onChange={(e) => updateLevelMax(e.target.value)} placeholder={t('filter.placeholder.max')} className={inputCls} />
           </div>
         ) : (
           <input
@@ -360,7 +354,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
             inputMode={filters.levelMode === 'int' ? 'numeric' : 'decimal'}
             value={filters.levelInput}
             onChange={(e) => updateLevelInput(e.target.value)}
-            placeholder={filters.levelMode === 'exact' ? "18 or 18.5" : "18"}
+            placeholder={t(filters.levelMode === 'exact' ? 'filter.placeholder.exactLevel' : 'filter.placeholder.intLevel')}
             className={inputCls}
           />
         )}
@@ -370,11 +364,11 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
       <div className="obs-panel-section">
         <SectionLabel
           action={<ClearBtn hasSelection={filters.bpmMin !== null || filters.bpmMax !== null} onClear={() => onChange({ ...filters, bpmMin: null, bpmMax: null })} />}
-        >BPM</SectionLabel>
+        >{t('filter.bpm')}</SectionLabel>
         <div className="flex items-center gap-1.5">
-          <input type="text" inputMode="numeric" value={filters.bpmMin ?? ""} onChange={(e) => updateBpmMin(e.target.value)} placeholder="min" className={inputCls} />
+          <input type="text" inputMode="numeric" value={filters.bpmMin ?? ""} onChange={(e) => updateBpmMin(e.target.value)} placeholder={t('filter.placeholder.min')} className={inputCls} />
           <span className="text-xs text-cosmos-600 shrink-0">—</span>
-          <input type="text" inputMode="numeric" value={filters.bpmMax ?? ""} onChange={(e) => updateBpmMax(e.target.value)} placeholder="max" className={inputCls} />
+          <input type="text" inputMode="numeric" value={filters.bpmMax ?? ""} onChange={(e) => updateBpmMax(e.target.value)} placeholder={t('filter.placeholder.max')} className={inputCls} />
         </div>
       </div>
 
@@ -386,7 +380,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
           className="flex items-center gap-1.5 px-4 py-1.5 rounded text-xs text-text-muted hover:text-gold-400 hover:bg-cosmos-800/40 transition-colors touch-manipulation"
         >
           <RotateCcw size={14} />
-          Reset All
+          {t('common.resetAll')}
         </button>
       </div>
     </div>

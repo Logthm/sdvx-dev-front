@@ -8,6 +8,8 @@ import { RenderOptionsBar } from "@/components/editor/RenderOptionsBar";
 import { Astrolabe } from "@/components/ui/Astrolabe";
 import { DifficultyBadge } from "@/components/ui/DifficultyBadge";
 import { RadarChart } from "@/components/ui/RadarChart";
+import { Tutorial, useChartTutorialSteps } from "@/components/ui/Tutorial";
+import { useTutorial } from "@/hooks/useTutorial";
 import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import {
@@ -16,9 +18,10 @@ import {
     type DifficultyName,
     type DifficultySchema,
 } from "@/types/music";
-import { ArrowLeft, ChevronDown, ChevronUp, Eye, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Eye, HelpCircle, Loader2, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 function DataRow({ label, value }: { label: string; value: string | number }) {
   return (
@@ -34,6 +37,9 @@ function DataRow({ label, value }: { label: string; value: string | number }) {
 }
 
 export function SongDetailPage() {
+  const { t } = useTranslation();
+  const chartTutorialSteps = useChartTutorialSteps();
+  const chartTutorial = useTutorial("sdvx-chart-tutorial-completed");
   const { musicId } = useParams<{ musicId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -79,6 +85,9 @@ export function SongDetailPage() {
   const mode = useEditorStore((s) => s.mode);
   const setMode = useEditorStore((s) => s.setMode);
   const renderOptions = useEditorStore((s) => s.renderOptions);
+  const setRenderOptions = useEditorStore((s) => s.setRenderOptions);
+  const setMouseTool = useEditorStore((s) => s.setMouseTool);
+  const setExpandedTool = useEditorStore((s) => s.setExpandedTool);
   const mobileFullscreen = useEditorStore((s) => s.mobileFullscreen);
 
   useEffect(() => {
@@ -89,11 +98,44 @@ export function SongDetailPage() {
     if (chart) setOriginalChartData(chart);
   }, [chart, setOriginalChartData]);
 
+  // Auto-switch mode/arrangement/mouseTool based on tutorial step
+  useEffect(() => {
+    if (!chartTutorial.isOpen) return;
+    const step = chartTutorial.currentStep;
+    if (step === 4) {
+      setMode("preview");
+      if (renderOptions.arrangementMode !== "random") {
+        setRenderOptions({ arrangementMode: "random" });
+      }
+    } else if (step >= 5 && step <= 10 && canEdit) {
+      setMode("edit");
+      if (step === 7) { setMouseTool("pan"); setExpandedTool(null); }
+      else if (step === 8) { setMouseTool("move"); setExpandedTool("drag"); }
+      else if (step === 9) { setMouseTool("edit-hs"); setExpandedTool(null); }
+      else if (step === 10) { setMouseTool("add-bt"); setExpandedTool("add"); }
+      else { setExpandedTool(null); }
+    } else {
+      if (mode === "edit") setMode("preview");
+      if (renderOptions.arrangementMode !== "normal") setRenderOptions({ arrangementMode: "normal" });
+    }
+  }, [chartTutorial.isOpen, chartTutorial.currentStep, canEdit, setMode, setRenderOptions, setMouseTool, setExpandedTool]);
+
   const coverSrc =
     music && activeDif ? coverUrl(music.id, activeDif.difstr) : undefined;
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-cosmos-950 stardust">
+      {/* Tutorial overlay */}
+      <Tutorial
+        isOpen={chartTutorial.isOpen}
+        currentStep={chartTutorial.currentStep}
+        steps={chartTutorialSteps}
+        onNext={chartTutorial.nextStep}
+        onPrev={chartTutorial.prevStep}
+        onClose={chartTutorial.closeTutorial}
+        onSkip={chartTutorial.skipTutorial}
+      />
+
       {/* ── Top bar ── */}
       <header className="shrink-0 relative z-20 flex items-center gap-2 px-3 py-4 border-b border-cosmos-600/20 bg-cosmos-900/40 backdrop-blur-sm">
         <button
@@ -115,7 +157,7 @@ export function SongDetailPage() {
           <div className="h-3 w-32 bg-cosmos-700 rounded animate-pulse" />
         )}
         {/* Difficulty selector */}
-        <div className="hidden md:flex items-center gap-2 shrink-0 flex-wrap justify-end">
+        <div className="hidden md:flex items-center gap-2 shrink-0 flex-wrap justify-end" data-tutorial="chart-difficulty">
           {sortedDiffs.map((d) => (
             <DifficultyBadge
               key={d.difstr}
@@ -126,6 +168,16 @@ export function SongDetailPage() {
             />
           ))}
         </div>
+        {/* Tutorial button */}
+        <button
+          type="button"
+          onClick={chartTutorial.resetTutorial}
+          className="shrink-0 p-1.5 rounded-md border border-cosmos-600/30 text-text-muted hover:text-accent hover:border-accent/30 transition-colors"
+          title={t('tutorial.viewTutorial')}
+          data-tutorial="tutorial-button"
+        >
+          <HelpCircle size={16} />
+        </button>
       </header>
 
       {/* ── Main content ── */}
@@ -135,7 +187,7 @@ export function SongDetailPage() {
         </div>
       ) : !music ? (
         <div className="flex-1 flex items-center justify-center">
-          <span className="text-sm text-text-muted">Song not found</span>
+          <span className="text-sm text-text-muted">{t('chart.songNotFound')}</span>
         </div>
       ) : (
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative coord-grid">
@@ -144,7 +196,7 @@ export function SongDetailPage() {
           {/* ── Metadata sidebar ── */}
           <aside className={cn("shrink-0 md:w-60 lg:w-64 border-b md:border-b-0 md:border-r border-cosmos-600/20 bg-cosmos-900/30 relative z-10 flex flex-col max-h-[50vh] md:max-h-none md:overflow-y-auto", mobileFullscreen && "hidden md:flex")}>
             {/* Scrollable info section (mobile only scrolls independently) */}
-            <div className="flex-1 overflow-y-auto min-h-0 md:flex-none md:overflow-visible">
+            <div className="flex-1 overflow-y-auto min-h-0 md:flex-none md:overflow-visible" data-tutorial="chart-sidebar">
             {/* Cover + title + collapse toggle */}
             <div className="obs-panel-section flex md:flex-col gap-3">
               <div className="w-16 h-16 md:w-full md:h-auto md:aspect-square rounded overflow-hidden bg-cosmos-800 shrink-0">
@@ -197,15 +249,15 @@ export function SongDetailPage() {
             {/* Data rows */}
             <div className="obs-panel-section">
               <DataRow label="BPM" value={formatBpm(music.bpm_max, music.bpm_min)} />
-              <DataRow label="Version" value={music.version} />
-              <DataRow label="Genre" value={music.genre_name[0] ?? "—"} />
+              <DataRow label={t('chart.version')} value={music.version} />
+              <DataRow label={t('chart.genre')} value={music.genre_name[0] ?? "—"} />
               {activeDif && (
                 <>
-                  <DataRow label="EX Score" value={activeDif.max_exscore.toLocaleString()} />
-                  <DataRow label="Chain" value={activeDif.max_chain.toLocaleString()} />
-                  <DataRow label="Chips" value={activeDif.chip_count} />
-                  <DataRow label="Holds" value={activeDif.hold_count} />
-                  <DataRow label="Tsumami" value={activeDif.tsumami_count} />
+                  <DataRow label={t('chart.exScore')} value={activeDif.max_exscore.toLocaleString()} />
+                  <DataRow label={t('chart.chain')} value={activeDif.max_chain.toLocaleString()} />
+                  <DataRow label={t('chart.chips')} value={activeDif.chip_count} />
+                  <DataRow label={t('chart.holds')} value={activeDif.hold_count} />
+                  <DataRow label={t('chart.tsumami')} value={activeDif.tsumami_count} />
                 </>
               )}
             </div>
@@ -214,11 +266,11 @@ export function SongDetailPage() {
             {activeDif && (
               <div className="obs-panel-section text-xs">
                 <div className="flex justify-between py-1">
-                  <span className="text-text-muted">Illust.</span>
+                  <span className="text-text-muted">{t('chart.illustrator')}</span>
                   <span className="text-text-secondary text-right break-words ml-2">{activeDif.illustrator || "—"}</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-text-muted">Effector</span>
+                  <span className="text-text-muted">{t('chart.effector')}</span>
                   <span className="text-text-secondary text-right break-words ml-2">{activeDif.effected_by || "—"}</span>
                 </div>
               </div>
@@ -239,7 +291,7 @@ export function SongDetailPage() {
 
             {/* ── Controls (always visible, fixed at bottom) ── */}
             <div className="shrink-0 obs-panel-section flex flex-col gap-3 bg-cosmos-800/25 border-t-2 border-gold-400/25">
-              <div className="flex bg-cosmos-800/60 rounded-md p-0.5 border border-cosmos-600/20">
+              <div className="flex bg-cosmos-800/60 rounded-md p-0.5 border border-cosmos-600/20" data-tutorial="chart-mode-toggle">
                 <button
                   onClick={() => setMode("preview")}
                   className={cn(
@@ -247,7 +299,7 @@ export function SongDetailPage() {
                     mode === "preview" ? "bg-gold-400/15 text-gold-400" : "text-text-muted hover:text-text-primary",
                   )}
                 >
-                  <Eye size={14} /> Preview
+                  <Eye size={14} /> {t('chart.preview')}
                 </button>
                 {canEdit && (
                   <button
@@ -257,7 +309,7 @@ export function SongDetailPage() {
                       mode === "edit" ? "bg-gold-400/15 text-gold-400" : "text-text-muted hover:text-text-primary",
                     )}
                   >
-                    <Pencil size={14} /> Edit
+                    <Pencil size={14} /> {t('chart.edit')}
                   </button>
                 )}
                 <button
@@ -267,7 +319,7 @@ export function SongDetailPage() {
                   {toolbarCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                 </button>
               </div>
-              <div className={cn(toolbarCollapsed ? "hidden md:block" : "block")}>
+              <div className={cn(toolbarCollapsed ? "hidden md:block" : "block")} data-tutorial="chart-render-options">
                 {mode === "preview" && <RenderOptionsBar />}
                 {mode === "edit" && <EditorToolbar />}
               </div>
@@ -288,12 +340,12 @@ export function SongDetailPage() {
             ) : chartQuery.isLoading ? (
               <div className="flex flex-col items-center justify-center h-full gap-3">
                 <Loader2 size={24} className="animate-spin text-accent" />
-                <span className="text-sm text-text-muted">Loading chart...</span>
+                <span className="text-sm text-text-muted">{t('chart.loadingChart')}</span>
               </div>
             ) : chartQuery.isError ? (
               <div className="flex flex-col items-center justify-center h-full gap-3">
-                <span className="text-sm text-diff-exhaust">Failed to load chart</span>
-                <button onClick={() => chartQuery.refetch()} className="text-xs text-accent hover:underline">Retry</button>
+                <span className="text-sm text-diff-exhaust">{t('chart.loadFailed')}</span>
+                <button onClick={() => chartQuery.refetch()} className="text-xs text-accent hover:underline">{t('chart.retry')}</button>
               </div>
             ) : chart ? (
               <ChartCanvas chartData={chart} className="w-full h-full" />

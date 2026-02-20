@@ -14,7 +14,7 @@ import {
   TRACK_WIDTH,
 } from "@/lib/chart-renderer/layout";
 import { resolveEvent } from "@/lib/chart-renderer/laser-drawer";
-import { noteX, CHIP_HEIGHT } from "@/lib/chart-renderer/note-drawer";
+import { noteX, CHIP_HEIGHT, TAIL_HEIGHT } from "@/lib/chart-renderer/note-drawer";
 import { calculateInterval } from "@/lib/chart-edit";
 import {
   renderChart,
@@ -24,8 +24,9 @@ import { DRAG_RANGE_MS, useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import type { ButtonEvent, ChartData, LaserEvent } from "@/types/chart";
 import type { Time3 } from "@/lib/chart-renderer/time-mapper";
-import { Hand, Maximize, Minimize, Move, Plus, RotateCcw, UnfoldVertical } from "lucide-react";
+import { Hand, Maximize, Minimize, Move, Pencil, Plus, RotateCcw, UnfoldVertical } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ChartCanvasProps {
   chartData: ChartData;
@@ -37,6 +38,7 @@ const MAX_ZOOM = 3.0;
 const ZOOM_STEP = 0.1;
 
 export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -54,6 +56,10 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   const hsDragRef = useRef<{ active: boolean; index: number; col: number }>({
     active: false, index: -1, col: 0,
   });
+  const holdTailDragRef = useRef<{ active: boolean; track: string; index: number; col: number; startTime: [number, number, number] }>({
+    active: false, track: "", index: -1, col: 0, startTime: [0, 0, 0],
+  });
+  const tailSelectedRef = useRef(false);
 
   const editorChartData = useEditorStore((s) => s.chartData);
   const zoom = useEditorStore((s) => s.zoom);
@@ -74,7 +80,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
 
   const resetSelectedPoint = useEditorStore((s) => s.resetSelectedPoint);
 
-  const [expandedTool, setExpandedTool] = useState<"drag" | "add" | null>(null);
+  const expandedTool = useEditorStore((s) => s.expandedTool);
+  const setExpandedTool = useEditorStore((s) => s.setExpandedTool);
   const [pendingHs, setPendingHs] = useState<{ time: [number, number, number] } | null>(null);
   const [hsInput, setHsInput] = useState({ hs: "", dur: "" });
   const [editingHs, setEditingHs] = useState<{ index: number } | null>(null);
@@ -189,20 +196,46 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         }
       }
 
-      // Stroke modified notes
-      ctx.strokeStyle = "rgba(255, 200, 50, 0.8)";
-      ctx.lineWidth = 2;
+      // Stroke modified notes + modified hold tails
+      ctx.strokeStyle = "rgba(100, 160, 255, 0.8)";
+      ctx.lineWidth = 1;
+      // Build original hold_len map
+      const origHoldLen = new Map<string, number>();
+      for (const t of ["2", "3", "4", "5", "6", "7"]) {
+        for (const ev of orig.tracks[t] ?? []) {
+          if (ev.type === "button") origHoldLen.set(`${t}:${ev.time[0]},${ev.time[1]},${ev.time[2]}`, ev.hold_len);
+        }
+      }
       for (const t of ["2", "3", "4", "5", "6", "7"]) {
         for (const ev of activeChart.tracks[t] ?? []) {
           if (ev.type !== "button") continue;
           const key = `${t}:${ev.time[0]},${ev.time[1]},${ev.time[2]}`;
-          if (origKeys.has(key)) continue;
-          const span = findSpanByMeasure(layout.spans, ev.time[0]);
-          if (!span) continue;
-          const geo = noteX(span, ev.track_name);
-          if (!geo) continue;
-          const ey = yInMeasure(span, ev.time as Time3, layout.timeMapper, layout.pxPerSecond);
-          ctx.strokeRect(geo.x - 1, ey - CHIP_HEIGHT / 2 - 1, geo.w + 2, CHIP_HEIGHT + 2);
+          // Gold border on chip head if position is new
+          if (!origKeys.has(key)) {
+            const span = findSpanByMeasure(layout.spans, ev.time[0]);
+            if (span) {
+              const geo = noteX(span, ev.track_name);
+              if (geo) {
+                const ey = yInMeasure(span, ev.time as Time3, layout.timeMapper, layout.pxPerSecond);
+                ctx.strokeRect(geo.x - 1, ey - CHIP_HEIGHT / 2 - 1, geo.w + 2, CHIP_HEIGHT + 2);
+              }
+            }
+          }
+          // Gold border on hold tail if hold_len changed
+          if (ev.hold_len > 0) {
+            const origHL = origHoldLen.get(key);
+            if (origHL === undefined || origHL !== ev.hold_len) {
+              const endTime = layout.timeMapper.advanceUnits(ev.time as Time3, ev.hold_len);
+              const span = findSpanByMeasure(layout.spans, endTime[0]);
+              if (span) {
+                const geo = noteX(span, ev.track_name);
+                if (geo) {
+                  const ey = yInMeasure(span, endTime, layout.timeMapper, layout.pxPerSecond);
+                  ctx.strokeRect(geo.x - 1, ey - 1, geo.w + 2, TAIL_HEIGHT + 2);
+                }
+              }
+            }
+          }
         }
       }
       ctx.restore();
@@ -246,11 +279,21 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           if (span) {
             const geo = noteX(span, bev.track_name);
             if (geo) {
-              const by = yInMeasure(span, bev.time as Time3, layout.timeMapper, layout.pxPerSecond);
-              // Highlight rect
+              // Highlight at tail or head
               ctx.strokeStyle = "#fff";
               ctx.lineWidth = 2;
-              ctx.strokeRect(geo.x - 2, by - CHIP_HEIGHT / 2 - 2, geo.w + 4, CHIP_HEIGHT + 4);
+              if (tailSelectedRef.current && bev.hold_len > 0) {
+                const endTime = layout.timeMapper.advanceUnits(bev.time as Time3, bev.hold_len);
+                const tailSpan = findSpanByMeasure(layout.spans, endTime[0]);
+                const tailGeo = tailSpan ? noteX(tailSpan, bev.track_name) : null;
+                if (tailSpan && tailGeo) {
+                  const ty = yInMeasure(tailSpan, endTime, layout.timeMapper, layout.pxPerSecond);
+                  ctx.strokeRect(tailGeo.x - 2, ty - 2, tailGeo.w + 4, TAIL_HEIGHT + 4);
+                }
+              } else {
+                const by = yInMeasure(span, bev.time as Time3, layout.timeMapper, layout.pxPerSecond);
+                ctx.strokeRect(geo.x - 2, by - CHIP_HEIGHT / 2 - 2, geo.w + 4, CHIP_HEIGHT + 4);
+              }
 
               // Draw drag range overlay based on original position
               const dr = useEditorStore.getState().dragRange;
@@ -484,6 +527,29 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     return null;
   }
 
+  function hitTestHoldTail(cx: number, cy: number, margin = 6) {
+    const chart = useEditorStore.getState().chartData;
+    if (!chart) return null;
+    const layout = computeLayout(chart);
+    for (const trackNum of ["2", "3", "4", "5", "6", "7"]) {
+      const events = chart.tracks[trackNum] ?? [];
+      for (let i = 0; i < events.length; i++) {
+        const ev = events[i];
+        if (ev.type !== "button" || ev.hold_len <= 0) continue;
+        const endTime = layout.timeMapper.advanceUnits(ev.time as Time3, ev.hold_len);
+        const span = findSpanByMeasure(layout.spans, endTime[0]);
+        if (!span) continue;
+        const geo = noteX(span, ev.track_name);
+        if (!geo) continue;
+        const y = yInMeasure(span, endTime, layout.timeMapper, layout.pxPerSecond);
+        if (cx >= geo.x - margin && cx <= geo.x + geo.w + margin && cy >= y - margin && cy <= y + margin) {
+          return { track: trackNum, index: i, col: span.col };
+        }
+      }
+    }
+    return null;
+  }
+
   // ── Mouse: pan + point interaction ──
   useEffect(() => {
     const container = containerRef.current;
@@ -544,7 +610,19 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             }
           }
 
-          // 2) Button hit test
+          // 2) Hold tail hit test
+          const tailHit = hitTestHoldTail(x, y);
+          if (tailHit) {
+            const chart = s.chartData!;
+            const bev = (chart.tracks[tailHit.track] ?? [])[tailHit.index] as ButtonEvent;
+            s.pushHistory();
+            s.setSelectedPoint({ type: "button", track: tailHit.track, index: tailHit.index });
+            tailSelectedRef.current = true;
+            holdTailDragRef.current = { active: true, track: tailHit.track, index: tailHit.index, col: tailHit.col, startTime: bev.time as [number, number, number] };
+            return;
+          }
+
+          // 3) Button hit test
           const btnHit = hitTestButtonNotes(x, y);
           if (btnHit) {
             const chart = s.chartData!;
@@ -578,20 +656,28 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
 
             s.pushHistory();
             s.setSelectedPoint({ type: "button", track: btnHit.track, index: btnHit.index });
+            tailSelectedRef.current = false;
             btnDragRef.current = { active: true, track: btnHit.track, index: btnHit.index, col: btnHit.col, origSec };
             return;
           }
 
-          // 3a) Hi-speed text label click → open edit dialog
+          // 3a) Hi-speed text label click → drag
           const hsTextHit = hitTestHiSpeedText(x, y);
           if (hsTextHit) {
-            const mark = s.hiSpeedMarks[hsTextHit.index];
-            setEditingHs({ index: hsTextHit.index });
-            setEditHsInput({ hs: mark.hiSpeed.toFixed(1), dur: String(mark.durationMs) });
+            const chart = s.chartData!;
+            const layout = computeLayout(chart);
+            const markSec = layout.timeMapper.secondsOf(s.hiSpeedMarks[hsTextHit.index].time as Time3);
+            // Find the column for this mark
+            let col = 0;
+            for (const span of layout.spans) {
+              if (markSec >= span.sec0 && markSec < span.sec1) { col = span.col; break; }
+            }
+            s.setSelectedPoint({ type: "hispeed", track: "", index: hsTextHit.index });
+            hsDragRef.current = { active: true, index: hsTextHit.index, col };
             return;
           }
 
-          // 3b) Hi-speed mark hit test
+          // 3b) Hi-speed mark line hit test → drag
           const hsHit = hitTestHiSpeedMarks(x, y);
           if (hsHit) {
             s.setSelectedPoint({ type: "hispeed", track: "", index: hsHit.index });
@@ -603,6 +689,42 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           s.clearSelectedPoint();
           s.setFirstSelectedNote(null);
           s.setIntervalInfo(null);
+          return;
+        }
+
+        // Edit mode: toggle hold, edit HS
+        if (s.mouseTool === "edit-hs") {
+          // Button hit: toggle chip <-> hold
+          const btnHit = hitTestButtonNotes(x, y);
+          if (btnHit) {
+            const chart = s.chartData!;
+            const bev = (chart.tracks[btnHit.track] ?? [])[btnHit.index] as ButtonEvent;
+            if (bev.hold_len > 0) {
+              s.updateButtonHoldLen(btnHit.track, btnHit.index, 0);
+            } else {
+              const layout = computeLayout(chart);
+              const [num, den] = layout.timeMapper.getTimeSigAt(bev.time as Time3);
+              const upb = chart.beat_resolution ?? (192 / den);
+              const holdLen = Math.round(num * upb / 8);
+              s.updateButtonHoldLen(btnHit.track, btnHit.index, holdLen);
+            }
+            return;
+          }
+          // HS text or line: open edit dialog
+          const hsTextHit = hitTestHiSpeedText(x, y);
+          if (hsTextHit) {
+            const mark = s.hiSpeedMarks[hsTextHit.index];
+            setEditingHs({ index: hsTextHit.index });
+            setEditHsInput({ hs: mark.hiSpeed.toFixed(1), dur: String(mark.durationMs) });
+            return;
+          }
+          const hsHit = hitTestHiSpeedMarks(x, y);
+          if (hsHit) {
+            const mark = s.hiSpeedMarks[hsHit.index];
+            setEditingHs({ index: hsHit.index });
+            setEditHsInput({ hs: mark.hiSpeed.toFixed(1), dur: String(mark.durationMs) });
+            return;
+          }
           return;
         }
 
@@ -708,6 +830,21 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         s.updateHiSpeedMarkTime(hsDragRef.current.index, newTime);
         return;
       }
+      // Hold tail drag (vertical only)
+      if (holdTailDragRef.current.active) {
+        const s = useEditorStore.getState();
+        const chart = s.chartData;
+        if (!chart) return;
+        const { y } = clientToChart(e.clientX, e.clientY);
+        const layout = computeLayout(chart);
+        const span = findSpanByYInCol(layout.spans, y, holdTailDragRef.current.col);
+        if (!span) return;
+        const sec = yToSec(y, span, layout.pxPerSecond);
+        const endTime = layout.timeMapper.secToTime3(sec, span.measure);
+        const units = layout.timeMapper.unitsBetween(holdTailDragRef.current.startTime as Time3, endTime);
+        if (units > 0) s.updateButtonHoldLen(holdTailDragRef.current.track, holdTailDragRef.current.index, units);
+        return;
+      }
       if (!dragRef.current.active) return;
       const dx = e.clientX - dragRef.current.lastX;
       const dy = e.clientY - dragRef.current.lastY;
@@ -722,6 +859,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       pointDragRef.current.active = false;
       btnDragRef.current.active = false;
       hsDragRef.current.active = false;
+      holdTailDragRef.current.active = false;
     }
 
     container.addEventListener("mousedown", handleMouseDown);
@@ -771,6 +909,17 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               return;
             }
           }
+          const tailHit = hitTestHoldTail(x, y, TOUCH_MARGIN);
+          if (tailHit) {
+            e.preventDefault();
+            const chart = s.chartData!;
+            const bev = (chart.tracks[tailHit.track] ?? [])[tailHit.index] as ButtonEvent;
+            s.pushHistory();
+            s.setSelectedPoint({ type: "button", track: tailHit.track, index: tailHit.index });
+            tailSelectedRef.current = true;
+            holdTailDragRef.current = { active: true, track: tailHit.track, index: tailHit.index, col: tailHit.col, startTime: bev.time as [number, number, number] };
+            return;
+          }
           const btnHit = hitTestButtonNotes(x, y, TOUCH_MARGIN);
           if (btnHit) {
             e.preventDefault(); // suppress synthetic mouse events
@@ -782,6 +931,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             const origSec = layout.timeMapper.secondsOf(origTime);
             s.pushHistory();
             s.setSelectedPoint({ type: "button", track: btnHit.track, index: btnHit.index });
+            tailSelectedRef.current = false;
             btnDragRef.current = { active: true, track: btnHit.track, index: btnHit.index, col: btnHit.col, origSec };
             return;
           }
@@ -802,7 +952,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         touchPanning = false;
         pointDragRef.current.active = false;
         btnDragRef.current.active = false;
-      hsDragRef.current.active = false;
+        hsDragRef.current.active = false;
+        holdTailDragRef.current.active = false;
         lastX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
         lastY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
         lastDist = Math.hypot(
@@ -862,6 +1013,19 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         s.updateHiSpeedMarkTime(hsDragRef.current.index, newTime);
         return;
       }
+      if (e.touches.length === 1 && holdTailDragRef.current.active) {
+        const { y } = clientToChart(e.touches[0].clientX, e.touches[0].clientY);
+        const chart = s.chartData;
+        if (!chart) return;
+        const layout = computeLayout(chart);
+        const span = findSpanByYInCol(layout.spans, y, holdTailDragRef.current.col);
+        if (!span) return;
+        const sec = yToSec(y, span, layout.pxPerSecond);
+        const endTime = layout.timeMapper.secToTime3(sec, span.measure);
+        const units = layout.timeMapper.unitsBetween(holdTailDragRef.current.startTime as Time3, endTime);
+        if (units > 0) s.updateButtonHoldLen(holdTailDragRef.current.track, holdTailDragRef.current.index, units);
+        return;
+      }
       if (e.touches.length === 1 && fingers === 1 && touchPanning) {
         const cx = e.touches[0].clientX;
         const cy = e.touches[0].clientY;
@@ -896,7 +1060,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         touchPanning = false;
         pointDragRef.current.active = false;
         btnDragRef.current.active = false;
-      hsDragRef.current.active = false;
+        hsDragRef.current.active = false;
+        holdTailDragRef.current.active = false;
       }
       fingers = e.touches.length;
       if (fingers === 1) {
@@ -932,14 +1097,14 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     <div
       ref={containerRef}
       className={cn("relative overflow-hidden", className)}
-      style={{ cursor: mode === "edit" ? (mouseTool === "pan" ? "grab" : mouseTool === "move" ? "crosshair" : "cell") : "grab", touchAction: "none" }}
+      style={{ cursor: mode === "edit" ? (mouseTool === "pan" ? "grab" : mouseTool === "move" ? "crosshair" : mouseTool === "edit-hs" ? "crosshair" : "cell") : "grab", touchAction: "none" }}
       tabIndex={0}
     >
       <canvas ref={canvasRef} className="block" style={{ touchAction: "none" }} />
 
       {/* Mouse tool selector (left side) */}
       {mode === "edit" && (
-        <div className="absolute top-3 left-3 flex flex-col gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border">
+        <div className="absolute top-3 left-3 flex flex-col gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border" data-tutorial="chart-pointer-tools">
           {/* Pan */}
           <button
             onClick={() => { setMouseTool("pan"); setExpandedTool(null); }}
@@ -949,7 +1114,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                 ? "bg-gold-400/15 text-gold-400"
                 : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
             )}
-            title="Pan (drag view)"
+            title={t('chart.panView')}
           >
             <Hand size={16} />
           </button>
@@ -965,7 +1130,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                 ? "bg-gold-400/15 text-gold-400"
                 : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
             )}
-            title="Move (select & drag)"
+            title={t('chart.moveSelect')}
           >
             <Move size={16} />
           </button>
@@ -987,6 +1152,19 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               ))}
             </div>
           )}
+          {/* Edit HS */}
+          <button
+            onClick={() => { setMouseTool("edit-hs"); setExpandedTool(null); }}
+            className={cn(
+              "p-3 md:p-1.5 rounded transition-colors touch-manipulation",
+              mouseTool === "edit-hs"
+                ? "bg-blue-400/15 text-blue-400"
+                : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
+            )}
+            title={t('chart.editHs')}
+          >
+            <Pencil size={16} />
+          </button>
           {/* Add */}
           <button
             onClick={() => setExpandedTool(expandedTool === "add" ? null : "add")}
@@ -996,7 +1174,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                 ? "bg-gold-400/15 text-gold-400"
                 : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
             )}
-            title="Add notes"
+            title={t('chart.addNotes')}
           >
             <Plus size={16} />
           </button>
@@ -1042,7 +1220,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             <button
               onClick={() => resetSelectedPoint()}
               className="p-3 md:p-1.5 rounded transition-colors touch-manipulation text-red-400 hover:bg-red-500/15"
-              title="Reset selected to original"
+              title={t('chart.resetToOriginal')}
             >
               <RotateCcw size={16} />
             </button>
@@ -1051,7 +1229,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       )}
 
       {/* Zoom indicator */}
-      <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted">
+      <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
         <button
           onClick={() => {
             const z = useEditorStore.getState().zoom;
@@ -1075,14 +1253,14 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           <button
             onClick={fitHeight}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-            title="Fit height"
+            title={t('chart.fitHeight')}
           >
             <UnfoldVertical size={14} />
           </button>
           <button
             onClick={toggleFullscreen}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-            title={isFullscreen || mobileFs ? "Exit fullscreen" : "Fullscreen"}
+            title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
           >
             {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
           </button>

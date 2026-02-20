@@ -6,7 +6,7 @@
  *   - "edit":    simplified frontend canvas rendering
  */
 
-import { applyEdits, DEFAULT_EDIT_FLAGS, moveLaserPoint, deleteLaserPoint as deleteLP, moveButtonEvent, deleteButtonEvent, addButtonEvent, type EditFlags } from "@/lib/chart-edit";
+import { applyEdits, DEFAULT_EDIT_FLAGS, moveLaserPoint, deleteLaserPoint as deleteLP, moveButtonEvent, deleteButtonEvent, addButtonEvent, updateButtonHoldLen as setHoldLen, type EditFlags } from "@/lib/chart-edit";
 import type { ButtonEvent, ChartData, TimePos } from "@/types/chart";
 import { create } from "zustand";
 
@@ -59,7 +59,7 @@ export const DRAG_RANGE_MS: Record<DragRange, number> = {
   "near": 150,
 };
 
-export type MouseTool = "pan" | "add-bt" | "add-fx" | "add-hispeed" | "move";
+export type MouseTool = "pan" | "add-bt" | "add-fx" | "add-hispeed" | "move" | "edit-hs";
 
 export type BpmDisplayMode = "bpm" | "hispeed" | "speed";
 
@@ -114,9 +114,12 @@ export interface EditorState {
   setDragRange: (r: DragRange) => void;
   mouseTool: MouseTool;
   setMouseTool: (t: MouseTool) => void;
+  expandedTool: "drag" | "add" | null;
+  setExpandedTool: (t: "drag" | "add" | null) => void;
   pushHistory: () => void;
   updateLaserPoint: (track: string, index: number, newTime: TimePos, newOffset: number) => void;
   updateButtonTime: (track: string, index: number, newTime: TimePos) => void;
+  updateButtonHoldLen: (track: string, index: number, holdLen: number) => void;
   deleteSelectedPoint: () => void;
   addButton: (trackNum: number, event: ButtonEvent) => void;
   undo: () => void;
@@ -150,6 +153,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   editVersion: 0,
   dragRange: "off" as DragRange,
   mouseTool: "pan" as MouseTool,
+  expandedTool: null,
   zoom: 1.0,
   panX: 0,
   panY: 0,
@@ -189,6 +193,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   setIntervalInfo: (info) => set({ intervalInfo: info }),
   setDragRange: (r) => set({ dragRange: r }),
   setMouseTool: (t) => set({ mouseTool: t }),
+  setExpandedTool: (t) => set({ expandedTool: t }),
 
   pushHistory: () =>
     set((s) => s.chartData ? { history: [...s.history, s.chartData] } : s),
@@ -204,6 +209,12 @@ export const useEditorStore = create<EditorState>((set) => ({
     set((s) => {
       if (!s.chartData) return s;
       return { chartData: moveButtonEvent(s.chartData, track, index, newTime), editVersion: s.editVersion + 1 };
+    }),
+
+  updateButtonHoldLen: (track, index, holdLen) =>
+    set((s) => {
+      if (!s.chartData) return s;
+      return { history: [...s.history, s.chartData], chartData: setHoldLen(s.chartData, track, index, holdLen), editVersion: s.editVersion + 1 };
     }),
 
   deleteSelectedPoint: () =>

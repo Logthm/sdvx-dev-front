@@ -102,6 +102,15 @@ export function moveButtonEvent(
   return { ...chartData, tracks: { ...chartData.tracks, [track]: events } };
 }
 
+export function updateButtonHoldLen(
+  chartData: ChartData, track: string, index: number, holdLen: number,
+): ChartData {
+  const events = [...(chartData.tracks[track] ?? [])];
+  const ev = events[index] as ButtonEvent;
+  events[index] = { ...ev, hold_len: holdLen };
+  return { ...chartData, tracks: { ...chartData.tracks, [track]: events } };
+}
+
 export function deleteButtonEvent(
   chartData: ChartData, track: string, index: number,
 ): ChartData {

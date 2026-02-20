@@ -1,14 +1,17 @@
 import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  "data-tutorial"?: string;
 }
 
-export function SearchBar({ value, onChange, className }: SearchBarProps) {
+export function SearchBar({ value, onChange, className, "data-tutorial": dataTutorial }: SearchBarProps) {
+  const { t } = useTranslation();
   const [local, setLocal] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -39,7 +42,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
   }
 
   return (
-    <div className={cn("relative group", className)}>
+    <div className={cn("relative group", className)} data-tutorial={dataTutorial}>
       <Search
         size={16}
         className={cn(
@@ -51,7 +54,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
       <input
         ref={inputRef}
         type="text"
-        placeholder="Search music..."
+        placeholder={t('search.placeholder')}
         value={local}
         onChange={(e) => handleChange(e.target.value)}
         onCompositionStart={() => { composingRef.current = true; }}

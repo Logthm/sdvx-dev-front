@@ -7,12 +7,18 @@ import {
 import { MusicGrid } from "@/components/browser/MusicGrid";
 import { SearchBar } from "@/components/browser/SearchBar";
 import { Astrolabe } from "@/components/ui/Astrolabe";
+import { Tutorial, useTutorialSteps } from "@/components/ui/Tutorial";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useTutorial } from "@/hooks/useTutorial";
 import { cn } from "@/lib/utils";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, HelpCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export function BrowserPage() {
+  const { t } = useTranslation();
+  const tutorialSteps = useTutorialSteps();
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>(() =>
     createDefaultFilters(),
@@ -21,6 +27,9 @@ export function BrowserPage() {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const navigate = useNavigate();
+
+  // Tutorial state
+  const tutorial = useTutorial();
 
   function toggleSort(field: SortField) {
     if (sortField === field) {
@@ -81,8 +90,19 @@ export function BrowserPage() {
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-cosmos-950 stardust pt-[env(safe-area-inset-top)]">
+      {/* Tutorial overlay */}
+      <Tutorial
+        isOpen={tutorial.isOpen}
+        currentStep={tutorial.currentStep}
+        steps={tutorialSteps}
+        onNext={tutorial.nextStep}
+        onPrev={tutorial.prevStep}
+        onClose={tutorial.closeTutorial}
+        onSkip={tutorial.skipTutorial}
+      />
+
       {/* ── Desktop sidebar ── */}
-      <aside className="hidden md:flex flex-col w-56 lg:w-60 shrink-0 border-r border-cosmos-600/20 bg-cosmos-900/50 relative z-10">
+      <aside className="hidden md:flex flex-col w-56 lg:w-60 shrink-0 border-r border-cosmos-600/20 bg-cosmos-900/50 relative z-10" data-tutorial="filter-sidebar">
         <div className="flex-1 overflow-y-auto">
           <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} onClearSort={clearSort} />
         </div>
@@ -116,11 +136,12 @@ export function BrowserPage() {
         {/* Astrolabe watermark */}
         <Astrolabe className="absolute -right-20 -top-20 w-[400px] h-[400px] hidden lg:block" opacity={0.04} />
         {/* Top bar */}
-        <header className="shrink-0 flex items-center gap-2 px-4 my-4 h-14 md:h-12 border-b border-cosmos-600/20 bg-cosmos-900/40 backdrop-blur-sm">
+        <header className="shrink-0 flex items-center gap-2 px-4 my-4 h-14 md:h-12 border-b border-cosmos-600/20 bg-cosmos-900/40 backdrop-blur-sm relative z-20">
           {/* Mobile filter toggle */}
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
+            data-tutorial="filter-button"
             className={cn(
               "md:hidden shrink-0 p-1.5 rounded-md border transition-colors",
               hasActiveFilters
@@ -135,15 +156,30 @@ export function BrowserPage() {
             value={query}
             onChange={setQuery}
             className="flex-1 min-w-0"
+            data-tutorial="search-bar"
           />
 
           <span className="hidden sm:block ml-3 text-xs font-mono text-text-muted whitespace-nowrap">
-            {total} records
+            {total} {t('common.records')}
           </span>
+
+          {/* Language switcher */}
+          <LanguageSwitcher />
+
+          {/* Tutorial button */}
+          <button
+            type="button"
+            onClick={tutorial.resetTutorial}
+            className="shrink-0 p-1.5 rounded-md border border-cosmos-600/30 text-text-muted hover:text-accent hover:border-accent/30 transition-colors"
+            title={t('tutorial.viewTutorial')}
+            data-tutorial="tutorial-button"
+          >
+            <HelpCircle size={16} />
+          </button>
         </header>
 
         {/* Grid area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto" data-tutorial="music-grid">
           <MusicGrid
             items={allMusic}
             filters={hasDifficultyFilters ? filters : undefined}

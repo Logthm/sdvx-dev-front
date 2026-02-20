@@ -312,4 +312,12 @@ export class TimeMapper {
     const eu = this.toTotalUnits(end, timeSig);
     return Math.max(0, eu - su);
   }
+
+  /** Public: compute signed unit distance from `from` to `to`. */
+  unitsBetween(from: Time3, to: Time3): number {
+    const ts = this.getTimeSigAt(from);
+    const su = this.toTotalUnits(from, ts);
+    const eu = this.toTotalUnits(to, ts);
+    return eu - su;
+  }
 }

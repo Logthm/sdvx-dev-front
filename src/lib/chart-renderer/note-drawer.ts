@@ -113,6 +113,25 @@ function drawHoldSegments(
   }
 }
 
+export const TAIL_HEIGHT = 2;
+
+function drawHoldTail(
+  ctx: CanvasRenderingContext2D,
+  ev: ButtonEvent,
+  layout: LayoutResult,
+  fx: boolean,
+) {
+  if (ev.hold_len <= 0) return;
+  const endTime = layout.timeMapper.advanceUnits(ev.time as Time3, ev.hold_len);
+  const span = findSpanByMeasure(layout.spans, endTime[0]);
+  if (!span) return;
+  const geo = noteX(span, ev.track_name);
+  if (!geo) return;
+  const y = yInMeasure(span, endTime, layout.timeMapper, layout.pxPerSecond);
+  ctx.fillStyle = fx ? C.FX_CHIP : "rgba(255,255,255,0.6)";
+  ctx.fillRect(geo.x, y, geo.w, TAIL_HEIGHT);
+}
+
 function collectButtonEvents(
   chartData: ChartData,
   trackNums: number[],
@@ -158,4 +177,8 @@ export function drawNotes(
   for (const ev of btEvents) {
     if (ev.hold_len > 0) drawChip(ctx, ev, layout, false);
   }
+
+  // Layer 5: Hold tails
+  for (const ev of fxEvents) drawHoldTail(ctx, ev, layout, true);
+  for (const ev of btEvents) drawHoldTail(ctx, ev, layout, false);
 }

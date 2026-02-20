@@ -1,0 +1,165 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "clear": "清除",
+    "resetAll": "重置全部",
+    "records": "条记录"
+  },
+  "search": {
+    "placeholder": "搜索音乐...",
+    "title": "搜索功能",
+    "description": "使用搜索栏可以快速查找歌曲。\n\n• 会同时搜索歌曲名称和艺术家名称\n• 使用罗马音、日文假名来匹配读音\n• 使用中文简繁体也可以匹配日文汉字（\u201c东云\u201d->\u201c東雲\u201d）\n\n试试输入你喜欢的歌曲名吧！"
+  },
+  "filter": {
+    "sort": "排序",
+    "version": "版本",
+    "difficulty": "难度",
+    "radarPeak": "雷达峰值",
+    "level": "等级",
+    "bpm": "BPM",
+    "sortBy": {
+      "difficulty": "难度",
+      "date": "日期",
+      "title": "标题",
+      "artist": "艺术家"
+    },
+    "levelMode": {
+      "exact": "精确",
+      "int": "整数",
+      "range": "范围"
+    },
+    "placeholder": {
+      "min": "最小",
+      "max": "最大",
+      "exactLevel": "18 或 18.5",
+      "intLevel": "18"
+    },
+    "radarPeaks": {
+      "notes": "NOTES",
+      "peak": "PEAK",
+      "tsumami": "TSUMAMI",
+      "tricky": "TRICKY",
+      "handTrip": "HAND-TRIP",
+      "oneHand": "ONE-HAND"
+    },
+    "title": "筛选器",
+    "description": "点击筛选按钮可以打开高级筛选面板。\n\n你可以按难度等级、版本、BPM、雷达图等条件筛选歌曲。\n\n还可以对结果进行排序！"
+  },
+  "tutorial": {
+    "viewTutorial": "查看新手教程",
+    "closeTutorial": "关闭教程",
+    "previous": "上一步",
+    "next": "下一步",
+    "start": "开始使用",
+    "welcome": {
+      "title": "欢迎",
+      "description": "这是一个为 Sound Voltex 玩家设计的谱面查询工具。\n\n让我们快速了解一下主要功能！"
+    },
+    "musicGrid": {
+      "title": "歌曲列表",
+      "description": "所有符合条件的歌曲会以卡片形式展示。\n\n点击艺术家名称可以快捷搜索同艺术家的歌曲\n\n点击难度查看详细信息和谱面预览。\n\n向下滚动会自动加载更多歌曲。"
+    },
+    "finish": {
+      "title": "查看教程",
+      "description": "点击此按钮可以再次查看本教程。"
+    }
+  },
+  "chartTutorial": {
+    "welcome": {
+      "title": "谱面预览页面",
+      "description": "这是谱面的详细预览和编辑页面。\n\n让我们快速了解一下各个功能区域！"
+    },
+    "difficulty": {
+      "title": "切换谱面",
+      "description": "点击顶部的难度标签可以切换要查看的谱面。"
+    },
+    "sidebar": {
+      "title": "信息栏",
+      "description": "在右侧的信息栏会展示歌曲的详细信息，点击雷达图顶点可以查看具体数值。"
+    },
+    "modeToggle": {
+      "title": "预览 / 编辑模式",
+      "description": "在此处切换谱面预览和编辑模式。\n\n编辑后切换回预览模式会实时渲染编辑后的谱面。"
+    },
+    "previewMode": {
+      "title": "预览模式",
+      "description": "在此处选择随机方式和调整激光颜色。\n\n选择 Random 后，可以点击 BT 按键手动编辑顺序，交换 FX 或激光。"
+    },
+    "editMode": {
+      "title": "编辑模式",
+      "description": "• 变速计算器：在此处输入游戏设置中的 Speed 后，可以查看变速谱面不同变速点的 BPM / 速度乘数（Hi-Speed） / 实际速度\n• 简化 & 编辑激光：开启后自动化简弧线激光，并允许在移动模式下编辑激光的起止点和拐点\n• 间隔计算器：在移动模式下选择两个物件可以计算两个物件的间隔时间和拍号"
+    },
+    "drawArea": {
+      "title": "预览控件",
+      "description": "在此处调整缩放、进入全屏。\n\n谱面浏览区域使用滚轮水平滚动，Shift+滚轮垂直滚动，Ctrl+滚轮缩放。\n\n在平移模式下也可以拖动视图进行平移。"
+    },
+    "panMode": {
+      "title": "平移模式",
+      "description": "拖动视图进行平移。"
+    },
+    "moveMode": {
+      "title": "移动模式",
+      "description": "拖动物件，被移动过的物件会带有蓝色边框。\n\n可以拖动 Hold 结尾来改变长度，上下拖动 Hold 头或单键来改变位置。\n\n开启「简化 & 编辑激光」后，还可以自由拖动激光的起止点和拐点。\n\n下方可以选择拖动的范围限制，开启后只能在判定允许的范围内拖动。"
+    },
+    "addMode": {
+      "title": "添加模式",
+      "description": "添加 BT、FX 以及变速标记。\n\n添加变速标记时，需要输入目标 Hi-Speed 以及进行变速操作所需要的时间，会改变操作完成之后的 HS。"
+    },
+    "editPointerMode": {
+      "title": "编辑模式",
+      "description": "点击 Hold 头或者按键可以在 Hold 和单键之间切换。\n\n点击变速标记可以编辑数值。"
+    }
+  },
+  "chart": {
+    "songNotFound": "未找到歌曲",
+    "loadingChart": "加载谱面中...",
+    "loadFailed": "谱面加载失败",
+    "retry": "重试",
+    "preview": "预览",
+    "edit": "编辑",
+    "version": "版本",
+    "genre": "流派",
+    "exScore": "EX Score",
+    "chain": "Chain",
+    "chips": "Chips",
+    "holds": "Holds",
+    "tsumami": "Tsumami",
+    "illustrator": "画师",
+    "effector": "Effector",
+    "speed": "Speed",
+    "simplifyLasers": "简化 & 编辑激光",
+    "intervalMeasurement": "间隔测量",
+    "clickTwoNotes": "点击两个音符以测量间隔",
+    "firstNoteSelected": "已选择第一个音符",
+    "clickAnotherNote": "点击另一个音符以测量间隔",
+    "interval": "间隔",
+    "deletePoint": "删除节点",
+    "deleteSpeedMark": "删除速度标记",
+    "deleteNote": "删除音符",
+    "undo": "撤销",
+    "normal": "Normal",
+    "mirror": "Mirror",
+    "random": "Random",
+    "sRandom": "S-Ran",
+    "swapFx": "交换 FX-L 和 FX-R",
+    "mirrorLasers": "镜像激光",
+    "randomizeAll": "随机排列所有轨道",
+    "fitHeight": "适应高度",
+    "fullscreen": "全屏",
+    "exitFullscreen": "退出全屏",
+    "chartPreview": "谱面预览",
+    "addNotes": "添加音符",
+    "resetToOriginal": "重置为原始状态",
+    "panView": "平移（拖动视图）",
+    "moveSelect": "移动（选择并拖动）",
+    "editHs": "编辑（切换长按/编辑变速）"
+  },
+  "difficulty": {
+    "novice": "NOV",
+    "advanced": "ADV",
+    "exhaust": "EXH",
+    "infinite": "INF",
+    "maximum": "MXM",
+    "ultimate": "ULT"
+  }
+}

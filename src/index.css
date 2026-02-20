@@ -61,7 +61,7 @@
   --color-diff-ultimate: oklch(0.75 0.15 70);
 
   /* ── Typography ── */
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* ── Radius ── */
@@ -97,6 +97,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ── CJK locale font stacks ── */
+:lang(zh-CN) { font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; }
+:lang(zh-TW) { font-family: "Inter", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
+:lang(ja) { font-family: "Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; }
+:lang(en) { font-family: "Inter", sans-serif; }
 
 /* ── Observatory panel ── */
 .obs-panel {
@@ -242,6 +248,49 @@ body {
 
 .animate-slide-in-bottom {
   animation: slide-in-bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Fade in animation ── */
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Tutorial animations ── */
+@keyframes highlight-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes border-dance {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.animate-highlight-pulse {
+  animation: highlight-pulse 2s ease-in-out infinite;
+}
+
+.animate-border-dance {
+  animation: border-dance 1.5s ease-in-out infinite;
+}
+
+.shadow-glow-accent {
+  box-shadow:
+    0 0 20px var(--color-accent-glow),
+    0 0 40px var(--color-accent-glow),
+    inset 0 0 10px var(--color-accent-glow);
+}
+
+/* ── Tutorial backdrop blur ── */
+.tutorial-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* ── Scan-in entrance ── */
