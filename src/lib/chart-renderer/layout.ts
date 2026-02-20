@@ -16,6 +16,7 @@ export const LANE_WIDTH = 96.5;
 export const OOB_WIDTH = 48.25;
 export const TRACK_WIDTH = LANE_WIDTH + OOB_WIDTH * 2; // 193
 export const GUTTER_WIDTH = 60;
+export const LEFT_GUTTER = GUTTER_WIDTH / 2; // space before first column for HS/measure labels
 export const MARGIN = 10;
 export const DEFAULT_PX_PER_SECOND = 300;
 export const DEFAULT_COLUMN_HEIGHT = 1400;
@@ -100,7 +101,7 @@ export function computeLayout(
 
   const numColumns = spans.length > 0 ? spans[spans.length - 1].col + 1 : 1;
   const canvasWidth =
-    numColumns * (TRACK_WIDTH + GUTTER_WIDTH) - GUTTER_WIDTH + 2 * MARGIN;
+    numColumns * (TRACK_WIDTH + GUTTER_WIDTH) - GUTTER_WIDTH + 2 * MARGIN + LEFT_GUTTER;
 
   return {
     spans,
@@ -117,7 +118,7 @@ export function computeLayout(
 
 /** X base of a column's track area (left edge including OOB) */
 export function colXBase(col: number): number {
-  return MARGIN + col * (TRACK_WIDTH + GUTTER_WIDTH);
+  return MARGIN + LEFT_GUTTER + col * (TRACK_WIDTH + GUTTER_WIDTH);
 }
 
 /** X of the lane left edge within a column */
