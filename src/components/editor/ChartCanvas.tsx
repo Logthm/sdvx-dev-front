@@ -485,7 +485,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     const chart = useEditorStore.getState().chartData;
     if (!chart) return null;
     const layout = computeLayout(chart);
-    for (const trackNum of ["2", "3", "4", "5", "6", "7"]) {
+    for (const trackNum of ["3", "4", "5", "6", "2", "7"]) {
       const events = chart.tracks[trackNum] ?? [];
       for (let i = 0; i < events.length; i++) {
         const ev = events[i];
@@ -548,7 +548,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     const chart = useEditorStore.getState().chartData;
     if (!chart) return null;
     const layout = computeLayout(chart);
-    for (const trackNum of ["2", "3", "4", "5", "6", "7"]) {
+    for (const trackNum of ["3", "4", "5", "6", "2", "7"]) {
       const events = chart.tracks[trackNum] ?? [];
       for (let i = 0; i < events.length; i++) {
         const ev = events[i];
