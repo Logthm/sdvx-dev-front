@@ -129,11 +129,11 @@ export function MusicCard({
       {/* Info */}
       <div className="flex flex-col gap-1.5 p-3 corner-brackets relative">
         <span className="gold-fill-bg" />
-        <h3 className="text-base font-semibold text-text-primary truncate leading-tight relative z-[2]">
+        <h3 className="text-base font-semibold text-text-primary truncate leading-tight relative z-[2] font-ja">
           {music.title_name}
         </h3>
         <p
-          className="text-sm text-text-muted truncate relative z-[2] hover:text-gold-400 cursor-pointer transition-colors"
+          className="text-sm text-text-muted truncate relative z-[2] hover:text-gold-400 cursor-pointer transition-colors font-ja"
           onClick={(e) => { e.stopPropagation(); onArtistClick?.(music.artist_name); }}
         >
           {music.artist_name}

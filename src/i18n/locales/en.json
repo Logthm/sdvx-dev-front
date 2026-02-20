@@ -99,7 +99,11 @@
     },
     "moveMode": {
       "title": "Move Mode",
-      "description": "Drag objects; moved objects get a blue border.\n\nDrag hold tails to change length, drag hold heads or chips vertically to reposition.\n\nWith \"Simplify & Edit Lasers\" on, freely drag laser start/end points and inflection points.\n\nDrag range limits available below — when enabled, dragging is restricted to the allowed judgment range."
+      "description": "Drag objects; moved objects get a blue border.\n\nDrag hold tails to change length, drag hold heads or chips vertically to reposition."
+    },
+    "moveMode2": {
+      "title": "Move Mode (cont.)",
+      "description": "With \"Simplify & Edit Lasers\" on, freely drag laser start/end points and inflection points.\n\nDrag range limits available below — when enabled, dragging is restricted to the allowed judgment range."
     },
     "addMode": {
       "title": "Add Mode",

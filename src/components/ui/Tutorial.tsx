@@ -9,6 +9,7 @@ export interface TutorialStep {
   icon: React.ReactNode;
   highlightSelector?: string;
   position?: "center" | "top" | "bottom" | "left" | "right";
+  positionDelay?: number;
 }
 
 interface TutorialProps {
@@ -26,6 +27,13 @@ interface HighlightRect {
   left: number;
   width: number;
   height: number;
+}
+
+function queryVisible(selector: string): Element | null {
+  for (const el of document.querySelectorAll(selector)) {
+    if ((el as HTMLElement).offsetParent !== null) return el;
+  }
+  return document.querySelector(selector);
 }
 
 export function Tutorial({
@@ -62,87 +70,95 @@ export function Tutorial({
     if (!isOpen || currentStep >= steps.length || !isCardReady) return;
 
     const step = steps[currentStep];
+    const measure = () => {
+      if (step.highlightSelector) {
+        const element = queryVisible(step.highlightSelector);
+        if (element) {
+          element.scrollIntoView({ block: "nearest" });
+          const rect = element.getBoundingClientRect();
+          const padding = 8;
 
-    if (step.highlightSelector) {
-      const element = document.querySelector(step.highlightSelector);
-      if (element) {
-        const rect = element.getBoundingClientRect();
-        const padding = 8;
+          setHighlightRect({
+            top: rect.top - padding,
+            left: rect.left - padding,
+            width: rect.width + padding * 2,
+            height: rect.height + padding * 2,
+          });
 
-        setHighlightRect({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
-        });
+          // Calculate card position based on highlight position
+          setTimeout(() => {
+            if (cardRef.current) {
+              const cardRect = cardRef.current.getBoundingClientRect();
+              const viewportWidth = window.innerWidth;
+              const viewportHeight = window.innerHeight;
 
-        // Calculate card position based on highlight position
-        setTimeout(() => {
-          if (cardRef.current) {
-            const cardRect = cardRef.current.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
+              let top = 0;
+              let left = 0;
 
-            let top = 0;
-            let left = 0;
+              switch (step.position) {
+                case "top":
+                  top = Math.max(20, rect.top - cardRect.height - 20);
+                  left = Math.max(20, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, viewportWidth - cardRect.width - 20));
+                  break;
+                case "bottom":
+                  top = Math.min(viewportHeight - cardRect.height - 20, rect.bottom + 20);
+                  left = Math.max(20, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, viewportWidth - cardRect.width - 20));
+                  break;
+                case "left":
+                  top = Math.max(20, Math.min(rect.top + rect.height / 2 - cardRect.height / 2, viewportHeight - cardRect.height - 20));
+                  left = Math.max(20, rect.left - cardRect.width - 20);
+                  break;
+                case "right":
+                  top = Math.max(20, Math.min(rect.top + rect.height / 2 - cardRect.height / 2, viewportHeight - cardRect.height - 20));
+                  left = Math.min(viewportWidth - cardRect.width - 20, rect.right + 20);
+                  break;
+                default:
+                  top = viewportHeight / 2 - cardRect.height / 2;
+                  left = viewportWidth / 2 - cardRect.width / 2;
+              }
 
-            // Position card based on step position preference
-            switch (step.position) {
-              case "top":
-                top = Math.max(20, rect.top - cardRect.height - 20);
-                left = Math.max(20, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, viewportWidth - cardRect.width - 20));
-                break;
-              case "bottom":
-                top = Math.min(viewportHeight - cardRect.height - 20, rect.bottom + 20);
-                left = Math.max(20, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, viewportWidth - cardRect.width - 20));
-                break;
-              case "left":
-                top = Math.max(20, Math.min(rect.top + rect.height / 2 - cardRect.height / 2, viewportHeight - cardRect.height - 20));
-                left = Math.max(20, rect.left - cardRect.width - 20);
-                break;
-              case "right":
-                top = Math.max(20, Math.min(rect.top + rect.height / 2 - cardRect.height / 2, viewportHeight - cardRect.height - 20));
-                left = Math.min(viewportWidth - cardRect.width - 20, rect.right + 20);
-                break;
-              default:
-                top = viewportHeight / 2 - cardRect.height / 2;
-                left = viewportWidth / 2 - cardRect.width / 2;
+              top = Math.max(16, Math.min(top, viewportHeight - cardRect.height - 16));
+              left = Math.max(16, Math.min(left, viewportWidth - cardRect.width - 16));
+
+              // If card overlaps highlight, reposition below it
+              if (
+                top < rect.bottom + 8 && top + cardRect.height > rect.top - 8 &&
+                left < rect.right + 8 && left + cardRect.width > rect.left - 8
+              ) {
+                top = Math.min(viewportHeight - cardRect.height - 16, rect.bottom + 20);
+                left = Math.max(16, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, viewportWidth - cardRect.width - 16));
+              }
+
+              setCardPosition({ top, left });
             }
-
-            setCardPosition({ top, left });
-          }
-        }, 50);
+          }, 50);
+        } else {
+          setHighlightRect(null);
+          centerCard();
+        }
       } else {
-        // Element not found - center the card
         setHighlightRect(null);
-        setTimeout(() => {
-          if (cardRef.current) {
-            const cardRect = cardRef.current.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-
-            setCardPosition({
-              top: viewportHeight / 2 - cardRect.height / 2,
-              left: viewportWidth / 2 - cardRect.width / 2,
-            });
-          }
-        }, 50);
+        centerCard();
       }
-    } else {
-      // No highlight selector - center the card
-      setHighlightRect(null);
+    };
+
+    function centerCard() {
       setTimeout(() => {
         if (cardRef.current) {
           const cardRect = cardRef.current.getBoundingClientRect();
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-
           setCardPosition({
-            top: viewportHeight / 2 - cardRect.height / 2,
-            left: viewportWidth / 2 - cardRect.width / 2,
+            top: window.innerHeight / 2 - cardRect.height / 2,
+            left: window.innerWidth / 2 - cardRect.width / 2,
           });
         }
       }, 50);
+    }
+
+    if (step.positionDelay) {
+      const timer = setTimeout(measure, step.positionDelay);
+      return () => clearTimeout(timer);
+    } else {
+      measure();
     }
   }, [isOpen, currentStep, steps, isCardReady]);
 
@@ -151,15 +167,17 @@ export function Tutorial({
     if (!isOpen || currentStep >= steps.length) return;
     const sel = steps[currentStep].highlightSelector;
     if (!sel) return;
-    const el = document.querySelector(sel);
+    const el = queryVisible(sel);
     if (!el) return;
     const padding = 8;
-    const ro = new ResizeObserver(() => {
+    const update = () => {
       const r = el.getBoundingClientRect();
       setHighlightRect({ top: r.top - padding, left: r.left - padding, width: r.width + padding * 2, height: r.height + padding * 2 });
-    });
+    };
+    const ro = new ResizeObserver(update);
     ro.observe(el);
-    return () => ro.disconnect();
+    document.addEventListener("scroll", update, { capture: true, passive: true });
+    return () => { ro.disconnect(); document.removeEventListener("scroll", update, { capture: true }); };
   }, [isOpen, currentStep, steps]);
 
   if (!isOpen || currentStep >= steps.length) return null;
@@ -217,7 +235,7 @@ export function Tutorial({
       <div
         ref={cardRef}
         className={cn(
-          "fixed w-full max-w-md mx-4 bg-cosmos-900 border border-cosmos-600/30 rounded-lg shadow-2xl overflow-hidden transition-all duration-500 ease-out",
+          "fixed w-[calc(100vw-32px)] max-w-md bg-cosmos-900 border border-cosmos-600/30 rounded-lg shadow-2xl overflow-hidden transition-all duration-500 ease-out",
           cardPosition ? "opacity-100" : "opacity-0"
         )}
         style={{
@@ -255,7 +273,7 @@ export function Tutorial({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-cosmos-600/20 bg-cosmos-800/30">
-          <div className="flex items-center gap-1.5">
+          <div className="hidden sm:flex items-center gap-1.5">
             {steps.map((_, index) => (
               <div
                 key={index}
@@ -269,11 +287,11 @@ export function Tutorial({
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex-1 sm:flex-none flex items-center gap-2 justify-between sm:justify-end">
             {!isFirstStep && (
               <button
                 onClick={onPrev}
-                className="px-3 py-1.5 rounded-md text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-cosmos-700/50 transition-colors flex items-center gap-1.5"
+                className="flex-1 sm:flex-none px-3 py-1.5 rounded-md text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-cosmos-700/50 transition-colors flex items-center justify-center gap-1.5"
               >
                 <ChevronLeft size={16} />
                 {t('tutorial.previous')}
@@ -282,14 +300,14 @@ export function Tutorial({
             {isLastStep ? (
               <button
                 onClick={onClose}
-                className="px-4 py-1.5 rounded-md text-sm font-medium bg-accent text-cosmos-950 hover:bg-accent/90 transition-colors"
+                className="flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium bg-accent text-cosmos-950 hover:bg-accent/90 transition-colors"
               >
                 {t('tutorial.start')}
               </button>
             ) : (
               <button
                 onClick={onNext}
-                className="px-4 py-1.5 rounded-md text-sm font-medium bg-accent text-cosmos-950 hover:bg-accent/90 transition-colors flex items-center gap-1.5"
+                className="flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium bg-accent text-cosmos-950 hover:bg-accent/90 transition-colors flex items-center justify-center gap-1.5"
               >
                 {t('tutorial.next')}
                 <ChevronRight size={16} />
@@ -359,8 +377,9 @@ export function useChartTutorialSteps() {
       title: t('chartTutorial.difficulty.title'),
       description: t('chartTutorial.difficulty.description'),
       icon: <MousePointer size={20} />,
-      highlightSelector: "[data-tutorial='chart-difficulty']",
+      highlightSelector: "[data-tutorial='chart-difficulty'], [data-tutorial='chart-difficulty-mobile']",
       position: "bottom" as const,
+      positionDelay: 20,
     },
     {
       title: t('chartTutorial.sidebar.title'),
@@ -402,28 +421,39 @@ export function useChartTutorialSteps() {
       description: t('chartTutorial.panMode.description'),
       icon: <Hand size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
-      position: "right" as const,
+      position: "top" as const,
     },
     {
       title: t('chartTutorial.moveMode.title'),
       description: t('chartTutorial.moveMode.description'),
       icon: <Move size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
-      position: "right" as const,
+      position: "top" as const,
+      positionDelay: 20,
+    },
+    {
+      title: t('chartTutorial.moveMode2.title'),
+      description: t('chartTutorial.moveMode2.description'),
+      icon: <Move size={20} />,
+      highlightSelector: "[data-tutorial='chart-pointer-tools']",
+      position: "top" as const,
+      positionDelay: 20,
     },
     {
       title: t('chartTutorial.editPointerMode.title'),
       description: t('chartTutorial.editPointerMode.description'),
       icon: <Pencil size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
-      position: "right" as const,
+      position: "top" as const,
+      positionDelay: 20,
     },
     {
       title: t('chartTutorial.addMode.title'),
       description: t('chartTutorial.addMode.description'),
       icon: <Plus size={20} />,
       highlightSelector: "[data-tutorial='chart-pointer-tools']",
-      position: "right" as const,
+      position: "top" as const,
+      positionDelay: 20,
     },
     {
       title: t('tutorial.finish.title'),

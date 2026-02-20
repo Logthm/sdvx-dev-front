@@ -103,6 +103,7 @@ body {
 :lang(zh-TW) { font-family: "Inter", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
 :lang(ja) { font-family: "Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; }
 :lang(en) { font-family: "Inter", sans-serif; }
+.font-ja { font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif !important; }
 
 /* ── Observatory panel ── */
 .obs-panel {

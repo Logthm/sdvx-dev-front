@@ -8,6 +8,7 @@ import { RenderOptionsBar } from "@/components/editor/RenderOptionsBar";
 import { Astrolabe } from "@/components/ui/Astrolabe";
 import { DifficultyBadge } from "@/components/ui/DifficultyBadge";
 import { RadarChart } from "@/components/ui/RadarChart";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Tutorial, useChartTutorialSteps } from "@/components/ui/Tutorial";
 import { useTutorial } from "@/hooks/useTutorial";
 import { useEditorStore } from "@/lib/editor-store";
@@ -23,13 +24,13 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-function DataRow({ label, value }: { label: string; value: string | number }) {
+function DataRow({ label, value, valueClassName }: { label: string; value: string | number; valueClassName?: string }) {
   return (
     <div className="flex items-center justify-between py-1.5">
       <span className="text-[11px] uppercase tracking-[0.12em] text-text-muted">
         {label}
       </span>
-      <span className="text-sm font-mono text-text-primary">
+      <span className={cn("text-sm font-mono text-text-primary", valueClassName)}>
         {value}
       </span>
     </div>
@@ -38,8 +39,7 @@ function DataRow({ label, value }: { label: string; value: string | number }) {
 
 export function SongDetailPage() {
   const { t } = useTranslation();
-  const chartTutorialSteps = useChartTutorialSteps();
-  const chartTutorial = useTutorial("sdvx-chart-tutorial-completed");
+  const allChartSteps = useChartTutorialSteps();
   const { musicId } = useParams<{ musicId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -75,6 +75,12 @@ export function SongDetailPage() {
   const canEdit =
     editabilityQuery.data?.editable_difficulties?.includes(activeDif?.difstr ?? "") ?? false;
 
+  // Combined tutorial: preview steps + edit steps (if canEdit), one continuous flow
+  const chartTutorial = useTutorial("sdvx-chart-tutorial");
+  const chartTutorialSteps = canEdit
+    ? [...allChartSteps.slice(0, 5), allChartSteps[6], allChartSteps[5], ...allChartSteps.slice(7)]
+    : [...allChartSteps.slice(0, 5), allChartSteps[6], allChartSteps[allChartSteps.length - 1]];
+
   const chartQuery = useChartData(
     canEdit ? numericId : null,
     canEdit ? (activeDif?.difstr ?? null) : null,
@@ -99,21 +105,28 @@ export function SongDetailPage() {
   }, [chart, setOriginalChartData]);
 
   // Auto-switch mode/arrangement/mouseTool based on tutorial step
+  // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=pan,8=move,9=move2,10=editPointer,11=add,12=finish
+  // !canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=finish
   useEffect(() => {
     if (!chartTutorial.isOpen) return;
     const step = chartTutorial.currentStep;
-    if (step === 4) {
-      setMode("preview");
-      if (renderOptions.arrangementMode !== "random") {
-        setRenderOptions({ arrangementMode: "random" });
-      }
-    } else if (step >= 5 && step <= 10 && canEdit) {
+    // Sidebar/toolbar visibility
+    if (step >= 1 && step <= 2) {
+      setSidebarCollapsed(false); setToolbarCollapsed(true);
+    } else if (step >= 3) {
+      setSidebarCollapsed(true); setToolbarCollapsed(false);
+    }
+    // Mode & tools
+    if (canEdit && step >= 6 && step <= 11) {
       setMode("edit");
       if (step === 7) { setMouseTool("pan"); setExpandedTool(null); }
-      else if (step === 8) { setMouseTool("move"); setExpandedTool("drag"); }
-      else if (step === 9) { setMouseTool("edit-hs"); setExpandedTool(null); }
-      else if (step === 10) { setMouseTool("add-bt"); setExpandedTool("add"); }
+      else if (step === 8 || step === 9) { setMouseTool("move"); setExpandedTool("drag"); }
+      else if (step === 10) { setMouseTool("edit-hs"); setExpandedTool(null); }
+      else if (step === 11) { setMouseTool("add-bt"); setExpandedTool("add"); }
       else { setExpandedTool(null); }
+    } else if (step === 4) {
+      setMode("preview");
+      if (renderOptions.arrangementMode !== "random") setRenderOptions({ arrangementMode: "random" });
     } else {
       if (mode === "edit") setMode("preview");
       if (renderOptions.arrangementMode !== "normal") setRenderOptions({ arrangementMode: "normal" });
@@ -146,10 +159,10 @@ export function SongDetailPage() {
         </button>
         {music ? (
           <div className="min-w-0 flex-1 flex items-center gap-2">
-            <h1 className="text-sm font-semibold text-text-primary truncate">
+            <h1 className="text-sm font-semibold text-text-primary truncate font-ja">
               {music.title_name}
             </h1>
-            <span className="text-xs text-text-muted truncate hidden sm:block">
+            <span className="text-xs text-text-muted truncate hidden sm:block font-ja">
               {music.artist_name}
             </span>
           </div>
@@ -168,10 +181,15 @@ export function SongDetailPage() {
             />
           ))}
         </div>
+        {/* Language switcher */}
+        <LanguageSwitcher />
+
         {/* Tutorial button */}
         <button
           type="button"
-          onClick={chartTutorial.resetTutorial}
+          onClick={() => {
+            chartTutorial.resetTutorial();
+          }}
           className="shrink-0 p-1.5 rounded-md border border-cosmos-600/30 text-text-muted hover:text-accent hover:border-accent/30 transition-colors"
           title={t('tutorial.viewTutorial')}
           data-tutorial="tutorial-button"
@@ -215,11 +233,11 @@ export function SongDetailPage() {
                 )}
               </div>
               <div className="min-w-0 flex flex-col justify-center md:justify-start flex-1">
-                <h2 className="text-sm font-bold text-text-primary leading-tight break-words">{music.title_name}</h2>
+                <h2 className="text-sm font-bold text-text-primary leading-tight break-words font-ja">{music.title_name}</h2>
                 {music.sub_title_name && (
-                  <p className="text-xs text-text-muted break-words">{music.sub_title_name}</p>
+                  <p className="text-xs text-text-muted break-words font-ja">{music.sub_title_name}</p>
                 )}
-                <p className="text-xs text-text-secondary break-words mt-0.5">{music.artist_name}</p>
+                <p className="text-xs text-text-secondary break-words mt-0.5 font-ja">{music.artist_name}</p>
               </div>
               <button
                 onClick={() => { setSidebarCollapsed((v) => !v); setToolbarCollapsed(true); }}
@@ -231,7 +249,7 @@ export function SongDetailPage() {
 
             {/* Mobile difficulty selector */}
             {!sidebarCollapsed && (
-              <div className="obs-panel-section flex items-center gap-2 flex-wrap md:hidden">
+              <div className="obs-panel-section flex items-center gap-2 flex-wrap md:hidden" data-tutorial="chart-difficulty-mobile">
                 {sortedDiffs.map((d) => (
                   <DifficultyBadge
                     key={d.difstr}
@@ -250,7 +268,7 @@ export function SongDetailPage() {
             <div className="obs-panel-section">
               <DataRow label="BPM" value={formatBpm(music.bpm_max, music.bpm_min)} />
               <DataRow label={t('chart.version')} value={music.version} />
-              <DataRow label={t('chart.genre')} value={music.genre_name[0] ?? "—"} />
+              <DataRow label={t('chart.genre')} value={music.genre_name[0] ?? "—"} valueClassName="font-ja" />
               {activeDif && (
                 <>
                   <DataRow label={t('chart.exScore')} value={activeDif.max_exscore.toLocaleString()} />
@@ -267,11 +285,11 @@ export function SongDetailPage() {
               <div className="obs-panel-section text-xs">
                 <div className="flex justify-between py-1">
                   <span className="text-text-muted">{t('chart.illustrator')}</span>
-                  <span className="text-text-secondary text-right break-words ml-2">{activeDif.illustrator || "—"}</span>
+                  <span className="text-text-secondary text-right break-words ml-2 font-ja">{activeDif.illustrator || "—"}</span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-text-muted">{t('chart.effector')}</span>
-                  <span className="text-text-secondary text-right break-words ml-2">{activeDif.effected_by || "—"}</span>
+                  <span className="text-text-secondary text-right break-words ml-2 font-ja">{activeDif.effected_by || "—"}</span>
                 </div>
               </div>
             )}
@@ -290,7 +308,7 @@ export function SongDetailPage() {
             </div>{/* end scrollable info section */}
 
             {/* ── Controls (always visible, fixed at bottom) ── */}
-            <div className="shrink-0 obs-panel-section flex flex-col gap-3 bg-cosmos-800/25 border-t-2 border-gold-400/25">
+            <div className="shrink-0 obs-panel-section flex flex-col gap-3 bg-cosmos-800/25 border-t-2 border-gold-400/25 !pb-3 md:!pb-6">
               <div className="flex bg-cosmos-800/60 rounded-md p-0.5 border border-cosmos-600/20" data-tutorial="chart-mode-toggle">
                 <button
                   onClick={() => setMode("preview")}

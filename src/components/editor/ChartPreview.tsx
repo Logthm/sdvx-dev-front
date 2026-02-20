@@ -329,7 +329,7 @@ export function ChartPreview({
 
       {/* Zoom indicator */}
       {isReady && (
-        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted">
+        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
           <button
             onClick={() => setZoom(Math.max(MIN_ZOOM, useEditorStore.getState().zoom - ZOOM_STEP))}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
