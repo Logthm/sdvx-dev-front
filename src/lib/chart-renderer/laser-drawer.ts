@@ -257,13 +257,6 @@ function drawStartMarker(
   ctx.lineTo(point.x + s / 2, point.y + s / 2 + 2 + s);
   ctx.closePath();
   ctx.fill();
-
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(point.x - s / 2, point.y);
-  ctx.lineTo(point.x + s / 2, point.y);
-  ctx.stroke();
 }
 
 function segmentAndDraw(

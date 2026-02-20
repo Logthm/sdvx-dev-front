@@ -241,6 +241,28 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       ctx.restore();
     }
 
+    // Draw laser point markers when simplifyLasers is active
+    if (mode === "edit" && simplifyLasers) {
+      const layout = computeLayout(activeChart);
+      ctx.save();
+      ctx.translate(-panX * zoom, -panY * zoom);
+      ctx.scale(zoom, zoom);
+      for (const [track, color] of [["1", "#0082D9"], ["8", "#BC0088"]] as const) {
+        const events = (activeChart.tracks[track] ?? []).filter(
+          (e): e is LaserEvent => e.type === "laser",
+        );
+        for (const ev of events) {
+          const rp = resolveEvent(ev, layout.timeMapper, layout.spans, layout.pxPerSecond);
+          if (!rp) continue;
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
     // Draw selection highlight
     const sel = useEditorStore.getState().selectedPoint;
     if (sel && mode === "edit") {
@@ -259,12 +281,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           if (rp) {
             ctx.beginPath();
             ctx.arc(rp.x, rp.y, 10, 0, Math.PI * 2);
-            ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(rp.x, rp.y, 10, 0, Math.PI * 2);
-            ctx.strokeStyle = "#000";
+            ctx.strokeStyle = "oklch(0.72 0.155 70)";
             ctx.lineWidth = 1;
             ctx.stroke();
           }
@@ -1127,7 +1144,10 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             className={cn(
               "p-3 md:p-1.5 rounded transition-colors touch-manipulation",
               mouseTool === "move"
-                ? "bg-gold-400/15 text-gold-400"
+                ? dragRange === "s-critical" ? "bg-gold-300/15 text-gold-300"
+                  : dragRange === "critical" ? "bg-gold-600/15 text-gold-600"
+                  : dragRange === "near" ? "bg-green-400/15 text-green-400"
+                  : "bg-gold-400/15 text-gold-400"
                 : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
             )}
             title={t('chart.moveSelect')}
@@ -1135,15 +1155,20 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             <Move size={16} />
           </button>
           {expandedTool === "drag" && (
-            <div className="flex flex-col gap-0.5 pl-1 border-l-2 border-gold-400/30 ml-1">
-              {([["off", "Off"], ["s-critical", "S-Crit"], ["critical", "Crit"], ["near", "Near"]] as const).map(([v, l]) => (
+            <div className={cn("flex flex-col gap-0.5 pl-1 border-l-2 ml-1",
+              dragRange === "s-critical" ? "border-gold-300/30"
+                : dragRange === "critical" ? "border-gold-600/30"
+                : dragRange === "near" ? "border-green-400/30"
+                : "border-gold-400/30",
+            )}>
+              {([["off", "Off", "bg-gold-400/15 text-gold-400"], ["s-critical", "S-Crit", "bg-gold-300/15 text-gold-300"], ["critical", "Crit", "bg-gold-600/15 text-gold-600"], ["near", "Near", "bg-green-400/15 text-green-400"]] as const).map(([v, l, ac]) => (
                 <button
                   key={v}
                   onClick={() => setDragRange(v)}
                   className={cn(
                     "px-2 py-1 rounded text-[10px] font-medium transition-colors text-left",
                     dragRange === v
-                      ? "bg-gold-400/15 text-gold-400"
+                      ? ac
                       : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
                   )}
                 >
@@ -1158,7 +1183,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             className={cn(
               "p-3 md:p-1.5 rounded transition-colors touch-manipulation",
               mouseTool === "edit-hs"
-                ? "bg-blue-400/15 text-blue-400"
+                ? "bg-gold-400/15 text-gold-400"
                 : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
             )}
             title={t('chart.editHs')}
@@ -1171,7 +1196,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             className={cn(
               "p-3 md:p-1.5 rounded transition-colors touch-manipulation",
               (mouseTool === "add-bt" || mouseTool === "add-fx" || mouseTool === "add-hispeed")
-                ? "bg-gold-400/15 text-gold-400"
+                ? mouseTool === "add-bt" ? "bg-slate-200/15 text-slate-200"
+                  : mouseTool === "add-fx" ? "bg-orange-400/15 text-orange-400"
+                  : "bg-blue-400/15 text-blue-400"
                 : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
             )}
             title={t('chart.addNotes')}
@@ -1179,13 +1206,18 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             <Plus size={16} />
           </button>
           {expandedTool === "add" && (
-            <div className="flex flex-col gap-0.5 pl-1 border-l-2 border-gold-400/30 ml-1">
+            <div className={cn("flex flex-col gap-0.5 pl-1 border-l-2 ml-1",
+              mouseTool === "add-bt" ? "border-slate-200/30"
+                : mouseTool === "add-fx" ? "border-orange-400/30"
+                : mouseTool === "add-hispeed" ? "border-blue-400/30"
+                : "border-gold-400/30",
+            )}>
               <button
                 onClick={() => { setMouseTool("add-bt"); setExpandedTool(null); }}
                 className={cn(
                   "px-2 py-1 rounded text-[10px] font-medium transition-colors text-left",
                   mouseTool === "add-bt"
-                    ? "bg-gold-400/15 text-gold-400"
+                    ? "bg-slate-200/15 text-slate-200"
                     : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
                 )}
               >
@@ -1196,7 +1228,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                 className={cn(
                   "px-2 py-1 rounded text-[10px] font-medium transition-colors text-left",
                   mouseTool === "add-fx"
-                    ? "bg-gold-400/15 text-gold-400"
+                    ? "bg-orange-400/15 text-orange-400"
                     : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
                 )}
               >
