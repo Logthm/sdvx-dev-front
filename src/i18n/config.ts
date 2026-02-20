@@ -7,6 +7,12 @@ import zhTW from './locales/zh-TW.json';
 import ja from './locales/ja.json';
 import en from './locales/en.json';
 
+const ZH_MAP: Record<string, string> = {
+  zh: 'zh-CN',
+  'zh-Hans': 'zh-CN',
+  'zh-Hant': 'zh-TW',
+};
+
 const resources = {
   'zh-CN': { translation: zhCN },
   'zh-TW': { translation: zhTW },
@@ -27,6 +33,7 @@ i18n
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
+      convertDetectedLanguage: (lng: string) => ZH_MAP[lng] || lng,
     },
   });
 
