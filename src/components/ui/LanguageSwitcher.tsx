@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 
 const LANGUAGES = [
-  { code: "zh-CN", label: "简体中文", flag: "🇨🇳" },
-  { code: "zh-TW", label: "繁體中文", flag: "🇹🇼" },
-  { code: "ja", label: "日本語", flag: "🇯🇵" },
-  { code: "en", label: "English", flag: "🇺🇸" },
+  { code: "zh-CN", label: "简体中文" },
+  { code: "zh-TW", label: "繁體中文" },
+  { code: "ja", label: "日本語" },
+  { code: "en", label: "English" },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -44,7 +44,7 @@ export function LanguageSwitcher() {
         title={currentLanguage.label}
       >
         <Languages size={16} />
-        <span className="hidden sm:inline text-xs font-medium">{currentLanguage.flag}</span>
+        <span className="hidden sm:inline text-xs font-medium">{currentLanguage.label}</span>
       </button>
 
       {isOpen && (
@@ -61,7 +61,6 @@ export function LanguageSwitcher() {
                   : "text-text-secondary hover:bg-cosmos-800/50 hover:text-text-primary"
               )}
             >
-              <span className="text-base">{lang.flag}</span>
               <span className="font-medium">{lang.label}</span>
             </button>
           ))}
