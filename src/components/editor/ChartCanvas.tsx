@@ -318,8 +318,11 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               if (dr !== "off") {
                 const limitSec = DRAG_RANGE_MS[dr] / 1000;
                 // Always use original position from originalChartData
+                // When events were added/removed, indices shift so index-based lookup is unreliable
                 const orig = useEditorStore.getState().originalChartData;
-                const origEv = orig?.tracks[sel.track]?.[sel.index];
+                const origTrack = orig?.tracks[sel.track];
+                const editedTrack = activeChart.tracks[sel.track];
+                const origEv = origTrack?.length === editedTrack?.length ? origTrack?.[sel.index] : undefined;
                 const origTime = origEv ? origEv.time as Time3 : bev.time as Time3;
                 const origSec = layout.timeMapper.secondsOf(origTime);
                 const origY = span.y1 - (origSec - span.sec0) * layout.pxPerSecond;
@@ -634,7 +637,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             const chart = s.chartData!;
             const layout = computeLayout(chart);
             const bev = (chart.tracks[btnHit.track] ?? [])[btnHit.index] as ButtonEvent;
-            const origEv = s.originalChartData?.tracks[btnHit.track]?.[btnHit.index];
+            const origTrack = s.originalChartData?.tracks[btnHit.track];
+            const editedTrack = chart.tracks[btnHit.track];
+            const origEv = origTrack?.length === editedTrack?.length ? origTrack?.[btnHit.index] : undefined;
             const origTime = origEv ? origEv.time as Time3 : bev.time as Time3;
             const origSec = layout.timeMapper.secondsOf(origTime);
 
@@ -957,7 +962,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             const chart = s.chartData!;
             const layout = computeLayout(chart);
             const bev = (chart.tracks[btnHit.track] ?? [])[btnHit.index] as ButtonEvent;
-            const origEv = s.originalChartData?.tracks[btnHit.track]?.[btnHit.index];
+            const origTrack = s.originalChartData?.tracks[btnHit.track];
+            const editedTrack = chart.tracks[btnHit.track];
+            const origEv = origTrack?.length === editedTrack?.length ? origTrack?.[btnHit.index] : undefined;
             const origTime = origEv ? origEv.time as Time3 : bev.time as Time3;
             const origSec = layout.timeMapper.secondsOf(origTime);
 
