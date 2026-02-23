@@ -319,6 +319,35 @@ body {
   }
 }
 
+/* ── Difficulty block tinted background (compatible fallback for color-mix) ── */
+.diff-block-bg {
+  position: relative;
+  isolation: isolate;
+}
+.diff-block-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0.18;
+  z-index: -1;
+}
+
+/* ── aspect-ratio fallback for older browsers ── */
+@supports not (aspect-ratio: 1 / 1) {
+  .card-cover {
+    height: 0;
+    padding-bottom: 100%;
+  }
+  .card-cover > * {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
 /* ── Corner brackets (仪器化定位框) ── */
 .corner-brackets {
   position: relative;

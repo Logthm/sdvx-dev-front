@@ -42,15 +42,15 @@ export function DifficultyBadge({
         "relative inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-semibold font-mono",
         "transition-all duration-200 overflow-hidden",
         !variantColor && BG_CLASSES[difstr],
-        selected && "ring-1 ring-gold-400/60 scale-105 shadow-[0_0_12px_oklch(0.72_0.155_70/0.15)]",
+        variantColor && "diff-block-bg",
+        selected && "ring-1 ring-gold-400/60 scale-105 shadow-[0_0_12px_rgba(201,168,76,0.15)]",
         onClick && "cursor-pointer hover:brightness-125 active:scale-95",
         !onClick && "cursor-default",
         className,
       )}
       style={variantColor ? {
-        backgroundColor: `color-mix(in oklch, ${variantColor} 15%, transparent)`,
         color: variantColor,
-        borderColor: `color-mix(in oklch, ${variantColor} 25%, transparent)`,
+        borderColor: variantColor,
       } : undefined}
     >
       <span className="uppercase tracking-wide text-[10px] opacity-80">

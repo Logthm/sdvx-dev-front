@@ -101,13 +101,13 @@ export function MusicCard({
         "group relative flex flex-col rounded-lg text-left cursor-pointer overflow-hidden",
         "bg-cosmos-900/40 border border-cosmos-600/20",
         "transition-all duration-300",
-        "hover:-translate-y-1 hover:shadow-[0_8px_24px_oklch(0.72_0.155_70/0.12)]",
+        "hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(201,168,76,0.12)]",
         "hover:border-gold-400/30",
         "active:scale-[0.97]",
       )}
     >
       {/* Cover image */}
-      <div className="relative w-full aspect-square overflow-hidden bg-cosmos-800">
+      <div className="relative w-full aspect-square overflow-hidden bg-cosmos-800 card-cover">
         {imgSrc && !imgError ? (
           <img
             src={imgSrc}
@@ -161,8 +161,8 @@ export function MusicCard({
                   e.stopPropagation();
                   onDifficultyClick?.(d.difstr);
                 }}
-                className="flex-1 flex flex-col items-center py-1.5 rounded cursor-pointer transition-all border-2 border-transparent hover:!border-current"
-                style={{ backgroundColor: `color-mix(in oklch, ${color} 18%, #0a0a0f)`, color }}
+                className="diff-block-bg flex-1 flex flex-col items-center py-1.5 rounded cursor-pointer transition-all border-2 border-transparent hover:!border-current"
+                style={{ color }}
               >
                 <span
                   className="text-[10px] font-bold uppercase tracking-wider leading-none"
