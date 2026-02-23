@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 
 const LANGUAGES = [
-  { code: "zh-CN", label: "简体中文", fontFamily: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif' },
-  { code: "zh-TW", label: "繁體中文", fontFamily: '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif' },
   { code: "ja", label: "日本語", fontFamily: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif' },
   { code: "en", label: "English", fontFamily: '"Inter", sans-serif' },
+  { code: "zh-CN", label: "简体中文", fontFamily: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif' },
+  { code: "zh-TW", label: "繁體中文", fontFamily: '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif' },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -15,7 +15,7 @@ export function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentLanguage = LANGUAGES.find((lang) => lang.code === i18n.language) || LANGUAGES[0];
+  const currentLanguage = LANGUAGES.find((lang) => lang.code === i18n.language) || LANGUAGES[1];
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
