@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { DifficultyName } from "@/types/music";
-import { DIFFICULTY_LABELS } from "@/types/music";
+import { DIFFICULTY_LABELS, INF_VER_COLORS, INF_VER_LABELS } from "@/types/music";
 
 const BG_CLASSES: Record<DifficultyName, string> = {
   novice: "bg-diff-novice/15 text-diff-novice border-diff-novice/25",
@@ -14,6 +14,7 @@ const BG_CLASSES: Record<DifficultyName, string> = {
 interface DifficultyBadgeProps {
   difstr: DifficultyName;
   level: string;
+  infVer?: number;
   selected?: boolean;
   onClick?: () => void;
   className?: string;
@@ -22,10 +23,17 @@ interface DifficultyBadgeProps {
 export function DifficultyBadge({
   difstr,
   level,
+  infVer,
   selected,
   onClick,
   className,
 }: DifficultyBadgeProps) {
+  const label = difstr === "infinite" && infVer
+    ? (INF_VER_LABELS[infVer] ?? DIFFICULTY_LABELS[difstr])
+    : DIFFICULTY_LABELS[difstr];
+
+  const variantColor = difstr === "infinite" && infVer ? INF_VER_COLORS[infVer] : undefined;
+
   return (
     <button
       type="button"
@@ -33,15 +41,20 @@ export function DifficultyBadge({
       className={cn(
         "relative inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-semibold font-mono",
         "transition-all duration-200 overflow-hidden",
-        BG_CLASSES[difstr],
+        !variantColor && BG_CLASSES[difstr],
         selected && "ring-1 ring-gold-400/60 scale-105 shadow-[0_0_12px_oklch(0.72_0.155_70/0.15)]",
         onClick && "cursor-pointer hover:brightness-125 active:scale-95",
         !onClick && "cursor-default",
         className,
       )}
+      style={variantColor ? {
+        backgroundColor: `color-mix(in oklch, ${variantColor} 15%, transparent)`,
+        color: variantColor,
+        borderColor: `color-mix(in oklch, ${variantColor} 25%, transparent)`,
+      } : undefined}
     >
       <span className="uppercase tracking-wide text-[10px] opacity-80">
-        {DIFFICULTY_LABELS[difstr]}
+        {label}
       </span>
       <span>{level}</span>
     </button>

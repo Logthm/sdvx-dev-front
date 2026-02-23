@@ -81,6 +81,26 @@ export const DIFFICULTY_LABELS: Record<DifficultyName, string> = {
   ultimate: "ULT",
 };
 
+export const INF_VER_LABELS: Record<number, string> = {
+  2: "INF",
+  3: "GRV",
+  4: "HVN",
+  5: "VVD",
+  6: "XCD",
+};
+
+export function getInfLabel(infVer: number): string {
+  return INF_VER_LABELS[infVer] ?? "INF";
+}
+
+export const INF_VER_COLORS: Record<number, string> = {
+  2: "var(--color-diff-inf)",
+  3: "var(--color-diff-grv)",
+  4: "var(--color-diff-hvn)",
+  5: "var(--color-diff-vvd)",
+  6: "var(--color-diff-xcd)",
+};
+
 export const DIFFICULTY_COLORS: Record<DifficultyName, string> = {
   novice: "var(--color-diff-novice)",
   advanced: "var(--color-diff-advanced)",

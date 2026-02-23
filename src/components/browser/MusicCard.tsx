@@ -9,7 +9,9 @@ import {
     DIFFICULTY_COLORS,
     DIFFICULTY_LABELS,
     DIFFICULTY_ORDER,
+    INF_VER_COLORS,
     formatBpm,
+    getInfLabel,
     type DifficultyName,
     type DifficultySchema,
     type MusicSchema,
@@ -49,9 +51,16 @@ function getHighestRadarKey(radar: RadarSchema): RadarPeakKey {
 function diffMatchesFilters(
   d: DifficultySchema,
   filters: FilterState,
+  infVer: number,
 ): boolean {
-  if (filters.difficulties.size > 0 && !filters.difficulties.has(d.difstr as DifficultyName))
-    return false;
+  const hasDifFilter = filters.difficulties.size > 0 || filters.infVers.size > 0;
+  if (hasDifFilter) {
+    if (d.difstr === "infinite") {
+      if (!filters.infVers.has(infVer)) return false;
+    } else if (!filters.difficulties.has(d.difstr as DifficultyName)) {
+      return false;
+    }
+  }
   const level = Number.parseFloat(d.difnum);
   if (filters.levelMin !== null && level < filters.levelMin) return false;
   if (filters.levelMax !== null && level > filters.levelMax) return false;
@@ -79,7 +88,7 @@ export function MusicCard({
   const imgSrc = primaryDif ? coverUrl(music.id, primaryDif.difstr) : undefined;
 
   const visibleDiffs = filters
-    ? sortedDiffs.filter((d) => diffMatchesFilters(d, filters))
+    ? sortedDiffs.filter((d) => diffMatchesFilters(d, filters, music.inf_ver))
     : sortedDiffs;
 
   const radarPeak = primaryDif ? getHighestRadarKey(primaryDif.radar) : null;
@@ -142,6 +151,9 @@ export function MusicCard({
         <div className="flex flex-wrap gap-1 mt-1 relative z-[2]">
           {visibleDiffs.map((d) => {
             const difName = d.difstr as DifficultyName;
+            const color = difName === "infinite"
+              ? (INF_VER_COLORS[music.inf_ver] ?? DIFFICULTY_COLORS[difName])
+              : DIFFICULTY_COLORS[difName];
             return (
               <span
                 key={d.difstr}
@@ -150,17 +162,17 @@ export function MusicCard({
                   onDifficultyClick?.(d.difstr);
                 }}
                 className="flex-1 flex flex-col items-center py-1.5 rounded cursor-pointer transition-all border-2 border-transparent hover:!border-current"
-                style={{ backgroundColor: `color-mix(in oklch, ${DIFFICULTY_COLORS[difName]} 18%, #0a0a0f)`, color: DIFFICULTY_COLORS[difName] }}
+                style={{ backgroundColor: `color-mix(in oklch, ${color} 18%, #0a0a0f)`, color }}
               >
                 <span
                   className="text-[10px] font-bold uppercase tracking-wider leading-none"
-                  style={{ color: DIFFICULTY_COLORS[difName] }}
+                  style={{ color }}
                 >
-                  {DIFFICULTY_LABELS[difName]}
+                  {difName === "infinite" ? getInfLabel(music.inf_ver) : DIFFICULTY_LABELS[difName]}
                 </span>
                 <span
                   className="text-sm font-mono font-bold leading-tight"
-                  style={{ color: DIFFICULTY_COLORS[difName] }}
+                  style={{ color }}
                 >
                   {d.difnum}
                 </span>

@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 
 const LANGUAGES = [
-  { code: "zh-CN", label: "简体中文" },
-  { code: "zh-TW", label: "繁體中文" },
-  { code: "ja", label: "日本語" },
-  { code: "en", label: "English" },
+  { code: "zh-CN", label: "简体中文", fontFamily: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif' },
+  { code: "zh-TW", label: "繁體中文", fontFamily: '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif' },
+  { code: "ja", label: "日本語", fontFamily: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif' },
+  { code: "en", label: "English", fontFamily: '"Inter", sans-serif' },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -44,7 +44,7 @@ export function LanguageSwitcher() {
         title={currentLanguage.label}
       >
         <Languages size={16} />
-        <span className="hidden sm:inline text-xs font-medium">{currentLanguage.label}</span>
+        <span lang={currentLanguage.code} style={{ fontFamily: currentLanguage.fontFamily }} className="hidden sm:inline text-xs font-medium">{currentLanguage.label}</span>
       </button>
 
       {isOpen && (
@@ -61,7 +61,7 @@ export function LanguageSwitcher() {
                   : "text-text-secondary hover:bg-cosmos-800/50 hover:text-text-primary"
               )}
             >
-              <span className="font-medium">{lang.label}</span>
+              <span lang={lang.code} style={{ fontFamily: lang.fontFamily }} className="font-medium">{lang.label}</span>
             </button>
           ))}
         </div>

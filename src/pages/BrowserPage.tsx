@@ -5,6 +5,7 @@ import { SearchBar } from "@/components/browser/SearchBar";
 import { Astrolabe } from "@/components/ui/Astrolabe";
 import { Tutorial, useTutorialSteps } from "@/components/ui/Tutorial";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useGridPageSize } from "@/hooks/useGridPageSize";
 import { useTutorial } from "@/hooks/useTutorial";
 import { useBrowserStore } from "@/lib/browser-store";
 import { cn } from "@/lib/utils";
@@ -19,15 +20,19 @@ export function BrowserPage() {
   const { query, setQuery, filters, setFilters, sortField, setSortField, sortDirection, setSortDirection } = useBrowserStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { ref: gridContainerRef, pageSize } = useGridPageSize();
 
   // Tutorial state
   const tutorial = useTutorial();
 
   function toggleSort(field: SortField) {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "desc" ? "asc" : "desc");
-    } else {
+    if (sortField !== field) {
       setSortField(field);
+      setSortDirection("desc");
+    } else if (sortDirection === "desc") {
+      setSortDirection("asc");
+    } else {
+      setSortField(null);
       setSortDirection("desc");
     }
   }
@@ -35,10 +40,11 @@ export function BrowserPage() {
 
   const browserMusicQuery = useBrowserMusic({
     query,
-    size: 40,
+    size: pageSize,
     levelMin: filters.levelMin,
     levelMax: filters.levelMax,
     difficulties: filters.difficulties,
+    infVers: filters.infVers,
     versions: filters.versions,
     bpmMin: filters.bpmMin,
     bpmMax: filters.bpmMax,
@@ -61,6 +67,7 @@ export function BrowserPage() {
     filters.levelMin !== null ||
     filters.levelMax !== null ||
     filters.difficulties.size > 0 ||
+    filters.infVers.size > 0 ||
     filters.versions.size > 0 ||
     filters.bpmMin !== null ||
     filters.bpmMax !== null ||
@@ -70,6 +77,7 @@ export function BrowserPage() {
     filters.levelMin !== null ||
     filters.levelMax !== null ||
     filters.difficulties.size > 0 ||
+    filters.infVers.size > 0 ||
     filters.radarPeaks.size > 0;
 
   const isLoading =
@@ -91,7 +99,7 @@ export function BrowserPage() {
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex flex-col w-56 lg:w-60 shrink-0 border-r border-cosmos-600/20 bg-cosmos-900/50 relative z-10" data-tutorial="filter-sidebar">
         <div className="flex-1 overflow-y-auto">
-          <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} />
+          <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} onClearSort={() => setSortField(null)} />
         </div>
       </aside>
 
@@ -112,7 +120,7 @@ export function BrowserPage() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} />
+              <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} onClearSort={() => setSortField(null)} />
             </div>
           </div>
         </div>
@@ -166,7 +174,7 @@ export function BrowserPage() {
         </header>
 
         {/* Grid area */}
-        <main className="flex-1 overflow-y-auto" data-tutorial="music-grid">
+        <main ref={gridContainerRef} className="flex-1 overflow-y-auto" data-tutorial="music-grid">
           <MusicGrid
             items={allMusic}
             filters={hasDifficultyFilters ? filters : undefined}

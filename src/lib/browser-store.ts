@@ -16,7 +16,7 @@ interface BrowserState {
 export const useBrowserStore = create<BrowserState>((set) => ({
   query: "",
   filters: createDefaultFilters(),
-  sortField: "distribution_date",
+  sortField: null,
   sortDirection: "desc",
   setQuery: (query) => set({ query }),
   setFilters: (filters) => set({ filters }),

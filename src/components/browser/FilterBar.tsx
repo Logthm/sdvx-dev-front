@@ -2,6 +2,8 @@ import { cn } from "@/lib/utils";
 import {
     DIFFICULTY_LABELS,
     DIFFICULTY_ORDER,
+    INF_VER_COLORS,
+    INF_VER_LABELS,
     type DifficultyName,
     type RadarSchema,
 } from "@/types/music";
@@ -42,6 +44,7 @@ export interface FilterState {
   levelMin: number | null;
   levelMax: number | null;
   difficulties: Set<DifficultyName>;
+  infVers: Set<number>;
   versions: Set<number>;
   bpmMin: number | null;
   bpmMax: number | null;
@@ -57,6 +60,7 @@ export function createDefaultFilters(): FilterState {
     levelMin: null,
     levelMax: null,
     difficulties: new Set<DifficultyName>(),
+    infVers: new Set<number>(),
     versions: new Set<number>(),
     bpmMin: null,
     bpmMax: null,
@@ -72,6 +76,7 @@ interface FilterBarProps {
   sortField: SortField | null;
   sortDirection: SortDirection;
   onToggleSort: (field: SortField) => void;
+  onClearSort: () => void;
   className?: string;
 }
 
@@ -128,7 +133,7 @@ const SORT_OPTIONS: [SortField, string][] = [
   ["artist_name", "filter.sortBy.artist"],
 ];
 
-export function FilterBar({ filters, onChange, sortField, sortDirection, onToggleSort, className }: FilterBarProps) {
+export function FilterBar({ filters, onChange, sortField, sortDirection, onToggleSort, onClearSort, className }: FilterBarProps) {
   const { t } = useTranslation();
   function clampLevel(n: number) {
     return Math.round(Math.max(1, Math.min(n, 20.9)) * 10) / 10;
@@ -195,6 +200,12 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
     onChange({ ...filters, difficulties: next });
   }
 
+  function toggleInfVer(v: number) {
+    const next = new Set(filters.infVers);
+    if (next.has(v)) next.delete(v); else next.add(v);
+    onChange({ ...filters, infVers: next });
+  }
+
   function toggleVersion(v: number) {
     const next = new Set(filters.versions);
     if (next.has(v)) next.delete(v); else next.add(v);
@@ -214,7 +225,9 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
     <div className={cn("flex flex-col md:pt-4", className)}>
       {/* Sort */}
       <div className="obs-panel-section">
-        <SectionLabel>{t('filter.sort')}</SectionLabel>
+        <SectionLabel
+          action={<ClearBtn hasSelection={sortField !== null} onClear={onClearSort} />}
+        >{t('filter.sort')}</SectionLabel>
         <div className="grid grid-cols-2 gap-1">
           {SORT_OPTIONS.map(([field, labelKey]) => (
             <button
@@ -268,12 +281,12 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
       {/* Difficulty */}
       <div className="obs-panel-section">
         <SectionLabel
-          action={<ClearBtn hasSelection={filters.difficulties.size > 0} onClear={() => onChange({ ...filters, difficulties: new Set<DifficultyName>() })} />}
+          action={<ClearBtn hasSelection={filters.difficulties.size > 0 || filters.infVers.size > 0} onClear={() => onChange({ ...filters, difficulties: new Set<DifficultyName>(), infVers: new Set<number>() })} />}
         >
           {t('filter.difficulty')}
         </SectionLabel>
         <div className="grid grid-cols-3 gap-1">
-          {DIFFICULTY_ORDER.map((d) => (
+          {DIFFICULTY_ORDER.filter((d) => d !== "infinite").map((d) => (
             <button
               key={d}
               type="button"
@@ -288,6 +301,28 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
               {DIFFICULTY_LABELS[d]}
             </button>
           ))}
+          {Object.entries(INF_VER_LABELS).map(([ver, label]) => {
+            const v = Number(ver);
+            const active = filters.infVers.has(v);
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => toggleInfVer(v)}
+                className={cn(
+                  "h-8 rounded text-[11px] font-bold uppercase tracking-wider border transition-colors touch-manipulation",
+                  !active && "bg-transparent text-text-muted border-cosmos-600/30 hover:border-cosmos-600/60 hover:bg-cosmos-800/40 hover:text-text-primary",
+                  active && "border-transparent hover:brightness-110",
+                )}
+                style={active ? {
+                  backgroundColor: INF_VER_COLORS[v],
+                  color: "var(--color-cosmos-950)",
+                } : undefined}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 

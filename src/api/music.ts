@@ -51,6 +51,7 @@ export interface BrowserMusicParams {
   levelMin?: number | null;
   levelMax?: number | null;
   difficulties?: Set<string>;
+  infVers?: Set<number>;
   versions?: Set<number>;
   bpmMin?: number | null;
   bpmMax?: number | null;
@@ -66,6 +67,9 @@ export function useBrowserMusic(params: BrowserMusicParams) {
   const levelMax = params.levelMax ?? null;
   const difficulties = params.difficulties
     ? [...params.difficulties].sort()
+    : [];
+  const infVers = params.infVers
+    ? [...params.infVers].sort((a, b) => a - b)
     : [];
   const versions = params.versions
     ? [...params.versions].sort((a, b) => a - b)
@@ -86,6 +90,7 @@ export function useBrowserMusic(params: BrowserMusicParams) {
         levelMin,
         levelMax,
         difficulties,
+        infVers,
         versions,
         bpmMin,
         bpmMax,
@@ -103,6 +108,7 @@ export function useBrowserMusic(params: BrowserMusicParams) {
       if (levelMin !== null) sp.set("level_min", String(levelMin));
       if (levelMax !== null) sp.set("level_max", String(levelMax));
       if (difficulties.length) sp.set("difficulties", difficulties.join(","));
+      if (infVers.length) sp.set("inf_vers", infVers.join(","));
       if (versions.length) sp.set("versions", versions.join(","));
       if (bpmMin !== null) sp.set("bpm_min", String(bpmMin));
       if (bpmMax !== null) sp.set("bpm_max", String(bpmMax));

@@ -14,8 +14,10 @@ import { useTutorial } from "@/hooks/useTutorial";
 import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import {
+    DIFFICULTY_LABELS,
     DIFFICULTY_ORDER,
     formatBpm,
+    getInfLabel,
     type DifficultyName,
     type DifficultySchema,
 } from "@/types/music";
@@ -177,6 +179,7 @@ export function SongDetailPage() {
               key={d.difstr}
               difstr={d.difstr as DifficultyName}
               level={d.difnum}
+              infVer={music.inf_ver}
               selected={activeDif?.difstr === d.difstr}
               onClick={() => setSelectedDif(d)}
             />
@@ -246,6 +249,17 @@ export function SongDetailPage() {
               >
                 {sidebarCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
               </button>
+              {activeDif && (
+                <a
+                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`sdvx ${music.title_name} ${activeDif.difstr === "infinite" ? getInfLabel(music.inf_ver) : DIFFICULTY_LABELS[activeDif.difstr]}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden md:flex items-center justify-center gap-1.5 w-full py-1.5 rounded-md text-xs font-medium text-text-muted hover:text-red-400 border border-cosmos-600/20 hover:border-red-400/30 transition-colors"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  {t('chart.chartPreview')}
+                </a>
+              )}
             </div>
 
             {/* Mobile difficulty selector */}
@@ -256,6 +270,7 @@ export function SongDetailPage() {
                     key={d.difstr}
                     difstr={d.difstr as DifficultyName}
                     level={d.difnum}
+                    infVer={music?.inf_ver}
                     selected={activeDif?.difstr === d.difstr}
                     onClick={() => setSelectedDif(d)}
                   />
