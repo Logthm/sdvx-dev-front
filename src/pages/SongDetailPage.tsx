@@ -185,6 +185,18 @@ export function SongDetailPage() {
             />
           ))}
         </div>
+        {/* Mobile YouTube button */}
+        {activeDif && music && (
+          <a
+            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`sdvx ${music.title_name} ${activeDif.difstr === "infinite" ? getInfLabel(music.inf_ver) : DIFFICULTY_LABELS[activeDif.difstr]}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="md:hidden shrink-0 p-1.5 rounded-md border border-cosmos-600/30 text-text-muted hover:text-red-400 hover:border-red-400/30 transition-colors"
+            title={t('chart.chartPreview')}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+        )}
         {/* Language switcher */}
         <LanguageSwitcher />
 
@@ -284,7 +296,12 @@ export function SongDetailPage() {
             <div className="obs-panel-section">
               <DataRow label="BPM" value={formatBpm(music.bpm_max, music.bpm_min)} />
               <DataRow label={t('chart.version')} value={music.version} />
-              <DataRow label={t('chart.genre')} value={music.genre_name[0] ?? "—"} valueClassName="font-ja" />
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-[11px] uppercase tracking-[0.12em] text-text-muted">{t('chart.genre')}</span>
+                <span className="text-sm font-mono text-text-primary font-ja text-right">
+                  {music.genre_name.length > 0 ? music.genre_name.map((g, i) => <div key={i}>{g}</div>) : "—"}
+                </span>
+              </div>
               {activeDif && (
                 <>
                   <DataRow label={t('chart.exScore')} value={activeDif.max_exscore.toLocaleString()} />
