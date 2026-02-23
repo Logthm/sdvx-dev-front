@@ -179,7 +179,7 @@ export function SongDetailPage() {
               key={d.difstr}
               difstr={d.difstr as DifficultyName}
               level={d.difnum}
-              infVer={music.inf_ver}
+              infVer={music?.inf_ver}
               selected={activeDif?.difstr === d.difstr}
               onClick={() => setSelectedDif(d)}
             />
