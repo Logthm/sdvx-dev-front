@@ -319,12 +319,17 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                 const limitSec = DRAG_RANGE_MS[dr] / 1000;
                 // Always use original position from originalChartData
                 // When events were added/removed, indices shift so index-based lookup is unreliable
-                const orig = useEditorStore.getState().originalChartData;
-                const origTrack = orig?.tracks[sel.track];
-                const editedTrack = activeChart.tracks[sel.track];
-                const origEv = origTrack?.length === editedTrack?.length ? origTrack?.[sel.index] : undefined;
-                const origTime = origEv ? origEv.time as Time3 : bev.time as Time3;
-                const origSec = layout.timeMapper.secondsOf(origTime);
+                let origSec: number;
+                if (btnDragRef.current.active && btnDragRef.current.track === sel.track && btnDragRef.current.index === sel.index) {
+                  origSec = btnDragRef.current.origSec;
+                } else {
+                  const orig = useEditorStore.getState().originalChartData;
+                  const origTrack = orig?.tracks[sel.track];
+                  const editedTrack = activeChart.tracks[sel.track];
+                  const origEv = origTrack?.length === editedTrack?.length ? origTrack?.[sel.index] : undefined;
+                  const origTime = origEv ? origEv.time as Time3 : bev.time as Time3;
+                  origSec = layout.timeMapper.secondsOf(origTime);
+                }
                 const origY = span.y1 - (origSec - span.sec0) * layout.pxPerSecond;
                 const yTop = origY - limitSec * layout.pxPerSecond;
                 const yBot = origY + limitSec * layout.pxPerSecond;
