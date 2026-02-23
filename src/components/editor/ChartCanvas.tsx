@@ -50,8 +50,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   const pointDragRef = useRef<{ active: boolean; track: string; index: number; col: number; isOob: boolean }>({
     active: false, track: "", index: -1, col: 0, isOob: false,
   });
-  const btnDragRef = useRef<{ active: boolean; track: string; index: number; col: number; origSec: number }>({
-    active: false, track: "", index: -1, col: 0, origSec: 0,
+  const btnDragRef = useRef<{ active: boolean; track: string; index: number; col: number; origSec: number; origHoldLen: number; origTime: [number, number, number] }>({
+    active: false, track: "", index: -1, col: 0, origSec: 0, origHoldLen: 0, origTime: [0, 0, 0],
   });
   const hsDragRef = useRef<{ active: boolean; index: number; col: number }>({
     active: false, index: -1, col: 0,
@@ -668,7 +668,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             s.pushHistory();
             s.setSelectedPoint({ type: "button", track: btnHit.track, index: btnHit.index });
             tailSelectedRef.current = false;
-            btnDragRef.current = { active: true, track: btnHit.track, index: btnHit.index, col: btnHit.col, origSec };
+            btnDragRef.current = { active: true, track: btnHit.track, index: btnHit.index, col: btnHit.col, origSec, origHoldLen: bev.hold_len ?? 0, origTime: bev.time as [number, number, number] };
             return;
           }
 
@@ -837,6 +837,11 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         }
         const newTime = layout.timeMapper.secToTime3(sec, span.measure);
         s.updateButtonTime(btnDragRef.current.track, btnDragRef.current.index, newTime);
+        if (btnDragRef.current.origHoldLen > 0) {
+          const delta = layout.timeMapper.unitsBetween(btnDragRef.current.origTime as Time3, newTime);
+          const newLen = btnDragRef.current.origHoldLen - delta;
+          if (newLen > 0) s.updateButtonHoldLen(btnDragRef.current.track, btnDragRef.current.index, newLen);
+        }
         return;
       }
       // Hi-speed mark drag (vertical only)
@@ -983,7 +988,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             s.pushHistory();
             s.setSelectedPoint({ type: "button", track: btnHit.track, index: btnHit.index });
             tailSelectedRef.current = false;
-            btnDragRef.current = { active: true, track: btnHit.track, index: btnHit.index, col: btnHit.col, origSec };
+            btnDragRef.current = { active: true, track: btnHit.track, index: btnHit.index, col: btnHit.col, origSec, origHoldLen: bev.hold_len ?? 0, origTime: bev.time as [number, number, number] };
             return;
           }
           const hsHit = hitTestHiSpeedMarks(x, y, TOUCH_MARGIN);
@@ -1052,6 +1057,11 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         }
         const newTime = layout.timeMapper.secToTime3(sec, span.measure);
         s.updateButtonTime(btnDragRef.current.track, btnDragRef.current.index, newTime);
+        if (btnDragRef.current.origHoldLen > 0) {
+          const delta = layout.timeMapper.unitsBetween(btnDragRef.current.origTime as Time3, newTime);
+          const newLen = btnDragRef.current.origHoldLen - delta;
+          if (newLen > 0) s.updateButtonHoldLen(btnDragRef.current.track, btnDragRef.current.index, newLen);
+        }
         return;
       }
       if (e.touches.length === 1 && hsDragRef.current.active) {
