@@ -334,18 +334,10 @@ body {
   z-index: -1;
 }
 
-/* ── aspect-ratio fallback for older browsers ── */
-@supports not (aspect-ratio: 1 / 1) {
-  .card-cover {
-    height: 0;
-    padding-bottom: 100%;
-  }
-  .card-cover > * {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
+/* ── Square cover container (padding-bottom trick for max compat) ── */
+.card-cover {
+  height: 0;
+  padding-bottom: 100%;
 }
 
 /* ── Corner brackets (仪器化定位框) ── */

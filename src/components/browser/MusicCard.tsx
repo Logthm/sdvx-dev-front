@@ -107,7 +107,7 @@ export function MusicCard({
       )}
     >
       {/* Cover image */}
-      <div className="relative w-full aspect-square overflow-hidden bg-cosmos-800 card-cover">
+      <div className="card-cover relative w-full overflow-hidden bg-cosmos-800">
         {imgSrc && !imgError ? (
           <img
             src={imgSrc}
@@ -115,10 +115,10 @@ export function MusicCard({
             loading="lazy"
             decoding="async"
             onError={() => setImgError(true)}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="absolute inset-0 w-full h-full flex items-center justify-center">
             <span className="text-3xl font-bold text-cosmos-600">
               {music.title_name.charAt(0)}
             </span>
