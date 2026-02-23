@@ -1,15 +1,12 @@
-import { useBrowserMusic, type SortField, type SortDirection } from "@/api/music";
-import {
-    FilterBar,
-    createDefaultFilters,
-    type FilterState,
-} from "@/components/browser/FilterBar";
+import { useBrowserMusic, type SortField } from "@/api/music";
+import { FilterBar } from "@/components/browser/FilterBar";
 import { MusicGrid } from "@/components/browser/MusicGrid";
 import { SearchBar } from "@/components/browser/SearchBar";
 import { Astrolabe } from "@/components/ui/Astrolabe";
 import { Tutorial, useTutorialSteps } from "@/components/ui/Tutorial";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useTutorial } from "@/hooks/useTutorial";
+import { useBrowserStore } from "@/lib/browser-store";
 import { cn } from "@/lib/utils";
 import { SlidersHorizontal, X, HelpCircle } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -19,13 +16,8 @@ import { useTranslation } from "react-i18next";
 export function BrowserPage() {
   const { t } = useTranslation();
   const tutorialSteps = useTutorialSteps();
-  const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<FilterState>(() =>
-    createDefaultFilters(),
-  );
+  const { query, setQuery, filters, setFilters, sortField, setSortField, sortDirection, setSortDirection } = useBrowserStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const navigate = useNavigate();
 
   // Tutorial state
