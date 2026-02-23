@@ -25,18 +25,13 @@ export function BrowserPage() {
 
   function toggleSort(field: SortField) {
     if (sortField === field) {
-      if (sortDirection === "desc") setSortDirection("asc");
-      else { setSortField(null); setSortDirection("desc"); }
+      setSortDirection(sortDirection === "desc" ? "asc" : "desc");
     } else {
       setSortField(field);
       setSortDirection("desc");
     }
   }
 
-  function clearSort() {
-    setSortField(null);
-    setSortDirection("desc");
-  }
 
   const browserMusicQuery = useBrowserMusic({
     query,
@@ -96,7 +91,7 @@ export function BrowserPage() {
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex flex-col w-56 lg:w-60 shrink-0 border-r border-cosmos-600/20 bg-cosmos-900/50 relative z-10" data-tutorial="filter-sidebar">
         <div className="flex-1 overflow-y-auto">
-          <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} onClearSort={clearSort} />
+          <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} />
         </div>
       </aside>
 
@@ -117,7 +112,7 @@ export function BrowserPage() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} onClearSort={clearSort} />
+              <FilterBar filters={filters} onChange={setFilters} sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} />
             </div>
           </div>
         </div>

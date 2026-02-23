@@ -72,7 +72,6 @@ interface FilterBarProps {
   sortField: SortField | null;
   sortDirection: SortDirection;
   onToggleSort: (field: SortField) => void;
-  onClearSort: () => void;
   className?: string;
 }
 
@@ -129,7 +128,7 @@ const SORT_OPTIONS: [SortField, string][] = [
   ["artist_name", "filter.sortBy.artist"],
 ];
 
-export function FilterBar({ filters, onChange, sortField, sortDirection, onToggleSort, onClearSort, className }: FilterBarProps) {
+export function FilterBar({ filters, onChange, sortField, sortDirection, onToggleSort, className }: FilterBarProps) {
   const { t } = useTranslation();
   function clampLevel(n: number) {
     return Math.round(Math.max(1, Math.min(n, 20.9)) * 10) / 10;
@@ -215,9 +214,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
     <div className={cn("flex flex-col md:pt-4", className)}>
       {/* Sort */}
       <div className="obs-panel-section">
-        <SectionLabel
-          action={<ClearBtn hasSelection={sortField !== null} onClear={onClearSort} />}
-        >{t('filter.sort')}</SectionLabel>
+        <SectionLabel>{t('filter.sort')}</SectionLabel>
         <div className="grid grid-cols-2 gap-1">
           {SORT_OPTIONS.map(([field, labelKey]) => (
             <button

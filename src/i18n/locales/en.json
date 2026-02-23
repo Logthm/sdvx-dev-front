@@ -8,7 +8,7 @@
   "search": {
     "placeholder": "Search music...",
     "title": "Search Function",
-    "description": "Use the search bar to quickly find songs.\n\n• Searches both song title and artist name\n• Use romaji or Japanese kana to match readings\n• Chinese simplified/traditional can match Japanese kanji (\u201c东云\u201d -> \u201c東雲\u201d)\n\nTry typing your favorite song name!"
+    "description": "Use the search bar to quickly find songs.\n\n• Searches both song title and artist name\n• Use romaji or Japanese kana to match readings\n• Chinese simplified/traditional can match Japanese kanji (\u201c东云\u201d -> \u201c東雲\u201d)\n• Normal characters can match special symbols (\u201cembryO\u201d -> \u201cΣmbryØ\u201d)\n\nTry typing your favorite song name!"
   },
   "filter": {
     "sort": "Sort",
