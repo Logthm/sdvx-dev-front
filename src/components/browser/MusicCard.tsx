@@ -94,9 +94,11 @@ export function MusicCard({
   const radarPeak = primaryDif ? getHighestRadarKey(primaryDif.radar) : null;
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter") onClick?.(); }}
       className={cn(
         "group relative flex flex-col rounded-lg text-left cursor-pointer overflow-hidden",
         "bg-cosmos-900/40 border border-cosmos-600/20",
@@ -182,6 +184,6 @@ export function MusicCard({
           })}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
