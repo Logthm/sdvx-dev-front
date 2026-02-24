@@ -107,7 +107,8 @@ export function MusicCard({
       )}
     >
       {/* Cover image */}
-      <div className="card-cover relative w-full overflow-hidden bg-cosmos-800">
+      <div className="relative w-full overflow-hidden bg-cosmos-800">
+        <svg viewBox="0 0 1 1" className="block w-full h-auto" aria-hidden="true" />
         {imgSrc && !imgError ? (
           <img
             src={imgSrc}

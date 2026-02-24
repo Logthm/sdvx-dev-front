@@ -334,12 +334,6 @@ body {
   z-index: -1;
 }
 
-/* ── Square cover container (padding-bottom trick for max compat) ── */
-.card-cover {
-  height: 0;
-  padding-bottom: 100%;
-}
-
 /* ── Corner brackets (仪器化定位框) ── */
 .corner-brackets {
   position: relative;
