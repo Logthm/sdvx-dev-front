@@ -24,6 +24,8 @@ export interface RenderOptions {
   fxSwap: boolean;
   /** Mirror lasers (swap L/R + invert offsets) */
   mirrorLaser: boolean;
+  /** Random seed for s-random (ensures preview and edit use the same arrangement) */
+  rngSeed: number | null;
   laserLColor: LaserColor;
   laserRColor: LaserColor;
   pxPerSecond: number;
@@ -42,6 +44,7 @@ export const DEFAULT_RENDER_OPTIONS: RenderOptions = {
   btOrder: [...DEFAULT_BT_ORDER],
   fxSwap: false,
   mirrorLaser: false,
+  rngSeed: null,
   laserLColor: "BLUE",
   laserRColor: "RED",
   pxPerSecond: 300,
@@ -342,6 +345,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         newOpts.arrangementMode !== s.renderOptions.arrangementMode ||
         newOpts.mirrorLaser !== s.renderOptions.mirrorLaser ||
         newOpts.fxSwap !== s.renderOptions.fxSwap ||
+        newOpts.rngSeed !== s.renderOptions.rngSeed ||
         newOpts.btOrder.some((v, i) => v !== s.renderOptions.btOrder[i]);
       if (arrChanged && s.originalChartData) {
         return {

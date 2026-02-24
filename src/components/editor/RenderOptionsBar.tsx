@@ -94,6 +94,7 @@ export function RenderOptionsBar() {
   const opts = useEditorStore((s) => s.renderOptions);
   const setOpts = useEditorStore((s) => s.setRenderOptions);
   const isRandom = opts.arrangementMode === "random";
+  const isSRandom = opts.arrangementMode === "s-random";
 
   const handleSetBt = useCallback(
     (idx: number, target: BtTrack) => {
@@ -139,6 +140,15 @@ export function RenderOptionsBar() {
           btOrder: arr,
           fxSwap: Math.random() < 0.5,
           mirrorLaser: Math.random() < 0.5,
+          rngSeed: null,
+        });
+      } else if (value === "s-random") {
+        setOpts({
+          arrangementMode: value,
+          btOrder: [...DEFAULT_BT_ORDER],
+          fxSwap: false,
+          mirrorLaser: false,
+          rngSeed: Math.floor(Math.random() * 2 ** 31),
         });
       } else {
         setOpts({
@@ -146,11 +156,16 @@ export function RenderOptionsBar() {
           btOrder: [...DEFAULT_BT_ORDER],
           fxSwap: false,
           mirrorLaser: false,
+          rngSeed: null,
         });
       }
     },
     [setOpts],
   );
+
+  const handleSRandomReshuffle = useCallback(() => {
+    setOpts({ rngSeed: Math.floor(Math.random() * 2 ** 31) });
+  }, [setOpts]);
 
   return (
     <div className="flex flex-col gap-3 text-sm w-full">
@@ -233,6 +248,20 @@ export function RenderOptionsBar() {
               <Shuffle size={14} />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* S-Random reshuffle */}
+      {isSRandom && (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={handleSRandomReshuffle}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-text-muted hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            title={t('chart.randomizeAll')}
+          >
+            <Shuffle size={14} />
+            <span className="text-xs">{t('chart.randomizeAll')}</span>
+          </button>
         </div>
       )}
 

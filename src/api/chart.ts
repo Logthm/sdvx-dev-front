@@ -55,6 +55,7 @@ export function useArrangedChartData(
       options.btOrder.join(","),
       options.fxSwap,
       options.mirrorLaser,
+      options.rngSeed,
     ] as const,
     queryFn: async () => {
       const body: Record<string, unknown> = {
@@ -62,6 +63,10 @@ export function useArrangedChartData(
         difstr: difstr,
         arrangement_mode: hasCustomMapping ? "normal" : options.arrangementMode,
       };
+
+      if (options.rngSeed !== null) {
+        body.rng_seed = options.rngSeed;
+      }
 
       if (hasCustomMapping) {
         body.bt_order = options.btOrder;
@@ -107,6 +112,7 @@ export function useChartImage(
       options.btOrder.join(","),
       options.fxSwap,
       options.mirrorLaser,
+      options.rngSeed,
       options.laserLColor,
       options.laserRColor,
       options.pxPerSecond,
@@ -124,6 +130,10 @@ export function useChartImage(
         laser_l_color: options.laserLColor,
         laser_r_color: options.laserRColor,
       };
+
+      if (options.rngSeed !== null) {
+        body.rng_seed = options.rngSeed;
+      }
 
       if (hasCustomMapping) {
         body.bt_order = options.btOrder;
