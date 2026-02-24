@@ -129,6 +129,7 @@
     "retry": "重試",
     "preview": "預覽",
     "edit": "編輯",
+    "play": "播放",
     "version": "版本",
     "genre": "流派",
     "exScore": "EX Score",
@@ -160,12 +161,24 @@
     "fullscreen": "全螢幕",
     "exitFullscreen": "退出全螢幕",
     "chartPreview": "譜面預覽",
+    "speakTitle": "點擊朗讀曲名",
+    "speakArtist": "點擊朗讀作者名",
     "addNotes": "新增音符",
     "resetToOriginal": "重置為原始狀態",
     "deleteSelected": "刪除選中的物件",
     "panView": "平移（拖動視圖）",
     "moveSelect": "移動（選擇並拖動）",
     "editHs": "編輯（切換長按/編輯變速）"
+  },
+  "playback": {
+    "play": "播放",
+    "pause": "暫停",
+    "stop": "停止",
+    "rewind": "後退 5 秒",
+    "forward": "前進 5 秒",
+    "metronome": "節拍器",
+    "chooseFile": "選擇音訊檔案...",
+    "offset": "偏移"
   },
   "difficulty": {
     "novice": "NOV",

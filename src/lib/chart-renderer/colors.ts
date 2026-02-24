@@ -1,5 +1,15 @@
 /** Chart renderer color palette */
 
+import type { LaserColor } from "@/lib/editor-store";
+
+/** Maps LaserColor enum to rgba strings (alpha=178/255≈0.70, matching backend). */
+export const LASER_COLOR_MAP: Record<LaserColor, string> = {
+  BLUE: "rgba(0, 130, 217, 0.70)",
+  RED: "rgba(188, 0, 136, 0.70)",
+  GREEN: "rgba(8, 190, 0, 0.70)",
+  YELLOW: "rgba(239, 222, 0, 0.70)",
+};
+
 export const C = {
   // Background
   BG: "#080c18",

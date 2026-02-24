@@ -9,7 +9,8 @@
  */
 
 import type { ChartData, LaserEvent } from "@/types/chart";
-import { C } from "./colors";
+import { C, LASER_COLOR_MAP } from "./colors";
+import type { LaserColor } from "@/lib/editor-store";
 import {
   findSpanByMeasure,
   lanLeftX,
@@ -345,6 +346,8 @@ export function drawLasers(
   ctx: CanvasRenderingContext2D,
   chartData: ChartData,
   layout: LayoutResult,
+  laserLColor?: LaserColor,
+  laserRColor?: LaserColor,
 ) {
   const laserLEvents = (chartData.tracks["1"] ?? []).filter(
     (e): e is LaserEvent => e.type === "laser",
@@ -354,6 +357,9 @@ export function drawLasers(
   );
 
   if (laserLEvents.length === 0 && laserREvents.length === 0) return;
+
+  const colorL = laserLColor ? LASER_COLOR_MAP[laserLColor] : C.LASER_L;
+  const colorR = laserRColor ? LASER_COLOR_MAP[laserRColor] : C.LASER_R;
 
   const { width, height } = ctx.canvas;
   const transform = ctx.getTransform();
@@ -369,10 +375,10 @@ export function drawLasers(
 
   // Draw each laser on its own offscreen canvas
   const [offL, ctxL] = makeOffscreen();
-  drawLaserTrack(ctxL, laserLEvents, layout, C.LASER_L);
+  drawLaserTrack(ctxL, laserLEvents, layout, colorL);
 
   const [offR, ctxR] = makeOffscreen();
-  drawLaserTrack(ctxR, laserREvents, layout, C.LASER_R);
+  drawLaserTrack(ctxR, laserREvents, layout, colorR);
 
   // Composite onto main canvas (identity transform — offscreens already transformed)
   ctx.save();

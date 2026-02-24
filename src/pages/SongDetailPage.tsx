@@ -1,9 +1,11 @@
-import { useChartData, useChartEditability } from "@/api/chart";
+import { useArrangedChartData, useChartData, useChartEditability } from "@/api/chart";
 import { coverUrl } from "@/api/client";
 import { useMusic } from "@/api/music";
 import { ChartCanvas } from "@/components/editor/ChartCanvas";
 import { ChartPreview } from "@/components/editor/ChartPreview";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
+import { PlaybackCanvas } from "@/components/editor/PlaybackCanvas";
+import { PlaybackToolbar } from "@/components/editor/PlaybackToolbar";
 import { RenderOptionsBar } from "@/components/editor/RenderOptionsBar";
 import { Astrolabe } from "@/components/ui/Astrolabe";
 import { DifficultyBadge } from "@/components/ui/DifficultyBadge";
@@ -21,7 +23,7 @@ import {
     type DifficultyName,
     type DifficultySchema,
 } from "@/types/music";
-import { ArrowLeft, ChevronDown, ChevronUp, Eye, HelpCircle, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Eye, HelpCircle, Loader2, Pencil, Play, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -40,7 +42,7 @@ function DataRow({ label, value, valueClassName }: { label: string; value: strin
 }
 
 export function SongDetailPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const allChartSteps = useChartTutorialSteps();
   const { musicId } = useParams<{ musicId: string }>();
   const [searchParams] = useSearchParams();
@@ -90,6 +92,9 @@ export function SongDetailPage() {
   const chart = chartQuery.data;
 
   const setOriginalChartData = useEditorStore((s) => s.setOriginalChartData);
+  const setArrangedBaseData = useEditorStore((s) => s.setArrangedBaseData);
+  const clearArrangedBaseData = useEditorStore((s) => s.clearArrangedBaseData);
+  const editorChartData = useEditorStore((s) => s.chartData);
   const mode = useEditorStore((s) => s.mode);
   const setMode = useEditorStore((s) => s.setMode);
   const renderOptions = useEditorStore((s) => s.renderOptions);
@@ -98,13 +103,30 @@ export function SongDetailPage() {
   const setExpandedTool = useEditorStore((s) => s.setExpandedTool);
   const mobileFullscreen = useEditorStore((s) => s.mobileFullscreen);
 
+  // Fetch backend-arranged chart data when arrangement is non-normal and song is editable
+  const arrangedQuery = useArrangedChartData(
+    canEdit ? numericId : null,
+    canEdit ? (activeDif?.difstr ?? null) : null,
+    renderOptions,
+    canEdit && renderOptions.arrangementMode !== "normal",
+  );
+
   useEffect(() => {
-    if (!canEdit && mode === "edit") setMode("preview");
+    if (!canEdit && (mode === "edit" || mode === "play")) setMode("preview");
   }, [canEdit, mode, setMode]);
 
   useEffect(() => {
     if (chart) setOriginalChartData(chart);
   }, [chart, setOriginalChartData]);
+
+  // When backend-arranged data arrives, push it into the store
+  useEffect(() => {
+    if (arrangedQuery.data) {
+      setArrangedBaseData(arrangedQuery.data);
+    } else if (renderOptions.arrangementMode === "normal") {
+      clearArrangedBaseData();
+    }
+  }, [arrangedQuery.data, renderOptions.arrangementMode, setArrangedBaseData, clearArrangedBaseData]);
 
   // Auto-switch mode/arrangement/mouseTool based on tutorial step
   // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=pan,8=move,9=move2,10=editPointer,11=add,12=reset,13=delete,14=finish
@@ -131,7 +153,7 @@ export function SongDetailPage() {
       setMode("preview");
       if (renderOptions.arrangementMode !== "random") setRenderOptions({ arrangementMode: "random" });
     } else {
-      if (mode === "edit") setMode("preview");
+      if (mode === "edit" || mode === "play") setMode("preview");
       if (renderOptions.arrangementMode !== "normal") setRenderOptions({ arrangementMode: "normal" });
     }
   }, [chartTutorial.isOpen, chartTutorial.currentStep, canEdit, setMode, setRenderOptions, setMouseTool, setExpandedTool]);
@@ -250,10 +272,50 @@ export function SongDetailPage() {
               </div>
               <div className="min-w-0 flex flex-col justify-center md:justify-start flex-1">
                 <h2 className="text-sm font-bold text-text-primary leading-tight break-words font-ja">{music.title_name}</h2>
+                {music.title_yomigana && music.title_yomigana !== music.title_name && (() => {
+                  const displayText = i18n.language === "ja" ? music.title_yomigana : (music.title_romaji || music.title_yomigana);
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const utterance = new SpeechSynthesisUtterance(music.title_yomigana);
+                        utterance.lang = "ja-JP";
+                        utterance.rate = 0.9;
+                        speechSynthesis.cancel();
+                        speechSynthesis.speak(utterance);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors cursor-pointer mt-0.5 font-ja text-left"
+                      title={t('chart.speakTitle')}
+                    >
+                      <Volume2 size={11} className="shrink-0" />
+                      <span>{displayText}</span>
+                    </button>
+                  );
+                })()}
                 {music.sub_title_name && (
                   <p className="text-xs text-text-muted break-words font-ja">{music.sub_title_name}</p>
                 )}
                 <p className="text-xs text-text-secondary break-words mt-0.5 font-ja">{music.artist_name}</p>
+                {music.artist_yomigana && music.artist_yomigana !== music.artist_name && (() => {
+                  const displayText = i18n.language === "ja" ? music.artist_yomigana : (music.artist_romaji || music.artist_yomigana);
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const utterance = new SpeechSynthesisUtterance(music.artist_yomigana);
+                        utterance.lang = "ja-JP";
+                        utterance.rate = 0.9;
+                        speechSynthesis.cancel();
+                        speechSynthesis.speak(utterance);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors cursor-pointer mt-0.5 font-ja text-left"
+                      title={t('chart.speakArtist')}
+                    >
+                      <Volume2 size={11} className="shrink-0" />
+                      <span>{displayText}</span>
+                    </button>
+                  );
+                })()}
               </div>
               <button
                 onClick={() => { setSidebarCollapsed((v) => !v); setToolbarCollapsed(true); }}
@@ -363,6 +425,17 @@ export function SongDetailPage() {
                     <Pencil size={14} /> {t('chart.edit')}
                   </button>
                 )}
+                {canEdit && (
+                  <button
+                    onClick={() => setMode("play")}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all",
+                      mode === "play" ? "bg-gold-400/15 text-gold-400" : "text-text-muted hover:text-text-primary",
+                    )}
+                  >
+                    <Play size={14} /> {t('chart.play')}
+                  </button>
+                )}
                 <button
                   onClick={() => { setToolbarCollapsed((v) => !v); setSidebarCollapsed(true); }}
                   className="md:hidden px-2 flex items-center text-text-muted hover:text-gold-400 transition-colors"
@@ -372,7 +445,14 @@ export function SongDetailPage() {
               </div>
               <div className={cn(toolbarCollapsed ? "hidden md:block" : "block")} data-tutorial="chart-render-options">
                 {mode === "preview" && <RenderOptionsBar />}
-                {mode === "edit" && <EditorToolbar />}
+                {mode === "edit" && (
+                  <>
+                    <RenderOptionsBar />
+                    <div className="border-t border-cosmos-600/20 my-2" />
+                    <EditorToolbar />
+                  </>
+                )}
+                {mode === "play" && <PlaybackToolbar />}
               </div>
             </div>
           </aside>
@@ -399,7 +479,11 @@ export function SongDetailPage() {
                 <button onClick={() => chartQuery.refetch()} className="text-xs text-accent hover:underline">{t('chart.retry')}</button>
               </div>
             ) : chart ? (
-              <ChartCanvas chartData={chart} className="w-full h-full" />
+              mode === "play" ? (
+                <PlaybackCanvas chartData={editorChartData ?? chart} className="w-full h-full" />
+              ) : (
+                <ChartCanvas chartData={editorChartData ?? chart} className="w-full h-full" />
+              )
             ) : null}
           </div>
         </div>

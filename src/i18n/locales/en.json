@@ -129,6 +129,7 @@
     "retry": "Retry",
     "preview": "Preview",
     "edit": "Edit",
+    "play": "Play",
     "version": "Version",
     "genre": "Genre",
     "exScore": "EX Score",
@@ -160,12 +161,24 @@
     "fullscreen": "Fullscreen",
     "exitFullscreen": "Exit fullscreen",
     "chartPreview": "Chart preview",
+    "speakTitle": "Click to read aloud",
+    "speakArtist": "Click to read artist aloud",
     "addNotes": "Add notes",
     "resetToOriginal": "Reset selected to original",
     "deleteSelected": "Delete selected",
     "panView": "Pan (drag view)",
     "moveSelect": "Move (select & drag)",
     "editHs": "Edit (toggle hold, edit HS)"
+  },
+  "playback": {
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop",
+    "rewind": "Rewind 5s",
+    "forward": "Forward 5s",
+    "metronome": "Metronome",
+    "chooseFile": "Choose audio file...",
+    "offset": "Offset"
   },
   "difficulty": {
     "novice": "NOV",

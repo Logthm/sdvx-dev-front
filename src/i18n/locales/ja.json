@@ -129,6 +129,7 @@
     "retry": "再試行",
     "preview": "プレビュー",
     "edit": "編集",
+    "play": "再生",
     "version": "バージョン",
     "genre": "ジャンル",
     "exScore": "EX Score",
@@ -160,12 +161,24 @@
     "fullscreen": "フルスクリーン",
     "exitFullscreen": "フルスクリーン解除",
     "chartPreview": "譜面確認",
+    "speakTitle": "クリックで読み上げ",
+    "speakArtist": "クリックでアーティスト名を読み上げ",
     "addNotes": "ノーツを追加",
     "resetToOriginal": "元に戻す",
     "deleteSelected": "選択を削除",
     "panView": "パン（ビューをドラッグ）",
     "moveSelect": "移動（選択してドラッグ）",
     "editHs": "編集（ホールド切替/HS編集）"
+  },
+  "playback": {
+    "play": "再生",
+    "pause": "一時停止",
+    "stop": "停止",
+    "rewind": "5秒戻る",
+    "forward": "5秒進む",
+    "metronome": "メトロノーム",
+    "chooseFile": "音声ファイルを選択...",
+    "offset": "オフセット"
   },
   "difficulty": {
     "novice": "NOV",

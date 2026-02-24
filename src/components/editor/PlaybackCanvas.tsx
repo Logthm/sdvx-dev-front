@@ -1,0 +1,229 @@
+/**
+ * PlaybackCanvas — single-column scrolling chart playback.
+ *
+ * Notes fall from top to bottom; the playhead sits at ~70% of screen height.
+ * Uses requestAnimationFrame for smooth scrolling driven by performance.now().
+ */
+
+import { computeSingleColumnLayout } from "@/lib/chart-renderer/layout";
+import { renderPlaybackChart } from "@/lib/chart-renderer/renderer";
+import { usePlaybackStore } from "@/lib/playback-store";
+import { useEditorStore } from "@/lib/editor-store";
+import { useMetronome } from "@/lib/use-metronome";
+import { useAudioPlayer } from "@/lib/use-audio-player";
+import type { ChartData } from "@/types/chart";
+import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+
+interface PlaybackCanvasProps {
+  chartData: ChartData;
+  className?: string;
+}
+
+const PLAYHEAD_RATIO = 0.7; // playhead at 70% from top
+
+export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number>(0);
+  const playStartRef = useRef<{ perfTime: number; chartTime: number } | null>(
+    null,
+  );
+
+  const isPlaying = usePlaybackStore((s) => s.isPlaying);
+  const currentTimeSec = usePlaybackStore((s) => s.currentTimeSec);
+  const playbackRate = usePlaybackStore((s) => s.playbackRate);
+  const totalDurationSec = usePlaybackStore((s) => s.totalDurationSec);
+  const setCurrentTime = usePlaybackStore((s) => s.setCurrentTime);
+  const setTotalDuration = usePlaybackStore((s) => s.setTotalDuration);
+  const pause = usePlaybackStore((s) => s.pause);
+
+  const metronomeEnabled = usePlaybackStore((s) => s.metronomeEnabled);
+  const metronomeVolume = usePlaybackStore((s) => s.metronomeVolume);
+  const beatSubdivision = usePlaybackStore((s) => s.beatSubdivision);
+  const bgmFile = usePlaybackStore((s) => s.bgmFile);
+  const bgmOffset = usePlaybackStore((s) => s.bgmOffset);
+
+  const hiSpeedMarks = useEditorStore((s) => s.hiSpeedMarks);
+  const bpmDisplayMode = useEditorStore((s) => s.bpmDisplayMode);
+  const renderOptions = useEditorStore((s) => s.renderOptions);
+
+  // Compute layout and total duration
+  const layout = useMemo(
+    () => computeSingleColumnLayout(chartData, renderOptions.pxPerSecond),
+    [chartData, renderOptions.pxPerSecond],
+  );
+
+  useEffect(() => {
+    if (layout.spans.length > 0) {
+      const lastSpan = layout.spans[layout.spans.length - 1];
+      setTotalDuration(lastSpan.sec1);
+    }
+  }, [layout, setTotalDuration]);
+
+  // Metronome
+  useMetronome(
+    chartData,
+    currentTimeSec,
+    isPlaying,
+    beatSubdivision,
+    metronomeVolume,
+    metronomeEnabled,
+    playbackRate,
+  );
+
+  // BGM player
+  useAudioPlayer(bgmFile, isPlaying, currentTimeSec, playbackRate, bgmOffset);
+
+  // Convert seconds to Y position in chart space (uses yInMeasure convention)
+  const secToY = useCallback(
+    (sec: number) => {
+      if (layout.spans.length === 0) return 0;
+      for (const span of layout.spans) {
+        if (sec >= span.sec0 - 1e-9 && sec <= span.sec1 + 1e-9) {
+          // yInMeasure: y1 - (sec - sec0) * pxPerSecond
+          return span.y1 - (sec - span.sec0) * layout.pxPerSecond;
+        }
+      }
+      // Beyond last span — return top of chart
+      const last = layout.spans[layout.spans.length - 1];
+      return last.y0;
+    },
+    [layout],
+  );
+
+  // Drawing function
+  const draw = useCallback(
+    (timeSec: number) => {
+      const canvas = canvasRef.current;
+      const container = containerRef.current;
+      if (!canvas || !container) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = container.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+
+      const ctx = canvas.getContext("2d")!;
+      ctx.scale(dpr, dpr);
+
+      const playheadScreenY = h * PLAYHEAD_RATIO;
+      const scrollY = secToY(timeSec);
+
+      renderPlaybackChart(
+        ctx,
+        chartData,
+        layout,
+        w,
+        h,
+        scrollY,
+        playheadScreenY,
+        hiSpeedMarks,
+        bpmDisplayMode,
+        renderOptions.laserLColor,
+        renderOptions.laserRColor,
+      );
+    },
+    [chartData, layout, secToY, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor],
+  );
+
+  // PLACEHOLDER_ANIMATION_LOOP
+
+  // Animation loop
+  useEffect(() => {
+    if (isPlaying) {
+      playStartRef.current = {
+        perfTime: performance.now(),
+        chartTime: currentTimeSec,
+      };
+    } else {
+      playStartRef.current = null;
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    let running = true;
+
+    const tick = () => {
+      if (!running) return;
+
+      if (isPlaying && playStartRef.current) {
+        const elapsed =
+          ((performance.now() - playStartRef.current.perfTime) / 1000) *
+          playbackRate;
+        const newTime = playStartRef.current.chartTime + elapsed;
+
+        if (newTime >= totalDurationSec) {
+          setCurrentTime(totalDurationSec);
+          pause();
+        } else {
+          setCurrentTime(newTime);
+          draw(newTime);
+        }
+      } else {
+        draw(currentTimeSec);
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      running = false;
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [isPlaying, playbackRate, totalDurationSec, currentTimeSec, draw, setCurrentTime, pause]);
+
+  // Resize observer
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const obs = new ResizeObserver(() => draw(currentTimeSec));
+    obs.observe(container);
+    return () => obs.disconnect();
+  }, [draw, currentTimeSec]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+
+      const store = usePlaybackStore.getState();
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (store.isPlaying) store.pause();
+        else store.play();
+      } else if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        store.seekRelative(-2);
+      } else if (e.code === "ArrowRight") {
+        e.preventDefault();
+        store.seekRelative(2);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn("relative overflow-hidden", className)}
+      style={{ touchAction: "none" }}
+      tabIndex={0}
+    >
+      <canvas ref={canvasRef} className="block" />
+    </div>
+  );
+}
+

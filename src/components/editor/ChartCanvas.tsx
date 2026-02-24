@@ -77,6 +77,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   const setDragRange = useEditorStore((s) => s.setDragRange);
   const hiSpeedMarks = useEditorStore((s) => s.hiSpeedMarks);
   const bpmDisplayMode = useEditorStore((s) => s.bpmDisplayMode);
+  const renderOptions = useEditorStore((s) => s.renderOptions);
 
   const resetSelectedPoint = useEditorStore((s) => s.resetSelectedPoint);
   const deleteSelectedPoint = useEditorStore((s) => s.deleteSelectedPoint);
@@ -178,6 +179,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       hiSpeed,
       hiSpeedMarks,
       bpmDisplayMode,
+      renderOptions.laserLColor,
+      renderOptions.laserRColor,
     );
 
     // Draw gold outlines for modified button notes
@@ -366,7 +369,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       }
       ctx.restore();
     }
-  }, [activeChart, zoom, panX, panY, mode, selectedPoint, simplifyLasers, dragRange, speed, hiSpeedMarks, bpmDisplayMode]);
+  }, [activeChart, zoom, panX, panY, mode, selectedPoint, simplifyLasers, dragRange, speed, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor]);
 
   const requestDraw = useCallback(() => {
     cancelAnimationFrame(rafRef.current);

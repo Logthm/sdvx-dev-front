@@ -1,5 +1,6 @@
 import type { ButtonEvent, ChartData, ChartEvent, LaserEvent, TimePos } from "@/types/chart";
 import type { TimeMapper, Time3 } from "./chart-renderer/time-mapper";
+import type { RenderOptions, BtTrack } from "./editor-store";
 
 export interface EditFlags {
   simplifyLasers: boolean;
@@ -183,4 +184,61 @@ export function calculateInterval(
   }
 
   return { ms, notation: `${numerator}/${denomFraction}` };
+}
+
+// ── Arrangement helpers ─────────────────────────────────────────
+
+const BT_TRACK_KEY: Record<BtTrack, string> = {
+  "BT-A": "3", "BT-B": "4", "BT-C": "5", "BT-D": "6",
+};
+const DEFAULT_BT_KEYS = ["3", "4", "5", "6"];
+
+function mirrorLaserEvents(events: ChartEvent[]): ChartEvent[] {
+  return events.map((ev) => {
+    if (ev.type !== "laser") return ev;
+    return { ...ev, offset: 1 - ev.offset };
+  });
+}
+
+/**
+ * Apply arrangement (mirror / random mapping) to chart data.
+ * Returns the original data unchanged for "normal" and "s-random" modes.
+ */
+export function applyArrangement(data: ChartData, opts: RenderOptions): ChartData {
+  const { arrangementMode, btOrder, fxSwap, mirrorLaser } = opts;
+
+  if (arrangementMode === "normal") return data;
+  if (arrangementMode === "s-random") return data;
+
+  const newTracks: Record<string, ChartEvent[]> = { ...data.tracks };
+
+  if (arrangementMode === "mirror") {
+    // BT: A↔D, B↔C
+    newTracks["3"] = data.tracks["6"] ?? [];
+    newTracks["4"] = data.tracks["5"] ?? [];
+    newTracks["5"] = data.tracks["4"] ?? [];
+    newTracks["6"] = data.tracks["3"] ?? [];
+    // FX: L↔R
+    newTracks["2"] = data.tracks["7"] ?? [];
+    newTracks["7"] = data.tracks["2"] ?? [];
+    // Laser: L↔R + invert offset
+    newTracks["1"] = mirrorLaserEvents(data.tracks["8"] ?? []);
+    newTracks["8"] = mirrorLaserEvents(data.tracks["1"] ?? []);
+  } else {
+    // "random" — apply custom btOrder, fxSwap, mirrorLaser
+    const srcKeys = btOrder.map((bt) => BT_TRACK_KEY[bt]);
+    for (let i = 0; i < 4; i++) {
+      newTracks[DEFAULT_BT_KEYS[i]] = data.tracks[srcKeys[i]] ?? [];
+    }
+    if (fxSwap) {
+      newTracks["2"] = data.tracks["7"] ?? [];
+      newTracks["7"] = data.tracks["2"] ?? [];
+    }
+    if (mirrorLaser) {
+      newTracks["1"] = mirrorLaserEvents(data.tracks["8"] ?? []);
+      newTracks["8"] = mirrorLaserEvents(data.tracks["1"] ?? []);
+    }
+  }
+
+  return { ...data, tracks: newTracks };
 }

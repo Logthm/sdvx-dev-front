@@ -114,6 +114,60 @@ export function computeLayout(
   };
 }
 
+// ── Single-column layout (for playback mode) ────────────────
+
+export function computeSingleColumnLayout(
+  chartData: ChartData,
+  pxPerSecond: number = DEFAULT_PX_PER_SECOND,
+): LayoutResult {
+  const tm = new TimeMapper(chartData);
+  const endMeasure = chartData.end_position?.measure ?? 1;
+
+  // First pass: compute total height
+  let totalHeight = 2 * MARGIN;
+  const heights: number[] = [];
+  for (let m = 1; m <= endMeasure; m++) {
+    const sec0 = tm.secondsOf([m, 1, 0]);
+    const sec1 = tm.secondsOf([m + 1, 1, 0]);
+    const h = (sec1 - sec0) * pxPerSecond;
+    heights.push(h);
+    totalHeight += h;
+  }
+
+  // Second pass: build spans bottom-to-top (same as multi-column)
+  const spans: MeasureSpan[] = [];
+  let currentY = totalHeight - MARGIN;
+
+  for (let m = 1; m <= endMeasure; m++) {
+    const sec0 = tm.secondsOf([m, 1, 0]);
+    const sec1 = tm.secondsOf([m + 1, 1, 0]);
+    const measureHeight = heights[m - 1];
+
+    spans.push({
+      measure: m,
+      col: 0,
+      y0: currentY - measureHeight,
+      y1: currentY,
+      sec0,
+      sec1,
+    });
+
+    currentY -= measureHeight;
+  }
+
+  const canvasWidth = TRACK_WIDTH + GUTTER_WIDTH + 2 * MARGIN + LEFT_GUTTER;
+
+  return {
+    spans,
+    timeMapper: tm,
+    numColumns: 1,
+    canvasWidth: Math.max(100, canvasWidth),
+    canvasHeight: Math.max(100, totalHeight),
+    pxPerSecond,
+    columnHeight: totalHeight,
+  };
+}
+
 // ── Helpers ─────────────────────────────────────────────────────
 
 /** X base of a column's track area (left edge including OOB) */

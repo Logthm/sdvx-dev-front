@@ -5,7 +5,7 @@
 
 import type { ChartData } from "@/types/chart";
 import { C } from "./colors";
-import type { BpmDisplayMode, HiSpeedMark } from "@/lib/editor-store";
+import type { BpmDisplayMode, HiSpeedMark, LaserColor } from "@/lib/editor-store";
 import { drawGridWithBpm, drawHiSpeedMarks } from "./grid-drawer";
 import { drawLasers } from "./laser-drawer";
 import {
@@ -42,6 +42,8 @@ export function renderChart(
   hiSpeed?: number,
   hiSpeedMarks: HiSpeedMark[] = [],
   bpmDisplayMode: BpmDisplayMode = "bpm",
+  laserLColor?: LaserColor,
+  laserRColor?: LaserColor,
 ): RenderResult {
   const layout = computeLayout(chartData, pxPerSecond, columnHeight);
 
@@ -79,7 +81,7 @@ export function renderChart(
   // Draw grid, notes, lasers (they iterate spans internally)
   drawGridWithBpm(ctx, layout, chartData.bpm_info, hiSpeed, hiSpeedMarks, bpmDisplayMode);
   drawNotes(ctx, chartData, layout);
-  drawLasers(ctx, chartData, layout);
+  drawLasers(ctx, chartData, layout, laserLColor, laserRColor);
 
   ctx.restore();
 
@@ -150,4 +152,58 @@ export function computeMainBpm(chartData: ChartData): number {
     if (dur > maxDur) { maxDur = dur; mainBpm = bpm; }
   }
   return mainBpm;
+}
+
+// ── Playback renderer ──────────────────────────────────────
+
+export function renderPlaybackChart(
+  ctx: CanvasRenderingContext2D,
+  chartData: ChartData,
+  layout: LayoutResult,
+  viewWidth: number,
+  viewHeight: number,
+  scrollY: number,
+  playheadY: number,
+  hiSpeedMarks: HiSpeedMark[] = [],
+  bpmDisplayMode: BpmDisplayMode = "bpm",
+  laserLColor?: LaserColor,
+  laserRColor?: LaserColor,
+) {
+  ctx.save();
+
+  // Clear
+  ctx.fillStyle = C.BG;
+  ctx.fillRect(0, 0, viewWidth, viewHeight);
+
+  // Center the single column horizontally
+  const offsetX = Math.max(0, (viewWidth - layout.canvasWidth) / 2);
+
+  // Translate: scrollY maps chart Y to screen Y
+  ctx.translate(offsetX, -scrollY + playheadY);
+
+  // Draw column background
+  drawColumnBackground(ctx, 0, layout.canvasHeight, layout.spans);
+
+  // Draw hi-speed shading
+  if (hiSpeedMarks.length > 0) drawHiSpeedMarks(ctx, layout, hiSpeedMarks);
+
+  // Grid, notes, lasers
+  drawGridWithBpm(ctx, layout, chartData.bpm_info, undefined, hiSpeedMarks, bpmDisplayMode);
+  drawNotes(ctx, chartData, layout);
+  drawLasers(ctx, chartData, layout, laserLColor, laserRColor);
+
+  ctx.restore();
+
+  // Draw playhead line (in screen space)
+  ctx.save();
+  const playheadXBase = colXBase(0);
+  ctx.strokeStyle = "#00ffcc";
+  ctx.lineWidth = 2;
+  ctx.shadowColor = "#00ffcc";
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.moveTo(offsetX + playheadXBase, playheadY);
+  ctx.lineTo(offsetX + playheadXBase + TRACK_WIDTH, playheadY);
+  ctx.stroke();
+  ctx.restore();
 }

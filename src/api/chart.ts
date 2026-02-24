@@ -34,6 +34,60 @@ function isCustomBtOrder(order: readonly string[]): boolean {
 }
 
 /**
+ * Fetch arranged chart data from the backend (for s-random and custom random modes).
+ * Returns the full ChartData with arrangement already applied by the backend.
+ */
+export function useArrangedChartData(
+  musicId: number | null,
+  difstr: string | null,
+  options: RenderOptions,
+  enabled: boolean,
+) {
+  const hasCustomMapping = isCustomBtOrder(options.btOrder) || options.fxSwap;
+
+  return useQuery({
+    queryKey: [
+      "chart",
+      "arranged_data",
+      musicId,
+      difstr,
+      options.arrangementMode,
+      options.btOrder.join(","),
+      options.fxSwap,
+      options.mirrorLaser,
+    ] as const,
+    queryFn: async () => {
+      const body: Record<string, unknown> = {
+        music_id: musicId,
+        difstr: difstr,
+        arrangement_mode: hasCustomMapping ? "normal" : options.arrangementMode,
+      };
+
+      if (hasCustomMapping) {
+        body.bt_order = options.btOrder;
+        body.fx_swap = options.fxSwap;
+      }
+
+      if (options.mirrorLaser) {
+        body.mirror_laser = true;
+      }
+
+      return apiFetch<ChartData>("/chart/data/arranged", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    },
+    enabled:
+      enabled &&
+      musicId !== null &&
+      difstr !== null &&
+      difstr.length > 0 &&
+      options.arrangementMode !== "normal",
+    staleTime: 10 * 60_000,
+  });
+}
+
+/**
  * Fetch a backend-rendered chart image as a blob URL.
  */
 export function useChartImage(
@@ -101,9 +155,10 @@ export function useChartImage(
 }
 
 /**
- * Render an edited chart via POST /chart/render_data.
+ * Render an edited/arranged chart via POST /chart/render_data.
  *
- * Triggers when editFlags are active OR manual edits have been made (editVersion > 0).
+ * Triggers when editFlags are active, manual edits have been made (editVersion > 0),
+ * or arrangement is applied (chartData already contains the arrangement).
  */
 export function useEditedChartImage(
   chartData: ChartData | null,
@@ -112,9 +167,10 @@ export function useEditedChartImage(
   options: RenderOptions,
 ) {
   const hasEdits = Object.values(editFlags).some(Boolean) || editVersion > 0;
+  const hasArrangement = options.arrangementMode !== "normal";
 
   return useQuery({
-    queryKey: ["chart", "edited_image", editFlags, editVersion, options.laserLColor, options.laserRColor, options.pxPerSecond, options.columnHeight] as const,
+    queryKey: ["chart", "edited_image", editFlags, editVersion, options.arrangementMode, options.btOrder.join(","), options.fxSwap, options.mirrorLaser, options.laserLColor, options.laserRColor, options.pxPerSecond, options.columnHeight] as const,
     queryFn: async () => {
       const res = await fetch(`${BASE_URL}/chart/render_data`, {
         method: "POST",
@@ -136,7 +192,7 @@ export function useEditedChartImage(
       const blob = await res.blob();
       return URL.createObjectURL(blob);
     },
-    enabled: hasEdits && chartData !== null,
+    enabled: (hasEdits || hasArrangement) && chartData !== null,
     staleTime: 0,
     gcTime: 5 * 60_000,
   });

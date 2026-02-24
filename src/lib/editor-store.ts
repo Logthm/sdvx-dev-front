@@ -6,11 +6,11 @@
  *   - "edit":    simplified frontend canvas rendering
  */
 
-import { applyEdits, DEFAULT_EDIT_FLAGS, moveLaserPoint, deleteLaserPoint as deleteLP, moveButtonEvent, deleteButtonEvent, addButtonEvent, updateButtonHoldLen as setHoldLen, type EditFlags } from "@/lib/chart-edit";
+import { applyEdits, applyArrangement, DEFAULT_EDIT_FLAGS, moveLaserPoint, deleteLaserPoint as deleteLP, moveButtonEvent, deleteButtonEvent, addButtonEvent, updateButtonHoldLen as setHoldLen, type EditFlags } from "@/lib/chart-edit";
 import type { ButtonEvent, ChartData, TimePos } from "@/types/chart";
 import { create } from "zustand";
 
-export type ViewMode = "preview" | "edit";
+export type ViewMode = "preview" | "edit" | "play";
 
 export type LaserColor = "BLUE" | "RED" | "GREEN" | "YELLOW";
 export type ArrangementMode = "normal" | "mirror" | "random" | "s-random";
@@ -82,6 +82,8 @@ export interface IntervalInfo {
 
 export interface EditorState {
   originalChartData: ChartData | null;
+  /** Backend-arranged chart data (for s-random / backend arrangement modes). */
+  arrangedBaseData: ChartData | null;
   chartData: ChartData | null;
   editFlags: EditFlags;
   mode: ViewMode;
@@ -99,6 +101,10 @@ export interface EditorState {
   toggleMobileFullscreen: () => void;
 
   setOriginalChartData: (data: ChartData) => void;
+  /** Set backend-arranged chart data (e.g. s-random result). Recomputes chartData from this base. */
+  setArrangedBaseData: (data: ChartData) => void;
+  /** Clear arranged base data (when switching back to normal/frontend-handled modes). */
+  clearArrangedBaseData: () => void;
   setChartData: (data: ChartData) => void;
   toggleEdit: (flag: keyof EditFlags) => void;
   setMode: (mode: ViewMode) => void;
@@ -145,6 +151,7 @@ export interface EditorState {
 
 export const useEditorStore = create<EditorState>((set) => ({
   originalChartData: null,
+  arrangedBaseData: null,
   chartData: null,
   editFlags: { ...DEFAULT_EDIT_FLAGS },
   mode: "preview",
@@ -164,9 +171,30 @@ export const useEditorStore = create<EditorState>((set) => ({
   setOriginalChartData: (data) =>
     set((s) => ({
       originalChartData: data,
+      arrangedBaseData: null,
+      chartData: applyArrangement(applyEdits(data, s.editFlags), s.renderOptions),
+      editVersion: 0,
+      history: [],
+    })),
+
+  setArrangedBaseData: (data) =>
+    set((s) => ({
+      arrangedBaseData: data,
       chartData: applyEdits(data, s.editFlags),
       editVersion: 0,
       history: [],
+      selectedPoint: null,
+    })),
+
+  clearArrangedBaseData: () =>
+    set((s) => ({
+      arrangedBaseData: null,
+      chartData: s.originalChartData
+        ? applyArrangement(applyEdits(s.originalChartData, s.editFlags), s.renderOptions)
+        : null,
+      editVersion: 0,
+      history: [],
+      selectedPoint: null,
     })),
 
   setChartData: (data) => set({ chartData: data }),
@@ -174,10 +202,13 @@ export const useEditorStore = create<EditorState>((set) => ({
   toggleEdit: (flag) =>
     set((s) => {
       const newFlags = { ...s.editFlags, [flag]: !s.editFlags[flag] };
+      const base = s.arrangedBaseData ?? s.originalChartData;
       return {
         editFlags: newFlags,
-        chartData: s.originalChartData
-          ? applyEdits(s.originalChartData, newFlags)
+        chartData: base
+          ? (s.arrangedBaseData
+              ? applyEdits(base, newFlags)
+              : applyArrangement(applyEdits(base, newFlags), s.renderOptions))
           : null,
         ...(!newFlags.simplifyLasers && { selectedPoint: null, history: [] }),
       };
@@ -260,9 +291,12 @@ export const useEditorStore = create<EditorState>((set) => ({
   resetAll: () =>
     set((s) => {
       if (!s.originalChartData || s.history.length === 0) return s;
+      const base = s.arrangedBaseData ?? s.originalChartData;
       return {
         history: [],
-        chartData: applyEdits(s.originalChartData, s.editFlags),
+        chartData: s.arrangedBaseData
+          ? applyEdits(base, s.editFlags)
+          : applyArrangement(applyEdits(base, s.editFlags), s.renderOptions),
         selectedPoint: null,
         editVersion: 0,
       };
@@ -271,9 +305,10 @@ export const useEditorStore = create<EditorState>((set) => ({
   resetSelectedPoint: () =>
     set((s) => {
       if (!s.chartData || !s.selectedPoint || !s.originalChartData) return s;
+      const base = s.arrangedBaseData ?? s.originalChartData;
       const { type, track, index } = s.selectedPoint;
       if (type === "button") {
-        const origEv = s.originalChartData.tracks[track]?.[index];
+        const origEv = base.tracks[track]?.[index];
         if (!origEv || origEv.type !== "button") return s;
         let cd = moveButtonEvent(s.chartData, track, index, origEv.time);
         cd = setHoldLen(cd, track, index, origEv.hold_len);
@@ -284,7 +319,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         };
       }
       if (type === "laser") {
-        const origChart = applyEdits(s.originalChartData, s.editFlags);
+        const origChart = applyEdits(base, s.editFlags);
         const origLasers = (origChart.tracks[track] ?? []).filter(e => e.type === "laser");
         const origEv = origLasers[index];
         if (!origEv || origEv.type !== "laser") return s;
@@ -300,7 +335,27 @@ export const useEditorStore = create<EditorState>((set) => ({
   setMode: (mode) => set({ mode, selectedPoint: null }),
 
   setRenderOptions: (opts) =>
-    set((s) => ({ renderOptions: { ...s.renderOptions, ...opts } })),
+    set((s) => {
+      const newOpts = { ...s.renderOptions, ...opts };
+      // Check if arrangement-related options changed
+      const arrChanged =
+        newOpts.arrangementMode !== s.renderOptions.arrangementMode ||
+        newOpts.mirrorLaser !== s.renderOptions.mirrorLaser ||
+        newOpts.fxSwap !== s.renderOptions.fxSwap ||
+        newOpts.btOrder.some((v, i) => v !== s.renderOptions.btOrder[i]);
+      if (arrChanged && s.originalChartData) {
+        return {
+          renderOptions: newOpts,
+          // Clear arranged base — component will re-fetch if needed (e.g. s-random)
+          arrangedBaseData: null,
+          chartData: applyArrangement(applyEdits(s.originalChartData, s.editFlags), newOpts),
+          history: [],
+          selectedPoint: null,
+          editVersion: 0,
+        };
+      }
+      return { renderOptions: newOpts };
+    }),
 
   setZoom: (zoom) => set({ zoom }),
 
