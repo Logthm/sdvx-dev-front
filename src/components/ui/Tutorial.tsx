@@ -506,7 +506,7 @@ export function useChartTutorialSteps() {
       icon: <MousePointer size={20} />,
       highlightSelector:
         "[data-tutorial='chart-difficulty'], [data-tutorial='chart-difficulty-mobile']",
-      position: "bottom" as const,
+      position: "top" as const,
       positionDelay: 180,
     },
     {
