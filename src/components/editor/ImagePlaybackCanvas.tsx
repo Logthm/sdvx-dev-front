@@ -109,19 +109,23 @@ export function ImagePlaybackCanvas({
     [layout],
   );
 
-  // Scroll the image so the playhead line sits at PLAYHEAD_RATIO
+  // Scroll the image so the playhead line sits at PLAYHEAD_RATIO.
+  // Transform is `scale(zoom) translateY(dy)` with origin "top center".
+  // CSS applies right-to-left: first translateY, then scale.
+  // Screen position of image point y = (y + dy) * zoom.
+  // To place chartY at the playhead: dy = playheadScreenY / zoom - chartY.
   const updateScroll = useCallback(
     (timeSec: number) => {
       const img = imgRef.current;
       const container = containerRef.current;
       if (!img || !container || !layout) return;
 
-      const containerH = container.getBoundingClientRect().height / zoom;
+      const containerH = container.getBoundingClientRect().height;
       const playheadScreenY = containerH * PLAYHEAD_RATIO;
       const chartY = secToY(timeSec);
-      const translateY = playheadScreenY - chartY * zoom;
+      const dy = playheadScreenY / zoom - chartY;
 
-      img.style.transform = `scale(${zoom}) translateY(${translateY / zoom}px)`;
+      img.style.transform = `scale(${zoom}) translateY(${dy}px)`;
       img.style.transformOrigin = "top center";
     },
     [layout, secToY, zoom],
