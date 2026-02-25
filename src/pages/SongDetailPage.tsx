@@ -124,6 +124,21 @@ export function SongDetailPage() {
     if (!canEdit && (mode === "edit" || mode === "play")) setMode("preview");
   }, [canEdit, mode, setMode]);
 
+  // Clear editor store when viewing a non-editable song to prevent stale
+  // chart data from leaking into /chart/render_data requests.
+  useEffect(() => {
+    if (!canEdit) {
+      useEditorStore.setState({
+        originalChartData: null,
+        arrangedBaseData: null,
+        chartData: null,
+        editVersion: 0,
+        history: [],
+        selectedPoint: null,
+      });
+    }
+  }, [canEdit, numericId, activeDif?.difstr]);
+
   useEffect(() => {
     if (chart) setOriginalChartData(chart);
   }, [chart, setOriginalChartData]);
