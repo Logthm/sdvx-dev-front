@@ -11,7 +11,7 @@
  * Duration rule: beat_length = 60/bpm * (4/denominator)
  */
 
-import type { BeatEntry, BpmEntry, ChartData } from "@/types/chart";
+import type { BeatEntry, BpmEntry, ChartTimingData } from "@/types/chart";
 
 export type Time3 = [number, number, number]; // [measure, beat, cell]
 
@@ -44,7 +44,7 @@ export class TimeMapper {
   private beatResolution: number | null;
   private breakpoints: Breakpoint[];
 
-  constructor(chartData: ChartData) {
+  constructor(chartData: ChartTimingData) {
     this.beatResolution = chartData.beat_resolution;
 
     this.beatInfo = chartData.beat_info

@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useMemo, useRef } from "react";
-import type { ChartData } from "@/types/chart";
+import type { ChartData, ChartTimingData } from "@/types/chart";
 import { TimeMapper, type Time3 } from "@/lib/chart-renderer/time-mapper";
 
 // ---------------------------------------------------------------------------
@@ -107,7 +107,7 @@ const TICK_STEP_UNITS = 2; // 48 units/beat ÷ 2 = 24 ticks/beat, divisible by 1
  * Each beat is divided into 64 slots. subdivision=1 → only beat heads,
  * subdivision=2 → 8th notes, etc.
  */
-function generateTicks(chartData: ChartData): MetronomeTick[] {
+function generateTicks(chartData: ChartTimingData): MetronomeTick[] {
   const tm = new TimeMapper(chartData);
 
   // Determine chart end in seconds
@@ -115,15 +115,17 @@ function generateTicks(chartData: ChartData): MetronomeTick[] {
   if (chartData.end_position) {
     const ep = chartData.end_position;
     endTime = [ep.measure, ep.beat, ep.cell];
-  } else {
+  } else if ("tracks" in chartData && (chartData as ChartData).tracks) {
     // Fallback: scan all events for the latest position
     let maxM = 1;
-    for (const events of Object.values(chartData.tracks)) {
+    for (const events of Object.values((chartData as ChartData).tracks)) {
       for (const ev of events) {
         if (ev.time[0] > maxM) maxM = ev.time[0];
       }
     }
     endTime = [maxM + 1, 1, 0];
+  } else {
+    endTime = [2, 1, 0];
   }
   const endSec = tm.secondsOf(endTime);
 
@@ -217,7 +219,7 @@ function scheduleClick(
 // ---------------------------------------------------------------------------
 
 export function useMetronome(
-  chartData: ChartData | null,
+  chartData: ChartTimingData | null,
   currentTimeSec: number,
   isPlaying: boolean,
   subdivision: number,

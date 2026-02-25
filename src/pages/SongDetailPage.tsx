@@ -5,6 +5,7 @@ import { ChartCanvas } from "@/components/editor/ChartCanvas";
 import { ChartPreview } from "@/components/editor/ChartPreview";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 import { PlaybackCanvas } from "@/components/editor/PlaybackCanvas";
+import { ImagePlaybackCanvas } from "@/components/editor/ImagePlaybackCanvas";
 import { PlaybackToolbar } from "@/components/editor/PlaybackToolbar";
 import { RenderOptionsBar } from "@/components/editor/RenderOptionsBar";
 import { Astrolabe } from "@/components/ui/Astrolabe";
@@ -92,7 +93,7 @@ export function SongDetailPage() {
   const chartTutorial = useTutorial("sdvx-chart-tutorial");
   const chartTutorialSteps = canEdit
     ? [...allChartSteps.slice(0, 5), allChartSteps[6], allChartSteps[5], ...allChartSteps.slice(7)]
-    : [...allChartSteps.slice(0, 5), allChartSteps[6], allChartSteps[allChartSteps.length - 1]];
+    : [...allChartSteps.slice(0, 5), allChartSteps[6], ...allChartSteps.slice(14)];
 
   const chartQuery = useChartData(
     canEdit ? numericId : null,
@@ -121,7 +122,7 @@ export function SongDetailPage() {
   );
 
   useEffect(() => {
-    if (!canEdit && (mode === "edit" || mode === "play")) setMode("preview");
+    if (!canEdit && mode === "edit") setMode("preview");
   }, [canEdit, mode, setMode]);
 
   // Clear editor store when viewing a non-editable song to prevent stale
@@ -154,7 +155,7 @@ export function SongDetailPage() {
 
   // Auto-switch mode/arrangement/mouseTool based on tutorial step
   // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=pan,8=move,9=move2,10=editPointer,11=add,12=reset,13=delete,14=playMode,15=playTransport,16=playRate,17=playMetronome,18=playBgm,19=playKeyboard,20=finish
-  // !canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=finish
+  // !canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=playMode,7=playTransport,8=playRate,9=playMetronome,10=playBgm,11=playKeyboard,12=finish
   useEffect(() => {
     if (!chartTutorial.isOpen) return;
     const step = chartTutorial.currentStep;
@@ -170,6 +171,8 @@ export function SongDetailPage() {
     }
     // Mode & tools
     if (canEdit && step >= 14 && step <= 19) {
+      if (mode !== "play") setMode("play");
+    } else if (!canEdit && step >= 6 && step <= 11) {
       if (mode !== "play") setMode("play");
     } else if (canEdit && step >= 6 && step <= 13) {
       if (mode !== "edit") setMode("edit");
@@ -574,17 +577,15 @@ export function SongDetailPage() {
                     <Pencil size={14} /> {t('chart.edit')}
                   </button>
                 )}
-                {canEdit && (
-                  <button
-                    onClick={() => setMode("play")}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all",
-                      mode === "play" ? "bg-gold-400/15 text-gold-400" : "text-text-muted hover:text-text-primary",
-                    )}
-                  >
-                    <Play size={14} /> {t('chart.play')}
-                  </button>
-                )}
+                <button
+                  onClick={() => setMode("play")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-all",
+                    mode === "play" ? "bg-gold-400/15 text-gold-400" : "text-text-muted hover:text-text-primary",
+                  )}
+                >
+                  <Play size={14} /> {t('chart.play')}
+                </button>
                 <button
                   onClick={() => setToolbarCollapsed((v) => !v)}
                   className="md:hidden px-2 flex items-center text-text-muted hover:text-gold-400 transition-colors"
@@ -608,6 +609,14 @@ export function SongDetailPage() {
                   musicId={numericId}
                   difstr={activeDif.difstr}
                   renderOptions={renderOptions}
+                  className="w-full h-full"
+                />
+              ) : null
+            ) : mode === "play" && !canEdit ? (
+              numericId && activeDif ? (
+                <ImagePlaybackCanvas
+                  musicId={numericId}
+                  difstr={activeDif.difstr}
                   className="w-full h-full"
                 />
               ) : null

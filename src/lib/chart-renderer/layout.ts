@@ -7,7 +7,7 @@
  * All pixel constants match the backend's chart_drawer.py exactly.
  */
 
-import type { ChartData } from "@/types/chart";
+import type { ChartData, ChartTimingData } from "@/types/chart";
 import { TimeMapper, type Time3 } from "./time-mapper";
 
 // ── Layout constants (matching backend) ─────────────────────────
@@ -117,7 +117,7 @@ export function computeLayout(
 // ── Single-column layout (for playback mode) ────────────────
 
 export function computeSingleColumnLayout(
-  chartData: ChartData,
+  chartData: ChartTimingData,
   pxPerSecond: number = DEFAULT_PX_PER_SECOND,
 ): LayoutResult {
   const tm = new TimeMapper(chartData);

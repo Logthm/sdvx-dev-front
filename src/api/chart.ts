@@ -1,6 +1,6 @@
 import { DEFAULT_BT_ORDER, type EditFlags, type RenderOptions } from "@/lib/editor-store";
 import { useEditorStore } from "@/lib/editor-store";
-import type { ChartData } from "@/types/chart";
+import type { ChartData, ChartTimingData } from "@/types/chart";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "./client";
 
@@ -218,6 +218,102 @@ export function useEditedChartImage(
     },
     enabled: (hasEdits || hasArrangement) && chartData !== null && musicId !== null && difstr !== null,
     staleTime: 0,
+    gcTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Fetch timing-only chart data (no tracks) — safe for non-editable charts.
+ */
+export function useChartTimingData(
+  musicId: number | null,
+  difstr: string | null,
+) {
+  return useQuery({
+    queryKey: ["chart", "timing", musicId, difstr] as const,
+    queryFn: async () => {
+      return apiFetch<ChartTimingData>(`/chart/timing/${musicId}/${difstr}`);
+    },
+    enabled: musicId !== null && difstr !== null && difstr.length > 0,
+    staleTime: 10 * 60_000,
+  });
+}
+
+/**
+ * Fetch a single-column playback image as a blob URL.
+ */
+export function usePlaybackImage(
+  musicId: number | null,
+  difstr: string | null,
+  options: RenderOptions,
+  enabled: boolean,
+) {
+  const hasCustomMapping = isCustomBtOrder(options.btOrder) || options.fxSwap;
+
+  return useQuery({
+    queryKey: [
+      "chart",
+      "playback_image",
+      musicId,
+      difstr,
+      options.arrangementMode,
+      options.btOrder.join(","),
+      options.fxSwap,
+      options.mirrorLaser,
+      options.rngSeed,
+      options.laserLColor,
+      options.laserRColor,
+      options.pxPerSecond,
+    ] as const,
+    queryFn: async () => {
+      const body: Record<string, unknown> = {
+        music_id: musicId,
+        difstr: difstr,
+        arrangement_mode: hasCustomMapping ? "normal" : options.arrangementMode,
+        output_format: "WEBP",
+        quality: 80,
+        px_per_second: options.pxPerSecond,
+        laser_l_color: options.laserLColor,
+        laser_r_color: options.laserRColor,
+        single_column: true,
+      };
+
+      if (options.rngSeed !== null) {
+        body.rng_seed = options.rngSeed;
+      }
+      if (hasCustomMapping) {
+        body.bt_order = options.btOrder;
+        body.fx_swap = options.fxSwap;
+      }
+      if (options.mirrorLaser) {
+        body.mirror_laser = true;
+      }
+
+      const res = await fetch(`${BASE_URL}/chart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const detail = await res.text().catch(() => res.statusText);
+        throw new Error(detail);
+      }
+
+      const maxPps = res.headers.get("X-Max-Px-Per-Second");
+      if (maxPps) {
+        useEditorStore.getState().setMaxPxPerSecond(parseInt(maxPps, 10));
+      }
+
+      const blob = await res.blob();
+      return URL.createObjectURL(blob);
+    },
+    enabled:
+      enabled &&
+      musicId !== null &&
+      difstr !== null &&
+      difstr.length > 0,
+    staleTime: 10 * 60_000,
     gcTime: 5 * 60_000,
   });
 }

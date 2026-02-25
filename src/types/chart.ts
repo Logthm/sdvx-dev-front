@@ -49,6 +49,15 @@ export interface ChartData {
   tracks: Record<string, ChartEvent[]>;
 }
 
+/** Timing-only subset of ChartData — no track/note information. */
+export interface ChartTimingData {
+  format_version: number;
+  beat_resolution: number | null;
+  bpm_info: BpmEntry[];
+  beat_info: BeatEntry[];
+  end_position: TimePosObj | null;
+}
+
 // Track layout constants
 export const TRACK_NAMES: Record<number, string> = {
   1: "LASER-L",
