@@ -39,7 +39,7 @@ export function ChartPreview({
   const hasEdits = Object.values(editFlags).some(Boolean) || editVersion > 0;
 
   const normalQuery = useChartImage(musicId, difstr, renderOptions);
-  const editedQuery = useEditedChartImage(chartData, editFlags, editVersion, renderOptions);
+  const editedQuery = useEditedChartImage(musicId, difstr, chartData, editFlags, editVersion, renderOptions);
   // Use normalQuery (backend-rendered with arrangement_mode param) by default.
   // Only use editedQuery when manual edits exist — chartData then contains
   // both arrangement and edits, sent to POST /chart/render_data.

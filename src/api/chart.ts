@@ -177,6 +177,8 @@ export function useChartImage(
  * or arrangement is applied (chartData already contains the arrangement).
  */
 export function useEditedChartImage(
+  musicId: number | null,
+  difstr: string | null,
   chartData: ChartData | null,
   editFlags: EditFlags,
   editVersion: number,
@@ -186,12 +188,14 @@ export function useEditedChartImage(
   const hasArrangement = options.arrangementMode !== "normal";
 
   return useQuery({
-    queryKey: ["chart", "edited_image", editFlags, editVersion, options.arrangementMode, options.btOrder.join(","), options.fxSwap, options.mirrorLaser, options.laserLColor, options.laserRColor, options.pxPerSecond, options.columnHeight] as const,
+    queryKey: ["chart", "edited_image", musicId, difstr, editFlags, editVersion, options.arrangementMode, options.btOrder.join(","), options.fxSwap, options.mirrorLaser, options.laserLColor, options.laserRColor, options.pxPerSecond, options.columnHeight] as const,
     queryFn: async () => {
       const res = await fetch(`${BASE_URL}/chart/render_data`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          music_id: musicId,
+          difstr: difstr,
           chart_data: chartData,
           output_format: "JPEG",
           quality: 80,
@@ -212,7 +216,7 @@ export function useEditedChartImage(
       const blob = await res.blob();
       return URL.createObjectURL(blob);
     },
-    enabled: (hasEdits || hasArrangement) && chartData !== null,
+    enabled: (hasEdits || hasArrangement) && chartData !== null && musicId !== null && difstr !== null,
     staleTime: 0,
     gcTime: 5 * 60_000,
   });
