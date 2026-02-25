@@ -240,11 +240,39 @@ export function findSpanByMeasure(
 
 // ── Safe px/sec range ───────────────────────────────────────────
 
+/** WebP hard limit — 16 383 px per dimension. */
+const MAX_CANVAS_WIDTH = 16383;
+
+/** Max columns that fit within MAX_CANVAS_WIDTH. */
+const MAX_COLUMNS = Math.floor(
+  (MAX_CANVAS_WIDTH + GUTTER_WIDTH - 2 * MARGIN - LEFT_GUTTER) / (TRACK_WIDTH + GUTTER_WIDTH),
+);
+
+/** Simulate the greedy layout and return the number of columns produced. */
+function countColumns(
+  durations: number[],
+  pxPerSecond: number,
+  columnHeight: number,
+): number {
+  let currentY = columnHeight - MARGIN;
+  let col = 0;
+  for (const dur of durations) {
+    const h = dur * pxPerSecond;
+    if (currentY - h < MARGIN) {
+      col++;
+      currentY = columnHeight - MARGIN;
+    }
+    currentY -= h;
+  }
+  return col + 1;
+}
+
 /**
- * Compute the maximum px_per_second that won't cause any single measure
- * to exceed the column height (which breaks the layout engine).
+ * Compute the maximum px_per_second that satisfies both:
+ *  1. No single measure exceeds the column height.
+ *  2. The resulting canvas width stays within the WebP dimension limit
+ *     (16 383 px), so no format downgrade is needed.
  *
- * Returns `floor((columnHeight - 2 * MARGIN) / longestMeasureDuration)`.
  * If chart data is unavailable or all measures are zero-length, returns Infinity.
  */
 export function computeMaxPxPerSecond(
@@ -255,16 +283,37 @@ export function computeMaxPxPerSecond(
   const endMeasure = chartData.end_position?.measure ?? 1;
   const available = columnHeight - 2 * MARGIN;
 
+  const durations: number[] = [];
   let maxDuration = 0;
   for (let m = 1; m <= endMeasure; m++) {
     const sec0 = tm.secondsOf([m, 1, 0]);
     const sec1 = tm.secondsOf([m + 1, 1, 0]);
     const dur = sec1 - sec0;
+    durations.push(dur);
     if (dur > maxDuration) maxDuration = dur;
   }
 
   if (maxDuration <= 0) return Infinity;
-  return Math.floor(available / maxDuration);
+
+  // Constraint 1: height-based max
+  const heightMax = Math.floor(available / maxDuration);
+
+  // Constraint 2: width-based max (binary search)
+  if (countColumns(durations, heightMax, columnHeight) <= MAX_COLUMNS) {
+    return heightMax;
+  }
+
+  let lo = 1;
+  let hi = heightMax;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (countColumns(durations, mid, columnHeight) <= MAX_COLUMNS) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return lo;
 }
 
 // ── Inverse helpers (chart-space → data) ─────────────────────────
