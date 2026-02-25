@@ -57,7 +57,7 @@
     },
     "musicGrid": {
       "title": "Music List",
-      "description": "All songs matching your criteria are displayed as cards.\n\nClick the artist name to quickly search for songs by the same artist.\n\nClick a difficulty to view detailed information and chart preview.\n\nScroll down to automatically load more songs."
+      "description": "All songs matching your criteria are displayed as cards.\n\nClick the artist name to quickly search for songs by the same artist.\n\nClick a difficulty to view detailed information and chart view.\n\nScroll down to automatically load more songs."
     },
     "finish": {
       "title": "View Tutorial",
@@ -66,8 +66,8 @@
   },
   "chartTutorial": {
     "welcome": {
-      "title": "Chart Preview Page",
-      "description": "This is the detailed chart preview and editing page.\n\nLet's take a quick look at each feature area!"
+      "title": "Chart View Page",
+      "description": "This is the detailed chart view and editing page.\n\nLet's take a quick look at each feature area!"
     },
     "difficulty": {
       "title": "Switch Charts",
@@ -78,11 +78,11 @@
       "description": "The info panel on the right shows detailed song information. Click radar chart vertices to view specific values."
     },
     "modeToggle": {
-      "title": "Preview / Edit Mode",
-      "description": "Switch between chart preview and edit mode here.\n\nAfter editing, switching back to preview mode will render the edited chart in real time."
+      "title": "View / Edit Mode",
+      "description": "Switch between chart view and edit mode here.\n\nAfter editing, switching back to view mode will render the edited chart in real time."
     },
     "previewMode": {
-      "title": "Preview Mode",
+      "title": "View Mode",
       "description": "Choose an arrangement mode and adjust laser colors here.\n\nIn Random mode, you can click BT buttons to manually edit the order, swap FX or lasers."
     },
     "editMode": {
@@ -90,7 +90,7 @@
       "description": "• Speed Calculator: Enter your in-game Speed setting to view BPM / Hi-Speed multiplier / actual speed at different speed change points\n• Simplify & Edit Lasers: Simplifies curved lasers and allows editing laser start/end points and inflection points in move mode\n• Interval Calculator: Select two objects in move mode to calculate interval time and beat notation"
     },
     "drawArea": {
-      "title": "Preview Controls",
+      "title": "View Controls",
       "description": "Adjust zoom and enter fullscreen here.\n\nIn the chart viewing area, use scroll wheel for horizontal scrolling, Shift+wheel for vertical, Ctrl+wheel to zoom.\n\nIn pan mode, you can also drag to move the view."
     },
     "panMode": {
@@ -120,6 +120,30 @@
     "deleteSelected": {
       "title": "Delete Selected",
       "description": "When an object is selected, click this button to delete it. You can also press Delete or Backspace."
+    },
+    "playMode": {
+      "title": "Play Mode",
+      "description": "Play mode scrolls the chart like in-game playback.\n\nYou can control playback, adjust speed, enable a metronome, and load BGM audio for synchronized playback."
+    },
+    "playTransport": {
+      "title": "Transport Controls",
+      "description": "Use these buttons to control playback:\n\n• Rewind / Forward: jump 5 seconds\n• Play / Pause: start or pause playback\n• Stop: pause and return to the beginning\n\nDrag the progress bar below to seek to any position."
+    },
+    "playRate": {
+      "title": "Playback Speed",
+      "description": "Adjust the playback speed multiplier."
+    },
+    "playMetronome": {
+      "title": "Metronome",
+      "description": "Enable the metronome to hear beat cues during playback.\n\n• Adjustable volume\n• Beat subdivisions: 1/4, 1/8, 1/12, 1/16, 1/24, 1/32"
+    },
+    "playBgm": {
+      "title": "BGM Audio",
+      "description": "Load the song's audio file for synchronized playback with the chart.\n\n• Click the button to select a local audio file\n• Adjustable volume\n• Use Offset to fine-tune audio-chart synchronization"
+    },
+    "playKeyboard": {
+      "title": "Keyboard Shortcuts",
+      "description": "Play mode supports these keyboard shortcuts:\n\n• Space: Play / Pause\n• Left Arrow: Seek back 2 seconds\n• Right Arrow: Seek forward 2 seconds"
     }
   },
   "chart": {
@@ -127,7 +151,7 @@
     "loadingChart": "Loading chart...",
     "loadFailed": "Failed to load chart",
     "retry": "Retry",
-    "preview": "Preview",
+    "preview": "View",
     "edit": "Edit",
     "play": "Play",
     "version": "Version",

@@ -43,6 +43,7 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
   const beatSubdivision = usePlaybackStore((s) => s.beatSubdivision);
   const bgmFile = usePlaybackStore((s) => s.bgmFile);
   const bgmOffset = usePlaybackStore((s) => s.bgmOffset);
+  const bgmVolume = usePlaybackStore((s) => s.bgmVolume);
 
   const hiSpeedMarks = useEditorStore((s) => s.hiSpeedMarks);
   const bpmDisplayMode = useEditorStore((s) => s.bpmDisplayMode);
@@ -73,7 +74,7 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
   );
 
   // BGM player
-  useAudioPlayer(bgmFile, isPlaying, currentTimeSec, playbackRate, bgmOffset);
+  useAudioPlayer(bgmFile, isPlaying, currentTimeSec, playbackRate, bgmOffset, bgmVolume);
 
   // Convert seconds to Y position in chart space (uses yInMeasure convention)
   const secToY = useCallback(
@@ -139,12 +140,12 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
     if (isPlaying) {
       playStartRef.current = {
         perfTime: performance.now(),
-        chartTime: currentTimeSec,
+        chartTime: usePlaybackStore.getState().currentTimeSec,
       };
     } else {
       playStartRef.current = null;
     }
-  }, [isPlaying]);
+  }, [isPlaying, playbackRate]);
 
   useEffect(() => {
     let running = true;

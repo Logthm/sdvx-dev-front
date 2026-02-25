@@ -57,12 +57,15 @@ export function PlaybackToolbar() {
 
   const bgmFile = usePlaybackStore((s) => s.bgmFile);
   const bgmOffset = usePlaybackStore((s) => s.bgmOffset);
+  const bgmVolume = usePlaybackStore((s) => s.bgmVolume);
   const setBgmFile = usePlaybackStore((s) => s.setBgmFile);
   const setBgmOffset = usePlaybackStore((s) => s.setBgmOffset);
+  const setBgmVolume = usePlaybackStore((s) => s.setBgmVolume);
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Transport controls */}
+      {/* Transport controls + Progress bar */}
+      <div className="flex flex-col gap-3" data-tutorial="playback-transport">
       <div className="flex items-center justify-center gap-1">
         <button
           onClick={() => seekRelative(-5)}
@@ -110,9 +113,10 @@ export function PlaybackToolbar() {
           <span>{formatTime(totalDurationSec)}</span>
         </div>
       </div>
+      </div>
 
       {/* Playback rate */}
-      <div className="flex items-center gap-1 flex-wrap">
+      <div className="flex items-center gap-1 flex-wrap" data-tutorial="playback-rate">
         {RATES.map((r) => (
           <button
             key={r}
@@ -130,7 +134,7 @@ export function PlaybackToolbar() {
       </div>
 
       {/* Metronome */}
-      <div className="flex flex-col gap-1.5 pt-2 border-t border-cosmos-600/20">
+      <div className="flex flex-col gap-1.5 pt-2 border-t border-cosmos-600/20" data-tutorial="playback-metronome">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <Volume2 size={12} className="text-text-muted" />
@@ -182,7 +186,7 @@ export function PlaybackToolbar() {
       </div>
 
       {/* BGM */}
-      <div className="flex flex-col gap-1.5 pt-2 border-t border-cosmos-600/20">
+      <div className="flex flex-col gap-1.5 pt-2 border-t border-cosmos-600/20" data-tutorial="playback-bgm">
         <div className="flex items-center gap-1.5">
           <Music size={12} className="text-text-muted" />
           <span className="text-xs text-text-muted">BGM</span>
@@ -190,7 +194,7 @@ export function PlaybackToolbar() {
         <input
           ref={fileInputRef}
           type="file"
-          accept="audio/*"
+          accept="audio/*,video/*"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0] ?? null;
@@ -204,7 +208,17 @@ export function PlaybackToolbar() {
           {bgmFile ? bgmFile.name : t("playback.chooseFile")}
         </button>
         {bgmFile && (
-          <div className="flex items-center gap-1">
+          <>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={bgmVolume}
+              onChange={(e) => setBgmVolume(parseFloat(e.target.value))}
+              className="w-full h-1 rounded-full appearance-none bg-cosmos-700 accent-gold-400 cursor-pointer"
+            />
+            <div className="flex items-center gap-1">
             <span className="text-[10px] text-text-muted shrink-0">
               {t("playback.offset")}:
             </span>
@@ -225,6 +239,7 @@ export function PlaybackToolbar() {
               +
             </button>
           </div>
+          </>
         )}
       </div>
     </div>

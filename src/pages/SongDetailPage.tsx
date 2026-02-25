@@ -14,6 +14,7 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Tutorial, useChartTutorialSteps } from "@/components/ui/Tutorial";
 import { useTutorial } from "@/hooks/useTutorial";
 import { useEditorStore } from "@/lib/editor-store";
+import { usePlaybackStore } from "@/lib/playback-store";
 import { cn } from "@/lib/utils";
 import {
     DIFFICULTY_LABELS,
@@ -74,6 +75,13 @@ export function SongDetailPage() {
     }
   }, [sortedDiffs, selectedDif, initialDif]);
 
+  // Reset playback position when switching song or difficulty
+  useEffect(() => {
+    const pb = usePlaybackStore.getState();
+    if (pb.isPlaying) pb.pause();
+    pb.setCurrentTime(0);
+  }, [numericId, selectedDif?.difstr]);
+
   const activeDif = selectedDif ?? sortedDiffs[sortedDiffs.length - 1] ?? null;
   const editabilityQuery = useChartEditability(numericId);
   const canEdit =
@@ -129,7 +137,7 @@ export function SongDetailPage() {
   }, [arrangedQuery.data, renderOptions.arrangementMode, setArrangedBaseData, clearArrangedBaseData]);
 
   // Auto-switch mode/arrangement/mouseTool based on tutorial step
-  // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=pan,8=move,9=move2,10=editPointer,11=add,12=reset,13=delete,14=finish
+  // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=pan,8=move,9=move2,10=editPointer,11=add,12=reset,13=delete,14=playMode,15=playTransport,16=playRate,17=playMetronome,18=playBgm,19=playKeyboard,20=finish
   // !canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=finish
   useEffect(() => {
     if (!chartTutorial.isOpen) return;
@@ -141,7 +149,9 @@ export function SongDetailPage() {
       setSidebarCollapsed(true); setToolbarCollapsed(false);
     }
     // Mode & tools
-    if (canEdit && step >= 6 && step <= 13) {
+    if (canEdit && step >= 14 && step <= 19) {
+      if (mode !== "play") setMode("play");
+    } else if (canEdit && step >= 6 && step <= 13) {
       if (mode !== "edit") setMode("edit");
       if (step === 7) { setMouseTool("pan"); setExpandedTool(null); }
       else if (step === 8 || step === 9) { setMouseTool("move"); setExpandedTool("drag"); }
@@ -445,13 +455,7 @@ export function SongDetailPage() {
               </div>
               <div className={cn(toolbarCollapsed ? "hidden md:block" : "block")} data-tutorial="chart-render-options">
                 {mode === "preview" && <RenderOptionsBar />}
-                {mode === "edit" && (
-                  <>
-                    <RenderOptionsBar />
-                    <div className="border-t border-cosmos-600/20 my-2" />
-                    <EditorToolbar />
-                  </>
-                )}
+                {mode === "edit" && <EditorToolbar />}
                 {mode === "play" && <PlaybackToolbar />}
               </div>
             </div>

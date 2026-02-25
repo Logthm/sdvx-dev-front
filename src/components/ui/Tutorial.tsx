@@ -8,15 +8,19 @@ import {
   Hand,
   HelpCircle,
   Info,
+  Keyboard,
   MousePointer,
   Move,
+  Music,
   Pencil,
+  Play,
   Plus,
   RotateCcw,
   Search,
   Shuffle,
   SlidersHorizontal,
   Trash2,
+  Volume2,
   X,
   ZoomIn,
 } from "lucide-react";
@@ -362,18 +366,10 @@ export function Tutorial({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-cosmos-600/20 bg-cosmos-800/30">
-          <div className="hidden sm:flex items-center gap-1.5">
-            {steps.map((_, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "h-1.5 rounded-full transition-all",
-                  index === currentStep
-                    ? "w-6 bg-accent"
-                    : "w-1.5 bg-cosmos-600/40",
-                )}
-              />
-            ))}
+          <div className="hidden sm:flex items-center">
+            <span className="text-xs font-mono text-text-muted">
+              {currentStep + 1} / {steps.length}
+            </span>
           </div>
 
           <div className="flex-1 sm:flex-none flex items-center gap-2 justify-between sm:justify-end">
@@ -576,6 +572,52 @@ export function useChartTutorialSteps() {
       position: "top" as const,
       positionDelay: 20,
       onEnter: selectFirstNote,
+    },
+    // Play mode steps
+    {
+      title: t("chartTutorial.playMode.title"),
+      description: t("chartTutorial.playMode.description"),
+      icon: <Play size={20} />,
+      highlightSelector: "[data-tutorial='chart-render-options']",
+      position: "right" as const,
+    },
+    {
+      title: t("chartTutorial.playTransport.title"),
+      description: t("chartTutorial.playTransport.description"),
+      icon: <Play size={20} />,
+      highlightSelector: "[data-tutorial='playback-transport']",
+      position: "right" as const,
+      positionDelay: 20,
+    },
+    {
+      title: t("chartTutorial.playRate.title"),
+      description: t("chartTutorial.playRate.description"),
+      icon: <Play size={20} />,
+      highlightSelector: "[data-tutorial='playback-rate']",
+      position: "right" as const,
+      positionDelay: 20,
+    },
+    {
+      title: t("chartTutorial.playMetronome.title"),
+      description: t("chartTutorial.playMetronome.description"),
+      icon: <Volume2 size={20} />,
+      highlightSelector: "[data-tutorial='playback-metronome']",
+      position: "right" as const,
+      positionDelay: 20,
+    },
+    {
+      title: t("chartTutorial.playBgm.title"),
+      description: t("chartTutorial.playBgm.description"),
+      icon: <Music size={20} />,
+      highlightSelector: "[data-tutorial='playback-bgm']",
+      position: "right" as const,
+      positionDelay: 20,
+    },
+    {
+      title: t("chartTutorial.playKeyboard.title"),
+      description: t("chartTutorial.playKeyboard.description"),
+      icon: <Keyboard size={20} />,
+      position: "center" as const,
     },
     {
       title: t("tutorial.finish.title"),

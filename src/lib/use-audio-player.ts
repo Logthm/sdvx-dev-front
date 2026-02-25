@@ -1,24 +1,31 @@
 /**
  * BGM audio player hook — decodes a File into an AudioBuffer
  * and plays it in sync with the chart playback.
+ *
+ * The audio source is created once when playback starts (or on seek),
+ * and playbackRate changes are applied to the live node without
+ * recreating it, so there is no audible gap on speed change.
  */
 
 import { useEffect, useRef, useState } from "react";
+import { usePlaybackStore } from "./playback-store";
 import { getAudioContext } from "./use-metronome";
 
 export function useAudioPlayer(
   bgmFile: File | null,
   isPlaying: boolean,
-  currentTimeSec: number,
+  _currentTimeSec: number,
   playbackRate: number,
   bgmOffset: number,
+  bgmVolume: number,
 ): { audioReady: boolean; duration: number } {
   const [audioReady, setAudioReady] = useState(false);
   const [duration, setDuration] = useState(0);
   const bufferRef = useRef<AudioBuffer | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const startTimeRef = useRef(0);
-  const startChartTimeRef = useRef(0);
+  const gainRef = useRef<GainNode | null>(null);
+
+  const seekVersion = usePlaybackStore((s) => s.seekVersion);
 
   // Decode file when it changes
   useEffect(() => {
@@ -67,7 +74,8 @@ export function useAudioPlayer(
     }
   };
 
-  // Play/pause/seek
+  // Create / destroy audio source on play, pause, seek, or offset change.
+  // Does NOT depend on currentTimeSec (animation-frame updates) or playbackRate.
   useEffect(() => {
     if (!isPlaying || !bufferRef.current) {
       stopSource();
@@ -76,30 +84,48 @@ export function useAudioPlayer(
 
     const ctx = getAudioContext();
     const buffer = bufferRef.current;
+    const currentTimeSec = usePlaybackStore.getState().currentTimeSec;
+    const rate = usePlaybackStore.getState().playbackRate;
 
     stopSource();
 
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-    source.playbackRate.value = playbackRate;
-    source.connect(ctx.destination);
+    source.playbackRate.value = rate;
+
+    const gain = ctx.createGain();
+    gain.gain.value = usePlaybackStore.getState().bgmVolume;
+    source.connect(gain).connect(ctx.destination);
 
     const bgmTime = currentTimeSec + bgmOffset;
     const offset = Math.max(0, bgmTime);
-    const delay = bgmTime < 0 ? -bgmTime / playbackRate : 0;
+    const delay = bgmTime < 0 ? -bgmTime / rate : 0;
 
     if (offset < buffer.duration) {
       source.start(ctx.currentTime + delay, offset);
     }
 
     sourceRef.current = source;
-    startTimeRef.current = ctx.currentTime;
-    startChartTimeRef.current = currentTimeSec;
+    gainRef.current = gain;
 
     return () => {
       stopSource();
     };
-  }, [isPlaying, currentTimeSec, playbackRate, bgmOffset]);
+  }, [isPlaying, seekVersion, bgmOffset]);
+
+  // Update playback rate on the live source — no recreation, no gap.
+  useEffect(() => {
+    if (sourceRef.current) {
+      sourceRef.current.playbackRate.value = playbackRate;
+    }
+  }, [playbackRate]);
+
+  // Update volume on the live gain node.
+  useEffect(() => {
+    if (gainRef.current) {
+      gainRef.current.gain.value = bgmVolume;
+    }
+  }, [bgmVolume]);
 
   // Cleanup on unmount
   useEffect(() => {
