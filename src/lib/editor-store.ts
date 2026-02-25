@@ -7,6 +7,7 @@
  */
 
 import { applyEdits, applyArrangement, DEFAULT_EDIT_FLAGS, moveLaserPoint, deleteLaserPoint as deleteLP, moveButtonEvent, deleteButtonEvent, addButtonEvent, updateButtonHoldLen as setHoldLen, type EditFlags } from "@/lib/chart-edit";
+import { computeMaxPxPerSecond } from "@/lib/chart-renderer/layout";
 import type { ButtonEvent, ChartData, TimePos } from "@/types/chart";
 import { create } from "zustand";
 
@@ -186,14 +187,23 @@ export const useEditorStore = create<EditorState>((set) => ({
     }),
 
   setOriginalChartData: (data) =>
-    set((s) => ({
-      originalChartData: data,
-      arrangedBaseData: null,
-      chartData: applyArrangement(applyEdits(data, s.editFlags), s.renderOptions),
-      editVersion: 0,
-      history: [],
-      maxPxPerSecond: null,
-    })),
+    set((s) => {
+      const frontendMax = computeMaxPxPerSecond(data, s.renderOptions.columnHeight);
+      const effectiveMax = Math.min(frontendMax, 2000);
+      const clamped = Math.min(s.renderOptions.pxPerSecond, effectiveMax);
+      const renderOptions = clamped !== s.renderOptions.pxPerSecond
+        ? { ...s.renderOptions, pxPerSecond: clamped }
+        : s.renderOptions;
+      return {
+        originalChartData: data,
+        arrangedBaseData: null,
+        chartData: applyArrangement(applyEdits(data, s.editFlags), renderOptions),
+        editVersion: 0,
+        history: [],
+        maxPxPerSecond: null,
+        renderOptions,
+      };
+    }),
 
   setArrangedBaseData: (data) =>
     set((s) => ({
