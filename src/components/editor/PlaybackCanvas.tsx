@@ -12,8 +12,13 @@ import { useEditorStore } from "@/lib/editor-store";
 import { useMetronome } from "@/lib/use-metronome";
 import { useAudioPlayer } from "@/lib/use-audio-player";
 import type { ChartData } from "@/types/chart";
+import { PxPerSecondButton } from "./PxPerSecondButton";
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+
+const MIN_ZOOM = 0.2;
+const MAX_ZOOM = 3.0;
+const ZOOM_STEP = 0.1;
 
 interface PlaybackCanvasProps {
   chartData: ChartData;
@@ -48,6 +53,8 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
   const hiSpeedMarks = useEditorStore((s) => s.hiSpeedMarks);
   const bpmDisplayMode = useEditorStore((s) => s.bpmDisplayMode);
   const renderOptions = useEditorStore((s) => s.renderOptions);
+  const zoom = useEditorStore((s) => s.zoom);
+  const setZoom = useEditorStore((s) => s.setZoom);
 
   // Compute layout and total duration
   const layout = useMemo(
@@ -113,15 +120,20 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
       const ctx = canvas.getContext("2d")!;
       ctx.scale(dpr, dpr);
 
-      const playheadScreenY = h * PLAYHEAD_RATIO;
+      // Apply zoom: scale content and adjust dimensions so renderer sees logical size
+      ctx.scale(zoom, zoom);
+      const scaledW = w / zoom;
+      const scaledH = h / zoom;
+
+      const playheadScreenY = scaledH * PLAYHEAD_RATIO;
       const scrollY = secToY(timeSec);
 
       renderPlaybackChart(
         ctx,
         chartData,
         layout,
-        w,
-        h,
+        scaledW,
+        scaledH,
         scrollY,
         playheadScreenY,
         hiSpeedMarks,
@@ -130,7 +142,7 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
         renderOptions.laserRColor,
       );
     },
-    [chartData, layout, secToY, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor],
+    [chartData, layout, secToY, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor, zoom],
   );
 
   // PLACEHOLDER_ANIMATION_LOOP
@@ -224,6 +236,29 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
       tabIndex={0}
     >
       <canvas ref={canvasRef} className="block" />
+      <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted">
+        <button
+          onClick={() => {
+            const z = useEditorStore.getState().zoom;
+            setZoom(Math.max(MIN_ZOOM, z - ZOOM_STEP));
+          }}
+          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+        >
+          −
+        </button>
+        <span className="w-10 text-center">{Math.round(zoom * 100)}%</span>
+        <button
+          onClick={() => {
+            const z = useEditorStore.getState().zoom;
+            setZoom(Math.min(MAX_ZOOM, z + ZOOM_STEP));
+          }}
+          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+        >
+          +
+        </button>
+        <span className="w-px h-4 bg-border mx-0.5" />
+        <PxPerSecondButton />
+      </div>
     </div>
   );
 }

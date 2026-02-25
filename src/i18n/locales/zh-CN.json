@@ -71,11 +71,11 @@
     },
     "difficulty": {
       "title": "切换谱面",
-      "description": "点击顶部的难度标签可以切换要查看的谱面。"
+      "description": "点击难度标签可以切换要查看的谱面。"
     },
     "sidebar": {
       "title": "信息栏",
-      "description": "在右侧的信息栏会展示歌曲的详细信息，点击雷达图顶点可以查看具体数值。"
+      "description": "信息栏会展示歌曲的详细信息，点击雷达图顶点可以查看具体数值。\n\n在移动端，通过顶栏的信息按钮打开。"
     },
     "modeToggle": {
       "title": "查看 / 编辑模式",
@@ -185,6 +185,7 @@
     "fullscreen": "全屏",
     "exitFullscreen": "退出全屏",
     "chartPreview": "谱面预览",
+    "songInfo": "歌曲信息",
     "speakTitle": "点击朗读曲名",
     "speakArtist": "点击朗读作者名",
     "addNotes": "添加音符",
@@ -192,7 +193,9 @@
     "deleteSelected": "删除选中的物件",
     "panView": "平移（拖动视图）",
     "moveSelect": "移动（选择并拖动）",
-    "editHs": "编辑（切换长按/编辑变速）"
+    "editHs": "编辑（切换长按/编辑变速）",
+    "pxPerSecond": "像素/秒",
+    "pxRange": "范围: {{min}} – {{max}}"
   },
   "playback": {
     "play": "播放",

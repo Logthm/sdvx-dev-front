@@ -237,6 +237,7 @@ export function Tutorial({
     }
 
     if (step.positionDelay) {
+      setHighlightRect(null);
       const timer = setTimeout(measure, step.positionDelay);
       return () => clearTimeout(timer);
     } else {
@@ -247,29 +248,47 @@ export function Tutorial({
   // Watch highlighted element for size changes (e.g. expanded toolbar)
   useEffect(() => {
     if (!isOpen || currentStep >= steps.length) return;
-    const sel = steps[currentStep].highlightSelector;
+    const step = steps[currentStep];
+    const sel = step.highlightSelector;
     if (!sel) return;
-    const el = queryVisible(sel);
-    if (!el) return;
     const padding = 8;
-    const update = () => {
-      const r = el.getBoundingClientRect();
-      setHighlightRect({
-        top: r.top - padding,
-        left: r.left - padding,
-        width: r.width + padding * 2,
-        height: r.height + padding * 2,
+
+    const setup = () => {
+      const el = queryVisible(sel);
+      if (!el) return;
+      const update = () => {
+        const r = el.getBoundingClientRect();
+        setHighlightRect({
+          top: r.top - padding,
+          left: r.left - padding,
+          width: r.width + padding * 2,
+          height: r.height + padding * 2,
+        });
+      };
+      const ro = new ResizeObserver(update);
+      ro.observe(el);
+      document.addEventListener("scroll", update, {
+        capture: true,
+        passive: true,
       });
+      cleanupRef = () => {
+        ro.disconnect();
+        document.removeEventListener("scroll", update, { capture: true });
+      };
     };
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    document.addEventListener("scroll", update, {
-      capture: true,
-      passive: true,
-    });
+
+    let cleanupRef: (() => void) | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    if (step.positionDelay) {
+      timer = setTimeout(setup, step.positionDelay);
+    } else {
+      setup();
+    }
+
     return () => {
-      ro.disconnect();
-      document.removeEventListener("scroll", update, { capture: true });
+      if (timer) clearTimeout(timer);
+      cleanupRef?.();
     };
   }, [isOpen, currentStep, steps]);
 
@@ -358,10 +377,19 @@ export function Tutorial({
         </div>
 
         {/* Content */}
-        <div className="px-6 py-6">
-          <p className="text-text-secondary leading-relaxed whitespace-pre-line">
-            {step.description}
-          </p>
+        <div className="px-6 py-4 md:py-6">
+          <div className="hidden md:block">
+            <p className="text-text-secondary leading-relaxed whitespace-pre-line">
+              {step.description}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 md:hidden">
+            {step.description.split("\n\n").map((para, i) => (
+              <p key={i} className="text-text-secondary leading-snug whitespace-pre-line">
+                {para}
+              </p>
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
@@ -479,7 +507,7 @@ export function useChartTutorialSteps() {
       highlightSelector:
         "[data-tutorial='chart-difficulty'], [data-tutorial='chart-difficulty-mobile']",
       position: "bottom" as const,
-      positionDelay: 20,
+      positionDelay: 180,
     },
     {
       title: t("chartTutorial.sidebar.title"),
@@ -487,6 +515,7 @@ export function useChartTutorialSteps() {
       icon: <Info size={20} />,
       highlightSelector: "[data-tutorial='chart-sidebar']",
       position: "right" as const,
+      positionDelay: 180,
     },
     {
       title: t("chartTutorial.modeToggle.title"),

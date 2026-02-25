@@ -238,6 +238,35 @@ export function findSpanByMeasure(
   return null;
 }
 
+// ── Safe px/sec range ───────────────────────────────────────────
+
+/**
+ * Compute the maximum px_per_second that won't cause any single measure
+ * to exceed the column height (which breaks the layout engine).
+ *
+ * Returns `floor((columnHeight - 2 * MARGIN) / longestMeasureDuration)`.
+ * If chart data is unavailable or all measures are zero-length, returns Infinity.
+ */
+export function computeMaxPxPerSecond(
+  chartData: ChartData,
+  columnHeight: number = DEFAULT_COLUMN_HEIGHT,
+): number {
+  const tm = new TimeMapper(chartData);
+  const endMeasure = chartData.end_position?.measure ?? 1;
+  const available = columnHeight - 2 * MARGIN;
+
+  let maxDuration = 0;
+  for (let m = 1; m <= endMeasure; m++) {
+    const sec0 = tm.secondsOf([m, 1, 0]);
+    const sec1 = tm.secondsOf([m + 1, 1, 0]);
+    const dur = sec1 - sec0;
+    if (dur > maxDuration) maxDuration = dur;
+  }
+
+  if (maxDuration <= 0) return Infinity;
+  return Math.floor(available / maxDuration);
+}
+
 // ── Inverse helpers (chart-space → data) ─────────────────────────
 
 /** Inverse of yInMeasure: pixel Y within a span → seconds */

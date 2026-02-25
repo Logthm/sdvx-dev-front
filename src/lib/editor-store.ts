@@ -103,6 +103,10 @@ export interface EditorState {
   mobileFullscreen: boolean;
   toggleMobileFullscreen: () => void;
 
+  /** Safe upper bound for px_per_second, computed by the backend from chart BPM data. */
+  maxPxPerSecond: number | null;
+  setMaxPxPerSecond: (v: number | null) => void;
+
   setOriginalChartData: (data: ChartData) => void;
   /** Set backend-arranged chart data (e.g. s-random result). Recomputes chartData from this base. */
   setArrangedBaseData: (data: ChartData) => void;
@@ -171,6 +175,16 @@ export const useEditorStore = create<EditorState>((set) => ({
   mobileFullscreen: false,
   toggleMobileFullscreen: () => set((s) => ({ mobileFullscreen: !s.mobileFullscreen })),
 
+  maxPxPerSecond: null,
+  setMaxPxPerSecond: (v) =>
+    set((s) => {
+      const next: Partial<EditorState> = { maxPxPerSecond: v };
+      if (v !== null && s.renderOptions.pxPerSecond > v) {
+        next.renderOptions = { ...s.renderOptions, pxPerSecond: v };
+      }
+      return next;
+    }),
+
   setOriginalChartData: (data) =>
     set((s) => ({
       originalChartData: data,
@@ -178,6 +192,7 @@ export const useEditorStore = create<EditorState>((set) => ({
       chartData: applyArrangement(applyEdits(data, s.editFlags), s.renderOptions),
       editVersion: 0,
       history: [],
+      maxPxPerSecond: null,
     })),
 
   setArrangedBaseData: (data) =>

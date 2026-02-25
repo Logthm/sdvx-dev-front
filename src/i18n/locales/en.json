@@ -71,11 +71,11 @@
     },
     "difficulty": {
       "title": "Switch Charts",
-      "description": "Click the difficulty badges at the top to switch between different charts."
+      "description": "Click the difficulty badges to switch between different charts."
     },
     "sidebar": {
       "title": "Info Panel",
-      "description": "The info panel on the right shows detailed song information. Click radar chart vertices to view specific values."
+      "description": "The info panel shows detailed song information. Click radar chart vertices to view specific values.\n\nOn mobile, open it via the info button in the top bar."
     },
     "modeToggle": {
       "title": "View / Edit Mode",
@@ -185,6 +185,7 @@
     "fullscreen": "Fullscreen",
     "exitFullscreen": "Exit fullscreen",
     "chartPreview": "Chart preview",
+    "songInfo": "Song info",
     "speakTitle": "Click to read aloud",
     "speakArtist": "Click to read artist aloud",
     "addNotes": "Add notes",
@@ -192,7 +193,9 @@
     "deleteSelected": "Delete selected",
     "panView": "Pan (drag view)",
     "moveSelect": "Move (select & drag)",
-    "editHs": "Edit (toggle hold, edit HS)"
+    "editHs": "Edit (toggle hold, edit HS)",
+    "pxPerSecond": "px/sec",
+    "pxRange": "Range: {{min}} – {{max}}"
   },
   "playback": {
     "play": "Play",

@@ -24,7 +24,7 @@ import {
     type DifficultyName,
     type DifficultySchema,
 } from "@/types/music";
-import { ArrowLeft, ChevronDown, ChevronUp, Eye, HelpCircle, Loader2, Pencil, Play, Volume2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Eye, HelpCircle, Info, Loader2, Pencil, Play, Volume2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -65,6 +65,7 @@ export function SongDetailPage() {
   const [selectedDif, setSelectedDif] = useState<DifficultySchema | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [toolbarCollapsed, setToolbarCollapsed] = useState(true);
+  const [infoDrawerOpen, setInfoDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (sortedDiffs.length > 0 && !selectedDif) {
@@ -145,8 +146,12 @@ export function SongDetailPage() {
     // Sidebar/toolbar visibility
     if (step >= 1 && step <= 2) {
       setSidebarCollapsed(false); setToolbarCollapsed(true);
+      setInfoDrawerOpen(true);
     } else if (step >= 3) {
       setSidebarCollapsed(true); setToolbarCollapsed(false);
+      setInfoDrawerOpen(false);
+    } else {
+      setInfoDrawerOpen(false);
     }
     // Mode & tools
     if (canEdit && step >= 14 && step <= 19) {
@@ -217,17 +222,15 @@ export function SongDetailPage() {
             />
           ))}
         </div>
-        {/* Mobile YouTube button */}
-        {activeDif && music && (
-          <a
-            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`sdvx ${music.title_name} ${activeDif.difstr === "infinite" ? getInfLabel(music.inf_ver) : DIFFICULTY_LABELS[activeDif.difstr]}`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="md:hidden shrink-0 p-1.5 rounded-md border border-cosmos-600/30 text-text-muted hover:text-red-400 hover:border-red-400/30 transition-colors"
-            title={t('chart.chartPreview')}
+        {/* Mobile song info drawer button */}
+        {music && (
+          <button
+            onClick={() => setInfoDrawerOpen(true)}
+            className="md:hidden shrink-0 p-1.5 rounded-md border border-cosmos-600/30 text-text-muted hover:text-accent hover:border-accent/30 transition-colors"
+            title={t('chart.songInfo')}
           >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-          </a>
+            <Info size={16} />
+          </button>
         )}
         {/* Language switcher */}
         <LanguageSwitcher />
@@ -246,6 +249,130 @@ export function SongDetailPage() {
         </button>
       </header>
 
+      {/* ── Mobile song info drawer ── */}
+      {infoDrawerOpen && music && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-cosmos-950/70 backdrop-blur-sm" onClick={() => { if (!chartTutorial.isOpen) setInfoDrawerOpen(false); }} />
+          <div className="relative w-72 max-w-[80vw] bg-cosmos-900 border-r border-cosmos-600/30 flex flex-col animate-slide-in-left">
+            <div className="shrink-0 flex items-center justify-between px-3 h-12 border-b border-cosmos-600/20">
+              <span className="text-sm font-medium text-text-primary">{t('chart.songInfo')}</span>
+              <button onClick={() => { if (!chartTutorial.isOpen) setInfoDrawerOpen(false); }} className="p-1 rounded text-text-muted hover:text-text-primary transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto" data-tutorial="chart-sidebar">
+              {/* Cover + title */}
+              <div className="obs-panel-section flex flex-col gap-3">
+                <div className="w-full aspect-square rounded overflow-hidden bg-cosmos-800">
+                  {coverSrc ? (
+                    <img src={coverSrc} alt={music.title_name} decoding="async" className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-xl font-bold text-cosmos-600">{music.title_name.charAt(0)}</span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-text-primary leading-tight break-words font-ja">{music.title_name}</h2>
+{/* DRAWER_CONTENT_PLACEHOLDER */}
+                  {music.title_yomigana && music.title_yomigana !== music.title_name && (() => {
+                    const displayText = i18n.language === "ja" ? music.title_yomigana : (music.title_romaji || music.title_yomigana);
+                    return (
+                      <button type="button" onClick={() => {
+                        const utterance = new SpeechSynthesisUtterance(music.title_yomigana);
+                        utterance.lang = "ja-JP"; utterance.rate = 0.9;
+                        speechSynthesis.cancel(); speechSynthesis.speak(utterance);
+                      }} className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors cursor-pointer mt-0.5 font-ja text-left" title={t('chart.speakTitle')}>
+                        <Volume2 size={11} className="shrink-0" /><span>{displayText}</span>
+                      </button>
+                    );
+                  })()}
+                  <p className="text-xs text-text-secondary break-words mt-0.5 font-ja">{music.artist_name}</p>
+                  {music.artist_yomigana && music.artist_yomigana !== music.artist_name && (() => {
+                    const displayText = i18n.language === "ja" ? music.artist_yomigana : (music.artist_romaji || music.artist_yomigana);
+                    return (
+                      <button type="button" onClick={() => {
+                        const utterance = new SpeechSynthesisUtterance(music.artist_yomigana);
+                        utterance.lang = "ja-JP"; utterance.rate = 0.9;
+                        speechSynthesis.cancel(); speechSynthesis.speak(utterance);
+                      }} className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors cursor-pointer mt-0.5 font-ja text-left" title={t('chart.speakArtist')}>
+                        <Volume2 size={11} className="shrink-0" /><span>{displayText}</span>
+                      </button>
+                    );
+                  })()}
+                </div>
+{/* DRAWER_CONTENT_PLACEHOLDER_2 */}
+                {activeDif && (
+                  <a
+                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`sdvx ${music.title_name} ${activeDif.difstr === "infinite" ? getInfLabel(music.inf_ver) : DIFFICULTY_LABELS[activeDif.difstr]}`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-md text-xs font-medium text-text-muted hover:text-red-400 border border-cosmos-600/20 hover:border-red-400/30 transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    {t('chart.chartPreview')}
+                  </a>
+                )}
+              </div>
+
+              {/* Difficulty badges */}
+              <div className="obs-panel-section flex items-center gap-2 flex-wrap" data-tutorial="chart-difficulty-mobile">
+                {sortedDiffs.map((d) => (
+                  <DifficultyBadge key={d.difstr} difstr={d.difstr as DifficultyName} level={d.difnum}
+                    infVer={music?.inf_ver} selected={activeDif?.difstr === d.difstr}
+                    onClick={() => setSelectedDif(d)} />
+                ))}
+              </div>
+
+              {/* Data rows */}
+              <div className="obs-panel-section">
+                <DataRow label="BPM" value={formatBpm(music.bpm_max, music.bpm_min)} />
+                <DataRow label={t('chart.version')} value={music.version} />
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-[11px] uppercase tracking-[0.12em] text-text-muted">{t('chart.genre')}</span>
+                  <span className="text-sm font-mono text-text-primary font-ja text-right">
+                    {music.genre_name.length > 0 ? music.genre_name.map((g, i) => <div key={i}>{g}</div>) : "—"}
+                  </span>
+                </div>
+{/* DRAWER_CONTENT_PLACEHOLDER_3 */}
+                {activeDif && (
+                  <>
+                    <DataRow label={t('chart.exScore')} value={activeDif.max_exscore.toLocaleString()} />
+                    <DataRow label={t('chart.chain')} value={activeDif.max_chain.toLocaleString()} />
+                    <DataRow label={t('chart.chips')} value={activeDif.chip_count} />
+                    <DataRow label={t('chart.holds')} value={activeDif.hold_count} />
+                    <DataRow label={t('chart.tsumami')} value={activeDif.tsumami_count} />
+                  </>
+                )}
+              </div>
+
+              {/* Credits */}
+              {activeDif && (
+                <div className="obs-panel-section text-xs">
+                  <div className="flex justify-between py-1">
+                    <span className="text-text-muted">{t('chart.illustrator')}</span>
+                    <span className="text-text-secondary text-right break-words ml-2 font-ja">{activeDif.illustrator || "—"}</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-text-muted">{t('chart.effector')}</span>
+                    <span className="text-text-secondary text-right break-words ml-2 font-ja">{activeDif.effected_by || "—"}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Radar */}
+              {activeDif && (
+                <div className="obs-panel-section">
+                  <div className="w-full aspect-square max-w-[220px] mx-auto">
+                    <RadarChart data={activeDif.radar} size={220} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Main content ── */}
       {musicQuery.isLoading ? (
         <div className="flex-1 flex items-center justify-center">
@@ -262,7 +389,7 @@ export function SongDetailPage() {
           {/* ── Metadata sidebar ── */}
           <aside className={cn("shrink-0 md:w-60 lg:w-64 border-b md:border-b-0 md:border-r border-cosmos-600/20 bg-cosmos-900/30 relative z-10 flex flex-col max-h-[50vh] md:max-h-none md:overflow-y-auto", mobileFullscreen && "hidden md:flex")}>
             {/* Scrollable info section (mobile only scrolls independently) */}
-            <div className="flex-1 overflow-y-auto min-h-0 md:flex-none md:overflow-visible" data-tutorial="chart-sidebar">
+            <div className="hidden md:block flex-1 overflow-y-auto min-h-0 md:flex-none md:overflow-visible" data-tutorial="chart-sidebar">
             {/* Cover + title + collapse toggle */}
             <div className="obs-panel-section flex md:flex-col gap-3">
               <div className="w-16 h-16 md:w-full md:h-auto md:aspect-square rounded overflow-hidden bg-cosmos-800 shrink-0">
@@ -302,10 +429,7 @@ export function SongDetailPage() {
                     </button>
                   );
                 })()}
-                {music.sub_title_name && (
-                  <p className="text-xs text-text-muted break-words font-ja">{music.sub_title_name}</p>
-                )}
-                <p className="text-xs text-text-secondary break-words mt-0.5 font-ja">{music.artist_name}</p>
+<p className="text-xs text-text-secondary break-words mt-0.5 font-ja">{music.artist_name}</p>
                 {music.artist_yomigana && music.artist_yomigana !== music.artist_name && (() => {
                   const displayText = i18n.language === "ja" ? music.artist_yomigana : (music.artist_romaji || music.artist_yomigana);
                   return (
@@ -447,7 +571,7 @@ export function SongDetailPage() {
                   </button>
                 )}
                 <button
-                  onClick={() => { setToolbarCollapsed((v) => !v); setSidebarCollapsed(true); }}
+                  onClick={() => setToolbarCollapsed((v) => !v)}
                   className="md:hidden px-2 flex items-center text-text-muted hover:text-gold-400 transition-colors"
                 >
                   {toolbarCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}

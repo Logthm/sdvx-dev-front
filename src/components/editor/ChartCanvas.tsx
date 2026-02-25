@@ -1,7 +1,5 @@
 import {
   computeLayout,
-  DEFAULT_COLUMN_HEIGHT,
-  DEFAULT_PX_PER_SECOND,
   findSpanAtPoint,
   findSpanByMeasure,
   findSpanByYInCol,
@@ -24,6 +22,7 @@ import { DRAG_RANGE_MS, useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import type { ButtonEvent, ChartData, LaserEvent } from "@/types/chart";
 import type { Time3 } from "@/lib/chart-renderer/time-mapper";
+import { PxPerSecondButton } from "./PxPerSecondButton";
 import { Hand, Maximize, Minimize, Move, Pencil, Plus, RotateCcw, Trash2, UnfoldVertical } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -96,11 +95,11 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     const container = containerRef.current;
     if (!container) { setPan(Math.max(0, x), Math.max(0, y)); return; }
     const rect = container.getBoundingClientRect();
-    const layout = computeLayout(activeChart);
+    const layout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
     const maxX = Math.max(0, layout.canvasWidth - rect.width / z);
     const maxY = Math.max(0, layout.canvasHeight - rect.height / z);
     setPan(Math.max(0, Math.min(maxX, x)), Math.max(0, Math.min(maxY, y)));
-  }, [activeChart, setPan]);
+  }, [activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight, setPan]);
 
   const clampedPanRef = useRef(clampedPan);
   clampedPanRef.current = clampedPan;
@@ -109,12 +108,12 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     const container = containerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
-    const layout = computeLayout(activeChart);
+    const layout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
     const z = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, rect.height / layout.canvasHeight));
     setZoom(z);
     const { panX: px, panY: py } = useEditorStore.getState();
     clampedPan(px, py, z);
-  }, [activeChart, setZoom, clampedPan]);
+  }, [activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight, setZoom, clampedPan]);
 
   const mobileFs = useEditorStore((s) => s.mobileFullscreen);
   const toggleMobileFs = useEditorStore((s) => s.toggleMobileFullscreen);
@@ -174,8 +173,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       w,
       h,
       state,
-      DEFAULT_PX_PER_SECOND,
-      DEFAULT_COLUMN_HEIGHT,
+      renderOptions.pxPerSecond,
+      renderOptions.columnHeight,
       hiSpeed,
       hiSpeedMarks,
       bpmDisplayMode,
@@ -187,7 +186,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     const store = useEditorStore.getState();
     if (mode === "edit" && store.originalChartData) {
       const orig = store.originalChartData;
-      const layout = computeLayout(activeChart);
+      const layout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
       ctx.save();
       ctx.translate(-panX * zoom, -panY * zoom);
       ctx.scale(zoom, zoom);
@@ -247,7 +246,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
 
     // Draw laser point markers when simplifyLasers is active
     if (mode === "edit" && simplifyLasers) {
-      const layout = computeLayout(activeChart);
+      const layout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
       ctx.save();
       ctx.translate(-panX * zoom, -panY * zoom);
       ctx.scale(zoom, zoom);
@@ -270,7 +269,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     // Draw selection highlight
     const sel = useEditorStore.getState().selectedPoint;
     if (sel && mode === "edit") {
-      const layout = computeLayout(activeChart);
+      const layout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
       ctx.save();
       ctx.translate(-panX * zoom, -panY * zoom);
       ctx.scale(zoom, zoom);
@@ -369,7 +368,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       }
       ctx.restore();
     }
-  }, [activeChart, zoom, panX, panY, mode, selectedPoint, simplifyLasers, dragRange, speed, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor]);
+  }, [activeChart, zoom, panX, panY, mode, selectedPoint, simplifyLasers, dragRange, speed, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor, renderOptions.pxPerSecond, renderOptions.columnHeight]);
 
   const requestDraw = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -396,7 +395,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     if (!container) return;
 
     const rect = container.getBoundingClientRect();
-    const layout = computeLayout(activeChart);
+    const layout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
 
     const fitZoom = rect.height / layout.canvasHeight;
     const initialZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, fitZoom));
@@ -472,9 +471,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   }
 
   function hitTestLaserPoints(cx: number, cy: number, margin = 0) {
-    const chart = useEditorStore.getState().chartData;
+    const { chartData: chart, renderOptions: ro } = useEditorStore.getState();
     if (!chart) return null;
-    const layout = computeLayout(chart);
+    const layout = computeLayout(chart, ro.pxPerSecond, ro.columnHeight);
     const HIT_R = 10 + margin;
     let best: { track: string; index: number; dist: number } | null = null;
     for (const track of ["1", "8"] as const) {
@@ -494,9 +493,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   }
 
   function hitTestButtonNotes(cx: number, cy: number, margin = 0) {
-    const chart = useEditorStore.getState().chartData;
+    const { chartData: chart, renderOptions: ro } = useEditorStore.getState();
     if (!chart) return null;
-    const layout = computeLayout(chart);
+    const layout = computeLayout(chart, ro.pxPerSecond, ro.columnHeight);
     for (const trackNum of ["3", "4", "5", "6", "2", "7"]) {
       const events = chart.tracks[trackNum] ?? [];
       for (let i = 0; i < events.length; i++) {
@@ -516,10 +515,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   }
 
   function hitTestHiSpeedMarks(cx: number, cy: number, margin = 6) {
-    const marks = useEditorStore.getState().hiSpeedMarks;
-    const chart = useEditorStore.getState().chartData;
+    const { hiSpeedMarks: marks, chartData: chart, renderOptions: ro } = useEditorStore.getState();
     if (!chart || marks.length === 0) return null;
-    const layout = computeLayout(chart);
+    const layout = computeLayout(chart, ro.pxPerSecond, ro.columnHeight);
     const { spans, timeMapper: tm, pxPerSecond } = layout;
     for (let i = 0; i < marks.length; i++) {
       const markSec = tm.secondsOf(marks[i].time as Time3);
@@ -536,10 +534,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   }
 
   function hitTestHiSpeedText(cx: number, cy: number) {
-    const marks = useEditorStore.getState().hiSpeedMarks;
-    const chart = useEditorStore.getState().chartData;
+    const { hiSpeedMarks: marks, chartData: chart, renderOptions: ro } = useEditorStore.getState();
     if (!chart || marks.length === 0) return null;
-    const layout = computeLayout(chart);
+    const layout = computeLayout(chart, ro.pxPerSecond, ro.columnHeight);
     const { spans, timeMapper: tm, pxPerSecond } = layout;
     for (let i = 0; i < marks.length; i++) {
       const markSec = tm.secondsOf(marks[i].time as Time3);
@@ -557,9 +554,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   }
 
   function hitTestHoldTail(cx: number, cy: number, margin = 6) {
-    const chart = useEditorStore.getState().chartData;
+    const { chartData: chart, renderOptions: ro } = useEditorStore.getState();
     if (!chart) return null;
-    const layout = computeLayout(chart);
+    const layout = computeLayout(chart, ro.pxPerSecond, ro.columnHeight);
     for (const trackNum of ["3", "4", "5", "6", "2", "7"]) {
       const events = chart.tracks[trackNum] ?? [];
       for (let i = 0; i < events.length; i++) {
@@ -606,7 +603,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             const hit = hitTestLaserPoints(x, y);
             if (hit) {
               const chart = s.chartData!;
-              const layout = computeLayout(chart);
+              const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
               const events = (chart.tracks[hit.track] ?? []).filter(
                 (ev): ev is LaserEvent => ev.type === "laser",
               );
@@ -643,7 +640,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           const btnHit = hitTestButtonNotes(x, y);
           if (btnHit) {
             const chart = s.chartData!;
-            const layout = computeLayout(chart);
+            const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
             const bev = (chart.tracks[btnHit.track] ?? [])[btnHit.index] as ButtonEvent;
             const origTrack = s.originalChartData?.tracks[btnHit.track];
             const editedTrack = chart.tracks[btnHit.track];
@@ -696,7 +693,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           const hsTextHit = hitTestHiSpeedText(x, y);
           if (hsTextHit) {
             const chart = s.chartData!;
-            const layout = computeLayout(chart);
+            const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
             const markSec = layout.timeMapper.secondsOf(s.hiSpeedMarks[hsTextHit.index].time as Time3);
             // Find the column for this mark
             let col = 0;
@@ -733,7 +730,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             if (bev.hold_len > 0) {
               s.updateButtonHoldLen(btnHit.track, btnHit.index, 0);
             } else {
-              const layout = computeLayout(chart);
+              const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
               const [num, den] = layout.timeMapper.getTimeSigAt(bev.time as Time3);
               const upb = chart.beat_resolution ?? (192 / den);
               const holdLen = Math.round(num * upb / 8);
@@ -763,7 +760,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         if (s.mouseTool === "add-bt" || s.mouseTool === "add-fx") {
           const chart = s.chartData;
           if (chart) {
-            const layout = computeLayout(chart);
+            const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
             const span = findSpanAtPoint(layout.spans, x, y);
             if (span) {
               const lane = xToTrackName(x, span.col);
@@ -792,7 +789,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         if (s.mouseTool === "add-hispeed") {
           const chart = s.chartData;
           if (chart) {
-            const layout = computeLayout(chart);
+            const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
             const span = findSpanAtPoint(layout.spans, x, y);
             if (span) {
               const sec = yToSec(y, span, layout.pxPerSecond);
@@ -815,7 +812,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const chart = s.chartData;
         if (!chart) return;
         const { x, y } = clientToChart(e.clientX, e.clientY);
-        const layout = computeLayout(chart);
+        const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
         const col = pointDragRef.current.col;
         const span = findSpanByYInCol(layout.spans, y, col);
         if (!span) return;
@@ -831,7 +828,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const chart = s.chartData;
         if (!chart) return;
         const { y } = clientToChart(e.clientX, e.clientY);
-        const layout = computeLayout(chart);
+        const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
         const col = btnDragRef.current.col;
         const span = findSpanByYInCol(layout.spans, y, col);
         if (!span) return;
@@ -858,7 +855,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const chart = s.chartData;
         if (!chart) return;
         const { y } = clientToChart(e.clientX, e.clientY);
-        const layout = computeLayout(chart);
+        const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
         const span = findSpanByYInCol(layout.spans, y, hsDragRef.current.col);
         if (!span) return;
         const sec = yToSec(y, span, layout.pxPerSecond);
@@ -872,7 +869,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const chart = s.chartData;
         if (!chart) return;
         const { y } = clientToChart(e.clientX, e.clientY);
-        const layout = computeLayout(chart);
+        const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
         const span = findSpanByYInCol(layout.spans, y, holdTailDragRef.current.col);
         if (!span) return;
         const sec = yToSec(y, span, layout.pxPerSecond);
@@ -935,7 +932,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             if (hit) {
               e.preventDefault();
               const chart = s.chartData!;
-              const layout = computeLayout(chart);
+              const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
               const events = (chart.tracks[hit.track] ?? []).filter(
                 (ev): ev is LaserEvent => ev.type === "laser",
               );
@@ -973,7 +970,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           if (btnHit) {
             e.preventDefault();
             const chart = s.chartData!;
-            const layout = computeLayout(chart);
+            const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
             const bev = (chart.tracks[btnHit.track] ?? [])[btnHit.index] as ButtonEvent;
             const origTrack = s.originalChartData?.tracks[btnHit.track];
             const editedTrack = chart.tracks[btnHit.track];
@@ -1038,7 +1035,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const { x, y } = clientToChart(e.touches[0].clientX, e.touches[0].clientY);
         const chart = s.chartData;
         if (!chart) return;
-        const layout = computeLayout(chart);
+        const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
         const col = pointDragRef.current.col;
         const span = findSpanByYInCol(layout.spans, y, col);
         if (!span) return;
@@ -1052,7 +1049,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const { y } = clientToChart(e.touches[0].clientX, e.touches[0].clientY);
         const chart = s.chartData;
         if (!chart) return;
-        const layout = computeLayout(chart);
+        const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
         const col = btnDragRef.current.col;
         const span = findSpanByYInCol(layout.spans, y, col);
         if (!span) return;
@@ -1076,7 +1073,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const { y } = clientToChart(e.touches[0].clientX, e.touches[0].clientY);
         const chart = s.chartData;
         if (!chart) return;
-        const layout = computeLayout(chart);
+        const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
         const span = findSpanByYInCol(layout.spans, y, hsDragRef.current.col);
         if (!span) return;
         const sec = yToSec(y, span, layout.pxPerSecond);
@@ -1088,7 +1085,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const { y } = clientToChart(e.touches[0].clientX, e.touches[0].clientY);
         const chart = s.chartData;
         if (!chart) return;
-        const layout = computeLayout(chart);
+        const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
         const span = findSpanByYInCol(layout.spans, y, holdTailDragRef.current.col);
         if (!span) return;
         const sec = yToSec(y, span, layout.pxPerSecond);
@@ -1327,11 +1324,19 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       )}
 
       {/* Zoom indicator */}
-      <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
+      <div className="absolute top-3 right-3 flex flex-col sm:flex-row items-end sm:items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
+        <div className="flex items-center gap-1 order-1 sm:order-2">
         <button
           onClick={() => {
-            const z = useEditorStore.getState().zoom;
-            setZoom(Math.max(MIN_ZOOM, z - ZOOM_STEP));
+            const { zoom: z, panX: px, panY: py } = useEditorStore.getState();
+            const next = Math.max(MIN_ZOOM, z - ZOOM_STEP);
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (rect) {
+              const cx = rect.width / 2, cy = rect.height / 2;
+              const chartX = px + cx / z, chartY = py + cy / z;
+              clampedPan(chartX - cx / next, chartY - cy / next, next);
+            }
+            setZoom(next);
           }}
           className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
         >
@@ -1340,14 +1345,26 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         <span className="w-10 text-center">{Math.round(zoom * 100)}%</span>
         <button
           onClick={() => {
-            const z = useEditorStore.getState().zoom;
-            setZoom(Math.min(MAX_ZOOM, z + ZOOM_STEP));
+            const { zoom: z, panX: px, panY: py } = useEditorStore.getState();
+            const next = Math.min(MAX_ZOOM, z + ZOOM_STEP);
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (rect) {
+              const cx = rect.width / 2, cy = rect.height / 2;
+              const chartX = px + cx / z, chartY = py + cy / z;
+              clampedPan(chartX - cx / next, chartY - cy / next, next);
+            }
+            setZoom(next);
           }}
           className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
         >
           +
         </button>
-          <span className="w-px h-4 bg-border mx-0.5" />
+        </div>
+        <span className="w-px h-4 bg-border mx-0.5 hidden sm:block order-none sm:order-1" />
+        <span className="w-px h-4 bg-border mx-0.5 hidden sm:block order-none sm:order-3" />
+        <div className="flex items-center gap-1 order-2 sm:order-none">
+          <PxPerSecondButton />
+          <span className="w-px h-4 bg-border mx-0.5 sm:hidden" />
           <button
             onClick={fitHeight}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
@@ -1362,6 +1379,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           >
             {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
           </button>
+        </div>
       </div>
 
       {/* Hi-Speed mark dialog */}

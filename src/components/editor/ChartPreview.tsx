@@ -10,6 +10,7 @@ import { useChartImage, useEditedChartImage } from "@/api/chart";
 import type { RenderOptions } from "@/lib/editor-store";
 import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
+import { PxPerSecondButton } from "./PxPerSecondButton";
 import { Loader2, Maximize, Minimize, UnfoldVertical } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -332,35 +333,62 @@ export function ChartPreview({
 
       {/* Zoom indicator */}
       {isReady && (
-        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
+        <div className="absolute top-3 right-3 flex flex-col sm:flex-row items-end sm:items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
+          <div className="flex items-center gap-1 order-1 sm:order-2">
           <button
-            onClick={() => setZoom(Math.max(MIN_ZOOM, useEditorStore.getState().zoom - ZOOM_STEP))}
+            onClick={() => {
+              const { zoom: z, panX: px, panY: py } = useEditorStore.getState();
+              const next = Math.max(MIN_ZOOM, z - ZOOM_STEP);
+              const rect = containerRef.current?.getBoundingClientRect();
+              if (rect) {
+                const cx = rect.width / 2, cy = rect.height / 2;
+                const chartX = px + cx / z, chartY = py + cy / z;
+                clampedPan(chartX - cx / next, chartY - cy / next, next);
+              }
+              setZoom(next);
+            }}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
           >
             −
           </button>
           <span className="w-10 text-center">{Math.round(zoom * 100)}%</span>
           <button
-            onClick={() => setZoom(Math.min(MAX_ZOOM, useEditorStore.getState().zoom + ZOOM_STEP))}
+            onClick={() => {
+              const { zoom: z, panX: px, panY: py } = useEditorStore.getState();
+              const next = Math.min(MAX_ZOOM, z + ZOOM_STEP);
+              const rect = containerRef.current?.getBoundingClientRect();
+              if (rect) {
+                const cx = rect.width / 2, cy = rect.height / 2;
+                const chartX = px + cx / z, chartY = py + cy / z;
+                clampedPan(chartX - cx / next, chartY - cy / next, next);
+              }
+              setZoom(next);
+            }}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
           >
             +
           </button>
-          <span className="w-px h-4 bg-border mx-0.5" />
-          <button
-            onClick={fitHeight}
-            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-            title={t('chart.fitHeight')}
-          >
-            <UnfoldVertical size={14} />
-          </button>
-          <button
-            onClick={toggleFullscreen}
-            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-            title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
-          >
-            {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
-          </button>
+          </div>
+          <span className="w-px h-4 bg-border mx-0.5 hidden sm:block order-none sm:order-1" />
+          <span className="w-px h-4 bg-border mx-0.5 hidden sm:block order-none sm:order-3" />
+          <div className="flex items-center gap-1 order-2 sm:order-none">
+            <PxPerSecondButton />
+            <span className="w-px h-4 bg-border mx-0.5 sm:hidden" />
+            <button
+              onClick={fitHeight}
+              className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+              title={t('chart.fitHeight')}
+            >
+              <UnfoldVertical size={14} />
+            </button>
+            <button
+              onClick={toggleFullscreen}
+              className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+              title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
+            >
+              {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { DEFAULT_BT_ORDER, type EditFlags, type RenderOptions } from "@/lib/editor-store";
+import { useEditorStore } from "@/lib/editor-store";
 import type { ChartData } from "@/types/chart";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "./client";
@@ -155,6 +156,11 @@ export function useChartImage(
         throw new Error(detail);
       }
 
+      const maxPps = res.headers.get("X-Max-Px-Per-Second");
+      if (maxPps) {
+        useEditorStore.getState().setMaxPxPerSecond(parseInt(maxPps, 10));
+      }
+
       const blob = await res.blob();
       return URL.createObjectURL(blob);
     },
@@ -198,6 +204,10 @@ export function useEditedChartImage(
       if (!res.ok) {
         const detail = await res.text().catch(() => res.statusText);
         throw new Error(detail);
+      }
+      const maxPps = res.headers.get("X-Max-Px-Per-Second");
+      if (maxPps) {
+        useEditorStore.getState().setMaxPxPerSecond(parseInt(maxPps, 10));
       }
       const blob = await res.blob();
       return URL.createObjectURL(blob);

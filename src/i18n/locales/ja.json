@@ -71,11 +71,11 @@
     },
     "difficulty": {
       "title": "譜面の切り替え",
-      "description": "上部の難易度バッジをクリックして、表示する譜面を切り替えられます。"
+      "description": "難易度バッジをクリックして、表示する譜面を切り替えられます。"
     },
     "sidebar": {
       "title": "情報パネル",
-      "description": "右側の情報パネルに楽曲の詳細情報が表示されます。レーダーチャートの頂点をクリックすると具体的な数値を確認できます。"
+      "description": "情報パネルに楽曲の詳細情報が表示されます。レーダーチャートの頂点をクリックすると具体的な数値を確認できます。\n\nモバイルでは、トップバーの情報ボタンから開けます。"
     },
     "modeToggle": {
       "title": "ビュー / 編集モード",
@@ -185,6 +185,7 @@
     "fullscreen": "フルスクリーン",
     "exitFullscreen": "フルスクリーン解除",
     "chartPreview": "譜面確認",
+    "songInfo": "楽曲情報",
     "speakTitle": "クリックで読み上げ",
     "speakArtist": "クリックでアーティスト名を読み上げ",
     "addNotes": "ノーツを追加",
@@ -192,7 +193,9 @@
     "deleteSelected": "選択を削除",
     "panView": "パン（ビューをドラッグ）",
     "moveSelect": "移動（選択してドラッグ）",
-    "editHs": "編集（ホールド切替/HS編集）"
+    "editHs": "編集（ホールド切替/HS編集）",
+    "pxPerSecond": "px/秒",
+    "pxRange": "範囲: {{min}} – {{max}}"
   },
   "playback": {
     "play": "再生",

@@ -71,11 +71,11 @@
     },
     "difficulty": {
       "title": "切換譜面",
-      "description": "點擊頂部的難度標籤可以切換要查看的譜面。"
+      "description": "點擊難度標籤可以切換要查看的譜面。"
     },
     "sidebar": {
       "title": "資訊欄",
-      "description": "在右側的資訊欄會展示歌曲的詳細資訊，點擊雷達圖頂點可以查看具體數值。"
+      "description": "資訊欄會展示歌曲的詳細資訊，點擊雷達圖頂點可以查看具體數值。\n\n在行動裝置上，透過頂欄的資訊按鈕開啟。"
     },
     "modeToggle": {
       "title": "查看 / 編輯模式",
@@ -185,6 +185,7 @@
     "fullscreen": "全螢幕",
     "exitFullscreen": "退出全螢幕",
     "chartPreview": "譜面預覽",
+    "songInfo": "歌曲資訊",
     "speakTitle": "點擊朗讀曲名",
     "speakArtist": "點擊朗讀作者名",
     "addNotes": "新增音符",
@@ -192,7 +193,9 @@
     "deleteSelected": "刪除選中的物件",
     "panView": "平移（拖動視圖）",
     "moveSelect": "移動（選擇並拖動）",
-    "editHs": "編輯（切換長按/編輯變速）"
+    "editHs": "編輯（切換長按/編輯變速）",
+    "pxPerSecond": "像素/秒",
+    "pxRange": "範圍: {{min}} – {{max}}"
   },
   "playback": {
     "play": "播放",
