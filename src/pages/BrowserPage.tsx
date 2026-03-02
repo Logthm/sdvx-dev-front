@@ -84,7 +84,7 @@ export function BrowserPage() {
     browserMusicQuery.isLoading || browserMusicQuery.isFetchingNextPage;
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-cosmos-950 stardust pt-[env(safe-area-inset-top)]">
+    <div className="flex h-[100dvh] overflow-hidden bg-cosmos-950 stardust safe-top">
       {/* Tutorial overlay */}
       <Tutorial
         isOpen={tutorial.isOpen}

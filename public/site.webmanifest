@@ -1,1 +1,27 @@
-{"name":"SDVX Chart Browser","short_name":"SDVX","display":"standalone","background_color":"#0d0f1c","theme_color":"#0d0f1c","icons":[{"sizes":"192x192","src":"/android-chrome-192x192.png","type":"image/png"},{"sizes":"512x512","src":"/android-chrome-512x512.png","type":"image/png"}]}
+{
+  "name": "SDVX Chart Browser",
+  "short_name": "SDVX",
+  "description": "SOUND VOLTEX Chart Browser and Editor",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0f1c",
+  "theme_color": "#0d0f1c",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "entertainment", "games"],
+  "prefer_related_applications": false
+}

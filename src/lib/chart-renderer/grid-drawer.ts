@@ -17,7 +17,7 @@ import {
 } from "./layout";
 import type { Time3 } from "./time-mapper";
 
-export function drawGrid(ctx: CanvasRenderingContext2D, layout: LayoutResult) {
+export function drawGrid(ctx: CanvasRenderingContext2D, layout: LayoutResult, measureOffset: number = 0) {
   const { spans, timeMapper: tm } = layout;
 
   for (const span of spans) {
@@ -72,13 +72,13 @@ export function drawGrid(ctx: CanvasRenderingContext2D, layout: LayoutResult) {
     ctx.lineTo(lineRight, span.y0);
     ctx.stroke();
 
-    // Measure number (left of lane)
+    // Measure number (left of lane) - add measureOffset to display original measure number
     ctx.fillStyle = C.MEASURE_TEXT;
     ctx.font = "600 12px 'JetBrains Mono', monospace";
     ctx.textAlign = "right";
     ctx.textBaseline = "bottom";
     ctx.fillText(
-      String(span.measure).padStart(2, "0"),
+      String(span.measure + measureOffset).padStart(2, "0"),
       lineLeft - 4,
       span.y1 + 1,
     );
@@ -96,8 +96,9 @@ export function drawGridWithBpm(
   hiSpeed?: number,
   hiSpeedMarks: HiSpeedMark[] = [],
   bpmDisplayMode: BpmDisplayMode = "bpm",
+  measureOffset?: number,
 ) {
-  drawGrid(ctx, layout);
+  drawGrid(ctx, layout, measureOffset);
   drawBpmMarkersFromData(ctx, layout, bpmInfo, hiSpeed, hiSpeedMarks, bpmDisplayMode);
 }
 
@@ -120,11 +121,12 @@ function drawBpmMarkersFromData(
     (a, b) => a.measure - b.measure || a.beat - b.beat || a.cell - b.cell,
   );
 
-  let lastBpm = 0;
+  let lastBpm = -1;
+  const BPM_EPSILON = 0.001; // Tolerance for floating point comparison
 
   for (const bpm of sorted) {
-    if (bpm.bpm === lastBpm) {
-      lastBpm = bpm.bpm;
+    // Skip if BPM is essentially the same as the last one (within epsilon)
+    if (Math.abs(bpm.bpm - lastBpm) < BPM_EPSILON) {
       continue;
     }
     lastBpm = bpm.bpm;

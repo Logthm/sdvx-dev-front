@@ -101,6 +101,7 @@ export function PxPerSecondButton() {
           <input
             ref={inputRef}
             type="number"
+            inputMode="numeric"
             min={MIN_PX}
             max={effectiveMax}
             value={draft}
@@ -110,7 +111,7 @@ export function PxPerSecondButton() {
               if (e.key === "Enter") commit();
               if (e.key === "Escape") { setDraft(String(pxPerSecond)); setOpen(false); }
             }}
-            className="w-16 px-1.5 py-0.5 rounded bg-cosmos-900 border border-cosmos-600 text-sm text-text-primary text-right font-mono outline-none focus:border-gold-400/50"
+            className="w-16 px-1.5 py-0.5 rounded bg-cosmos-900 border border-cosmos-600 text-base text-text-primary text-right font-mono outline-none focus:border-gold-400/50"
           />
         </div>
         <span className="text-[10px] text-text-muted whitespace-nowrap">

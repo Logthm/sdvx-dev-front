@@ -30,6 +30,7 @@ export function EditorToolbar() {
         <span className="text-xs text-text-muted font-mono">{t('chart.speed')}</span>
         <input
           type="number"
+          inputMode="decimal"
           min="1"
           max="10"
           step="0.01"

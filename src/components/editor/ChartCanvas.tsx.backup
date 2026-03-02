@@ -10,8 +10,6 @@ import {
   yToSec,
   colXBase,
   TRACK_WIDTH,
-  MARGIN,
-  GUTTER_WIDTH,
   type LayoutResult,
 } from "@/lib/chart-renderer/layout";
 import { resolveEvent, drawLasers } from "@/lib/chart-renderer/laser-drawer";
@@ -158,34 +156,16 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     // Create a new chart data containing only the specified measure range
     const filteredTracks: Record<string, (ButtonEvent | LaserEvent)[]> = {};
 
-    // Get the full layout for time calculations
-    const fullLayout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
-
-    // Helper function to get the last position in a measure
-    const getLastPositionInMeasure = (measure: number): Time3 => {
-      const timeSig = fullLayout.timeMapper.getTimeSigAt([measure, 1, 0] as Time3);
-      const [numerator, denominator] = timeSig;
-
-      // Get units per beat
-      const beatResolution = activeChart.beat_resolution;
-      const unitsPerBeat = beatResolution !== null && beatResolution !== undefined
-        ? beatResolution
-        : 192 / Math.max(1, denominator);
-
-      // Last position in the measure is at the last beat, last cell
-      return [measure, numerator, unitsPerBeat - 1] as Time3;
-    };
-
     // Helper function to interpolate laser point at boundary
     const interpolateLaserAtBoundary = (
       prevPoint: LaserEvent,
       nextPoint: LaserEvent,
-      boundaryTime: Time3,
-      flag: number,
+      boundaryMeasure: number,
     ): LaserEvent => {
+      const fullLayout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
       const prevSec = fullLayout.timeMapper.secondsOf(prevPoint.time as [number, number, number]);
       const nextSec = fullLayout.timeMapper.secondsOf(nextPoint.time as [number, number, number]);
-      const boundarySec = fullLayout.timeMapper.secondsOf(boundaryTime);
+      const boundarySec = fullLayout.timeMapper.secondsOf([boundaryMeasure, 1, 0] as [number, number, number]);
 
       // Linear interpolation
       const t = (boundarySec - prevSec) / (nextSec - prevSec);
@@ -194,33 +174,31 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       return {
         type: "laser",
         track_name: prevPoint.track_name,
-        time: boundaryTime,
+        time: [boundaryMeasure, 1, 0] as [number, number, number],
         offset: interpolatedOffset,
-        flag: flag,
+        flag: 2, // Terminate flag
         is_out_of_bounds: prevPoint.is_out_of_bounds,
       };
     };
 
     // Filter and remap events to start from measure 1
     Object.entries(activeChart.tracks).forEach(([trackName, events]) => {
-      // Track names are numeric strings: '1' = LASER-L, '8' = LASER-R
-      if (trackName === '1' || trackName === '8') {
+      if (trackName === 'LASER-L' || trackName === 'LASER-R') {
         // Special handling for laser tracks
         const laserEvents = events as LaserEvent[];
         const filtered: LaserEvent[] = [];
         let needStartInterpolation = false;
         let prevPoint: LaserEvent | null = null;
-        let lastInRangePoint: LaserEvent | null = null; // Track the last point within range
 
         for (let i = 0; i < laserEvents.length; i++) {
           const event = laserEvents[i];
           const [measure] = event.time as [number, number, number];
-          // measure is already 1-indexed
+          const measureNum = measure + 1; // Convert to 1-indexed
 
           // Check if this point is within range
-          const inRange = measure >= startMeasure && measure <= endMeasure;
+          const inRange = measureNum >= startMeasure && measureNum <= endMeasure;
 
-          if (measure < startMeasure) {
+          if (measureNum < startMeasure) {
             // Before range, keep track for potential start interpolation
             prevPoint = event;
             if (event.flag !== 2) {
@@ -231,11 +209,11 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           } else if (inRange) {
             // Add interpolated start point if needed
             if (needStartInterpolation && prevPoint && filtered.length === 0) {
-              const startBoundary: Time3 = [startMeasure, 1, 0];
-              const interpolated = interpolateLaserAtBoundary(prevPoint, event, startBoundary, 1);
+              const interpolated = interpolateLaserAtBoundary(prevPoint, event, startMeasure - 1);
               filtered.push({
                 ...interpolated,
                 time: [interpolated.time[0] - measureOffset, interpolated.time[1], interpolated.time[2]] as [number, number, number],
+                flag: 1, // Start flag
               });
               needStartInterpolation = false;
             }
@@ -245,28 +223,27 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               ...event,
               time: [measure - measureOffset, (event.time as [number, number, number])[1], (event.time as [number, number, number])[2]] as [number, number, number],
             });
-
-            lastInRangePoint = event; // Track this as the last in-range point
-          } else if (measure > endMeasure) {
+          } else if (measureNum > endMeasure) {
             // This point is after the range, check if we need to add an interpolated end point
-            if (lastInRangePoint && lastInRangePoint.flag !== 2) {
-              const endBoundary = getLastPositionInMeasure(endMeasure);
-              const interpolated = interpolateLaserAtBoundary(lastInRangePoint, event, endBoundary, 2);
-              filtered.push({
-                ...interpolated,
-                time: [interpolated.time[0] - measureOffset, interpolated.time[1], interpolated.time[2]] as [number, number, number],
-              });
+            if (filtered.length > 0) {
+              const lastFiltered = filtered[filtered.length - 1];
+              if (lastFiltered.flag !== 2) {
+                // Last point in range is not a terminator, need to interpolate
+                const interpolated = interpolateLaserAtBoundary(lastFiltered, event, endMeasure);
+                filtered.push({
+                  ...interpolated,
+                  time: [interpolated.time[0] - measureOffset, interpolated.time[1], interpolated.time[2]] as [number, number, number],
+                });
+              }
             }
             break; // No need to check further points
           }
         }
 
-        // After loop: if the last point in range is not a terminator and there's no next point,
-        // the laser segment ends exactly at or within the range - no interpolation needed
-
         filteredTracks[trackName] = filtered;
       } else {
         // Regular button events - need to handle hold truncation and adjustment
+        const fullLayout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
         const buttonEvents = events as ButtonEvent[];
 
         // First pass: collect all button events and check for holds that start before range
@@ -274,22 +251,22 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
 
         buttonEvents.forEach(event => {
           const [measure] = event.time as [number, number, number];
-          // measure is already 1-indexed
+          const measureNum = measure + 1; // Convert to 1-indexed
 
           // Check if this button is in range
-          if (measure >= startMeasure && measure <= endMeasure) {
+          if (measureNum >= startMeasure && measureNum <= endMeasure) {
             const [m, beat, cell] = event.time as [number, number, number];
 
             // Check if hold extends beyond the export range
             if (event.hold_len && event.hold_len > 0) {
               // Calculate hold end time using advanceUnits
               const holdEndTime = fullLayout.timeMapper.advanceUnits([m, beat, cell], event.hold_len);
-              const holdEndMeasure = holdEndTime[0]; // Already 1-indexed
+              const holdEndMeasure = holdEndTime[0] + 1; // Convert to 1-indexed
 
               if (holdEndMeasure > endMeasure) {
                 // Hold extends beyond range, need to truncate
                 // Note: endMeasure is 1-indexed, so convert to 0-indexed for Time3
-                const boundaryTime: [number, number, number] = [endMeasure + 1, 1, 0];
+                const boundaryTime: [number, number, number] = [endMeasure - 1, 1, 0];
                 const truncatedHoldLen = fullLayout.timeMapper.unitsBetween(
                   [m, beat, cell],
                   boundaryTime
@@ -312,18 +289,18 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                 time: [m - measureOffset, beat, cell] as [number, number, number],
               });
             }
-          } else if (measure < startMeasure && event.hold_len && event.hold_len > 0) {
+          } else if (measureNum < startMeasure && event.hold_len && event.hold_len > 0) {
             // Button is before range, but check if hold extends into range
             const [m, beat, cell] = event.time as [number, number, number];
 
             // Calculate hold end time using advanceUnits
             const holdEndTime = fullLayout.timeMapper.advanceUnits([m, beat, cell], event.hold_len);
-            const holdEndMeasure = holdEndTime[0]; // Already 1-indexed
+            const holdEndMeasure = holdEndTime[0] + 1; // Convert to 1-indexed
 
             if (holdEndMeasure >= startMeasure) {
               // Hold extends into range, need to create a new button at the start boundary
               // Note: startMeasure is 1-indexed, so convert to 0-indexed for Time3
-              const boundaryTime: [number, number, number] = [startMeasure, 1, 0];
+              const boundaryTime: [number, number, number] = [startMeasure - 1, 1, 0];
 
               // Calculate new hold length from boundary to original end
               const newHoldLen = fullLayout.timeMapper.unitsBetween(
@@ -334,7 +311,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               // Check if hold also extends beyond end range
               let finalHoldLen = newHoldLen;
               if (holdEndMeasure > endMeasure) {
-                const endBoundaryTime: [number, number, number] = [endMeasure + 1, 1, 0];
+                const endBoundaryTime: [number, number, number] = [endMeasure - 1, 1, 0];
                 finalHoldLen = fullLayout.timeMapper.unitsBetween(
                   boundaryTime,
                   endBoundaryTime
@@ -355,92 +332,33 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     });
 
     // Filter and remap BPM info to start from measure 1
-    // Strategy:
-    // 1. Include all BPM changes within the range (startMeasure to endMeasure)
-    // 2. If the first BPM change is not at measure 1, beat 1, cell 0, add the active BPM there
-
     const filteredBpmInfo = activeChart.bpm_info
       .filter(bpm => {
-        // bpm.measure is already 1-indexed
-        return bpm.measure >= startMeasure && bpm.measure <= endMeasure;
+        const measureNum = bpm.measure + 1; // Convert to 1-indexed
+        return measureNum >= startMeasure && measureNum <= endMeasure;
       })
       .map(bpm => ({
         ...bpm,
         measure: bpm.measure - measureOffset,
       }));
 
-    // Check if we need to add an initial BPM at the start
-    const hasInitialBpm = filteredBpmInfo.some(bpm =>
-      bpm.measure === 1 && bpm.beat === 1 && bpm.cell === 0
-    );
-
-    if (!hasInitialBpm) {
-      // Find the active BPM at the start of the range
-      let activeBpm = activeChart.bpm_info[0];
-      for (const bpm of activeChart.bpm_info) {
-        if (bpm.measure < startMeasure ||
-            (bpm.measure === startMeasure &&
-             (bpm.beat < 1 || (bpm.beat === 1 && bpm.cell <= 0)))) {
-          activeBpm = bpm;
-        } else {
-          break;
-        }
-      }
-
-      // Add it at the start
-      filteredBpmInfo.unshift({
-        measure: 1,
-        beat: 1,
-        cell: 0,
-        bpm: activeBpm.bpm,
-      });
-    }
-
     // Filter and remap beat info to start from measure 1
     const filteredBeatInfo = activeChart.beat_info
       .filter(beat => {
-        // beat.measure is already 1-indexed
-        return beat.measure >= startMeasure && beat.measure <= endMeasure;
+        const measureNum = beat.measure + 1; // Convert to 1-indexed
+        return measureNum >= startMeasure && measureNum <= endMeasure;
       })
       .map(beat => ({
         ...beat,
         measure: beat.measure - measureOffset,
       }));
 
-    // Check if we need to add an initial beat signature at the start
-    const hasInitialBeat = filteredBeatInfo.some(beat =>
-      beat.measure === 1 && beat.beat === 1 && beat.cell === 0
-    );
-
-    if (!hasInitialBeat) {
-      // Find the active beat signature at the start of the range
-      let activeBeat = activeChart.beat_info[0];
-      for (const beat of activeChart.beat_info) {
-        if (beat.measure < startMeasure ||
-            (beat.measure === startMeasure &&
-             (beat.beat < 1 || (beat.beat === 1 && beat.cell <= 0)))) {
-          activeBeat = beat;
-        } else {
-          break;
-        }
-      }
-
-      // Add it at the start
-      filteredBeatInfo.unshift({
-        measure: 1,
-        beat: 1,
-        cell: 0,
-        numerator: activeBeat.numerator,
-        denominator: activeBeat.denominator,
-      });
-    }
-
     // Filter and remap hi-speed marks to start from measure 1
     const filteredHsMarks = hiSpeedMarks
       .filter(mark => {
         const [measure] = mark.time as [number, number, number];
-        // measure is already 1-indexed
-        return measure >= startMeasure && measure <= endMeasure;
+        const measureNum = measure + 1; // Convert to 1-indexed
+        return measureNum >= startMeasure && measureNum <= endMeasure;
       })
       .map(mark => {
         const [measure, beat, cell] = mark.time as [number, number, number];
@@ -464,8 +382,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     const exportChartData: ChartData = {
       ...activeChart,
       tracks: filteredTracks,
-      bpm_info: filteredBpmInfo,
-      beat_info: filteredBeatInfo,
+      bpm_info: filteredBpmInfo.length > 0 ? filteredBpmInfo : [{ ...activeChart.bpm_info[0], measure: 1 }],
+      beat_info: filteredBeatInfo.length > 0 ? filteredBeatInfo : activeChart.beat_info,
       end_position: endPosition,
     };
 
@@ -474,44 +392,29 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
 
     if (exportLayout.spans.length === 0) return;
 
-    // Filter spans to only include those within the requested measure range (1-indexed in remapped chart)
-    // Since we remapped measures, measure 1 = startMeasure, measure N = endMeasure
-    const requestedMeasureCount = endMeasure - startMeasure + 1;
-    const filteredSpans = exportLayout.spans.filter(span => span.measure <= requestedMeasureCount);
+    // Calculate the required canvas dimensions
+    const minY = Math.min(...exportLayout.spans.map(s => s.y0));
+    const maxY = Math.max(...exportLayout.spans.map(s => s.y1));
+    const height = maxY - minY;
 
-    if (filteredSpans.length === 0) return;
-
-    // Calculate the required canvas dimensions based on filtered spans
-    const minY = Math.min(...filteredSpans.map(s => s.y0));
-    const maxY = Math.max(...filteredSpans.map(s => s.y1));
-    const contentHeight = maxY - minY;
-
-    // Add top and bottom margins
-    const height = contentHeight + 2 * MARGIN;
-
-    // Adjust spans coordinates to start from MARGIN (top margin)
-    const adjustedSpans = filteredSpans.map(span => ({
+    // Adjust spans coordinates to start from 0
+    const adjustedSpans = exportLayout.spans.map(span => ({
       ...span,
-      y0: span.y0 - minY + MARGIN,
-      y1: span.y1 - minY + MARGIN,
+      y0: span.y0 - minY,
+      y1: span.y1 - minY,
     }));
-
-    // Recalculate canvas width based on filtered columns
-    const maxCol = Math.max(...filteredSpans.map(s => s.col));
-    const filteredCanvasWidth = colXBase(maxCol) + TRACK_WIDTH + GUTTER_WIDTH + MARGIN;
 
     // Create the final export layout with adjusted spans
     const finalExportLayout: LayoutResult = {
       ...exportLayout,
       spans: adjustedSpans,
-      canvasWidth: filteredCanvasWidth,
       canvasHeight: height,
       columnHeight: height,
     };
 
     // Create a temporary canvas for export
     const exportCanvas = document.createElement('canvas');
-    exportCanvas.width = filteredCanvasWidth;
+    exportCanvas.width = exportLayout.canvasWidth;
     exportCanvas.height = height;
     const ctx = exportCanvas.getContext('2d');
 
@@ -519,7 +422,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
 
     // Clear background
     ctx.fillStyle = '#080c18';
-    ctx.fillRect(0, 0, filteredCanvasWidth, height);
+    ctx.fillRect(0, 0, exportLayout.canvasWidth, height);
 
     // Draw column backgrounds for each span individually
     for (const span of adjustedSpans) {
@@ -1799,7 +1702,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       )}
 
       {/* Zoom indicator */}
-      <div className="absolute top-3 right-3 flex flex-row items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
+      <div className="absolute top-3 right-3 flex flex-col sm:flex-row items-end sm:items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
+        <div className="flex items-center gap-1 order-1 sm:order-2">
         <button
           onClick={() => {
             const { zoom: z, panX: px, panY: py } = useEditorStore.getState();
@@ -1812,11 +1716,11 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             }
             setZoom(next);
           }}
-          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors hidden sm:block"
+          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
         >
           −
         </button>
-        <span className="w-10 text-center hidden sm:block">{Math.round(zoom * 100)}%</span>
+        <span className="w-10 text-center">{Math.round(zoom * 100)}%</span>
         <button
           onClick={() => {
             const { zoom: z, panX: px, panY: py } = useEditorStore.getState();
@@ -1829,34 +1733,38 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             }
             setZoom(next);
           }}
-          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors hidden sm:block"
+          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
         >
           +
         </button>
-        <span className="w-px h-4 bg-border mx-0.5 hidden sm:block" />
-        <PxPerSecondButton />
-        <span className="w-px h-4 bg-border mx-0.5" />
-        <button
-          onClick={() => setExportDialogOpen(true)}
-          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-          title={t('chart.exportChart')}
-        >
-          <Download size={14} />
-        </button>
-        <button
-          onClick={fitHeight}
-          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-          title={t('chart.fitHeight')}
-        >
-          <UnfoldVertical size={14} />
-        </button>
-        <button
-          onClick={toggleFullscreen}
-          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-          title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
-        >
-          {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
-        </button>
+        </div>
+        <span className="w-px h-4 bg-border mx-0.5 hidden sm:block order-none sm:order-1" />
+        <span className="w-px h-4 bg-border mx-0.5 hidden sm:block order-none sm:order-3" />
+        <div className="flex items-center gap-1 order-2 sm:order-none">
+          <PxPerSecondButton />
+          <span className="w-px h-4 bg-border mx-0.5 sm:hidden" />
+          <button
+            onClick={() => setExportDialogOpen(true)}
+            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            title={t('chart.exportChart')}
+          >
+            <Download size={14} />
+          </button>
+          <button
+            onClick={fitHeight}
+            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            title={t('chart.fitHeight')}
+          >
+            <UnfoldVertical size={14} />
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
+          >
+            {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
+          </button>
+        </div>
       </div>
 
       {/* Hi-Speed mark dialog */}
@@ -1868,7 +1776,6 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               <span className="text-[10px] text-text-muted">Hi-Speed</span>
               <input
                 type="number"
-                inputMode="decimal"
                 min="0.1"
                 max="20.0"
                 step="0.1"
@@ -1884,7 +1791,6 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               <span className="text-[10px] text-text-muted">Speed Change Duration (ms)</span>
               <input
                 type="number"
-                inputMode="numeric"
                 step="1"
                 value={hsInput.dur}
                 onChange={(e) => setHsInput((p) => ({ ...p, dur: e.target.value }))}
@@ -1926,7 +1832,6 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               <span className="text-[10px] text-text-muted">Hi-Speed</span>
               <input
                 type="number"
-                inputMode="decimal"
                 min="0.1"
                 max="20.0"
                 step="0.1"
@@ -1942,7 +1847,6 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               <span className="text-[10px] text-text-muted">Speed Change Duration (ms)</span>
               <input
                 type="number"
-                inputMode="numeric"
                 step="1"
                 value={editHsInput.dur}
                 onChange={(e) => setEditHsInput((p) => ({ ...p, dur: e.target.value }))}

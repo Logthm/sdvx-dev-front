@@ -228,6 +228,50 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  // Pinch zoom for mobile
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let initialDistance = 0;
+    let initialZoom = 1;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialDistance = Math.sqrt(dx * dx + dy * dy);
+        initialZoom = useEditorStore.getState().zoom;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && initialDistance > 0) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const scale = distance / initialDistance;
+        const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, initialZoom * scale));
+        setZoom(newZoom);
+      }
+    };
+
+    const onTouchEnd = () => {
+      initialDistance = 0;
+    };
+
+    container.addEventListener("touchstart", onTouchStart, { passive: true });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [setZoom]);
+
   return (
     <div
       ref={containerRef}
@@ -242,21 +286,21 @@ export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
             const z = useEditorStore.getState().zoom;
             setZoom(Math.max(MIN_ZOOM, z - ZOOM_STEP));
           }}
-          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors hidden md:block"
         >
           −
         </button>
-        <span className="w-10 text-center">{Math.round(zoom * 100)}%</span>
+        <span className="w-10 text-center hidden md:block">{Math.round(zoom * 100)}%</span>
         <button
           onClick={() => {
             const z = useEditorStore.getState().zoom;
             setZoom(Math.min(MAX_ZOOM, z + ZOOM_STEP));
           }}
-          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+          className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors hidden md:block"
         >
           +
         </button>
-        <span className="w-px h-4 bg-border mx-0.5" />
+        <span className="w-px h-4 bg-border mx-0.5 hidden md:block" />
         <PxPerSecondButton />
       </div>
     </div>

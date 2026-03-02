@@ -317,3 +317,107 @@ export function usePlaybackImage(
     gcTime: 5 * 60_000,
   });
 }
+
+/**
+ * Export a chart image with specified measure range.
+ * Downloads the image directly instead of returning a blob URL.
+ */
+export async function exportChartImage(
+  musicId: number,
+  difstr: string,
+  options: RenderOptions,
+  startMeasure: number,
+  endMeasure: number,
+): Promise<void> {
+  const hasCustomMapping = isCustomBtOrder(options.btOrder) || options.fxSwap;
+
+  const body: Record<string, unknown> = {
+    music_id: musicId,
+    difstr: difstr,
+    arrangement_mode: hasCustomMapping ? "normal" : options.arrangementMode,
+    output_format: "PNG",
+    px_per_second: options.pxPerSecond,
+    column_height: options.columnHeight,
+    laser_l_color: options.laserLColor,
+    laser_r_color: options.laserRColor,
+    start_measure: startMeasure,
+    end_measure: endMeasure,
+  };
+
+  if (options.rngSeed !== null) {
+    body.rng_seed = options.rngSeed;
+  }
+
+  if (hasCustomMapping) {
+    body.bt_order = options.btOrder;
+    body.fx_swap = options.fxSwap;
+  }
+
+  if (options.mirrorLaser) {
+    body.mirror_laser = true;
+  }
+
+  const res = await fetch(`${BASE_URL}/chart`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => res.statusText);
+    throw new Error(detail);
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `chart_measure_${startMeasure}-${endMeasure}.png`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export an edited chart image with specified measure range.
+ * Downloads the image directly instead of returning a blob URL.
+ */
+export async function exportEditedChartImage(
+  musicId: number,
+  difstr: string,
+  chartData: ChartData,
+  options: RenderOptions,
+  startMeasure: number,
+  endMeasure: number,
+): Promise<void> {
+  const body: Record<string, unknown> = {
+    music_id: musicId,
+    difstr: difstr,
+    chart_data: chartData,
+    output_format: "PNG",
+    px_per_second: options.pxPerSecond,
+    column_height: options.columnHeight,
+    laser_l_color: options.laserLColor,
+    laser_r_color: options.laserRColor,
+    start_measure: startMeasure,
+    end_measure: endMeasure,
+  };
+
+  const res = await fetch(`${BASE_URL}/chart/render_data`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => res.statusText);
+    throw new Error(detail);
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `chart_measure_${startMeasure}-${endMeasure}.png`;
+  a.click();
+  URL.revokeObjectURL(url);
+}

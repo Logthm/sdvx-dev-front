@@ -3,7 +3,8 @@
     "loading": "読み込み中...",
     "clear": "クリア",
     "resetAll": "すべてリセット",
-    "records": "件"
+    "records": "件",
+    "cancel": "キャンセル"
   },
   "search": {
     "placeholder": "楽曲を検索...",
@@ -91,7 +92,7 @@
     },
     "drawArea": {
       "title": "ビューコントロール",
-      "description": "ここでズーム調整やフルスクリーンへの切り替えができます。\n\n譜面閲覧エリアではスクロールホイールで水平スクロール、Shift+ホイールで垂直、Ctrl+ホイールでズーム。\n\nパンモードではドラッグでビューを移動できます。"
+      "description": "ここで1秒あたりのピクセル数の調整、譜面画像のダウンロード、ズーム調整、フルスクリーンへの切り替えができます。\n\n譜面閲覧エリアではスクロールホイールで水平スクロール、Shift+ホイールで垂直、Ctrl+ホイールでズーム。\n\nパンモードではドラッグでビューを移動できます。"
     },
     "panMode": {
       "title": "パンモード",
@@ -195,7 +196,12 @@
     "moveSelect": "移動（選択してドラッグ）",
     "editHs": "編集（ホールド切替/HS編集）",
     "pxPerSecond": "px/秒",
-    "pxRange": "範囲: {{min}} – {{max}}"
+    "pxRange": "範囲: {{min}} – {{max}}",
+    "exportChart": "譜面をエクスポート",
+    "startMeasure": "開始小節",
+    "endMeasure": "終了小節",
+    "measureRange": "小節範囲: 1 - {{max}}",
+    "export": "エクスポート"
   },
   "playback": {
     "play": "再生",
@@ -214,5 +220,11 @@
     "infinite": "INF",
     "maximum": "MXM",
     "ultimate": "ULT"
+  },
+  "install": {
+    "title": "ホーム画面に追加",
+    "description": "アプリをインストールしてより良い体験を",
+    "install": "今すぐインストール",
+    "iosInstructions": "共有ボタン をタップして「ホーム画面に追加」を選択してください"
   }
 }

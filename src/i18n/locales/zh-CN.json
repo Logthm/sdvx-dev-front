@@ -3,7 +3,8 @@
     "loading": "加载中...",
     "clear": "清除",
     "resetAll": "重置全部",
-    "records": "条记录"
+    "records": "条记录",
+    "cancel": "取消"
   },
   "search": {
     "placeholder": "搜索音乐...",
@@ -91,7 +92,7 @@
     },
     "drawArea": {
       "title": "查看控件",
-      "description": "在此处调整缩放、进入全屏。\n\n谱面浏览区域使用滚轮水平滚动，Shift+滚轮垂直滚动，Ctrl+滚轮缩放。\n\n在平移模式下也可以拖动视图进行平移。"
+      "description": "在此处调整每秒对应高度、下载谱面图片、调整缩放、进入全屏。\n\n谱面浏览区域使用滚轮水平滚动，Shift+滚轮垂直滚动，Ctrl+滚轮缩放。\n\n在平移模式下也可以拖动视图进行平移。"
     },
     "panMode": {
       "title": "平移模式",
@@ -195,7 +196,12 @@
     "moveSelect": "移动（选择并拖动）",
     "editHs": "编辑（切换长按/编辑变速）",
     "pxPerSecond": "像素/秒",
-    "pxRange": "范围: {{min}} – {{max}}"
+    "pxRange": "范围: {{min}} – {{max}}",
+    "exportChart": "导出谱面",
+    "startMeasure": "起始小节",
+    "endMeasure": "结束小节",
+    "measureRange": "小节范围: 1 - {{max}}",
+    "export": "导出"
   },
   "playback": {
     "play": "播放",
@@ -214,5 +220,11 @@
     "infinite": "INF",
     "maximum": "MXM",
     "ultimate": "ULT"
+  },
+  "install": {
+    "title": "添加到主屏幕",
+    "description": "将应用添加到主屏幕，获得更好的使用体验",
+    "install": "立即安装",
+    "iosInstructions": "点击分享按钮，然后选择\"添加到主屏幕\""
   }
 }

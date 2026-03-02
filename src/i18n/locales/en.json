@@ -3,7 +3,8 @@
     "loading": "Loading...",
     "clear": "Clear",
     "resetAll": "Reset All",
-    "records": "records"
+    "records": "records",
+    "cancel": "Cancel"
   },
   "search": {
     "placeholder": "Search music...",
@@ -91,7 +92,7 @@
     },
     "drawArea": {
       "title": "View Controls",
-      "description": "Adjust zoom and enter fullscreen here.\n\nIn the chart viewing area, use scroll wheel for horizontal scrolling, Shift+wheel for vertical, Ctrl+wheel to zoom.\n\nIn pan mode, you can also drag to move the view."
+      "description": "Adjust pixels per second, download chart image, adjust zoom, and enter fullscreen here.\n\nIn the chart viewing area, use scroll wheel for horizontal scrolling, Shift+wheel for vertical, Ctrl+wheel to zoom.\n\nIn pan mode, you can also drag to move the view."
     },
     "panMode": {
       "title": "Pan Mode",
@@ -195,7 +196,12 @@
     "moveSelect": "Move (select & drag)",
     "editHs": "Edit (toggle hold, edit HS)",
     "pxPerSecond": "px/sec",
-    "pxRange": "Range: {{min}} – {{max}}"
+    "pxRange": "Range: {{min}} – {{max}}",
+    "exportChart": "Export Chart",
+    "startMeasure": "Start Measure",
+    "endMeasure": "End Measure",
+    "measureRange": "Measure range: 1 - {{max}}",
+    "export": "Export"
   },
   "playback": {
     "play": "Play",
@@ -214,5 +220,11 @@
     "infinite": "INF",
     "maximum": "MXM",
     "ultimate": "ULT"
+  },
+  "install": {
+    "title": "Add to Home Screen",
+    "description": "Install the app for a better experience",
+    "install": "Install Now",
+    "iosInstructions": "Tap the Share button , then select \"Add to Home Screen\""
   }
 }

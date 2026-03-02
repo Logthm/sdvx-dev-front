@@ -3,7 +3,8 @@
     "loading": "載入中...",
     "clear": "清除",
     "resetAll": "重置全部",
-    "records": "條記錄"
+    "records": "條記錄",
+    "cancel": "取消"
   },
   "search": {
     "placeholder": "搜尋音樂...",
@@ -91,7 +92,7 @@
     },
     "drawArea": {
       "title": "查看控件",
-      "description": "在此處調整縮放、進入全螢幕。\n\n譜面瀏覽區域使用滾輪水平捲動，Shift+滾輪垂直捲動，Ctrl+滾輪縮放。\n\n在平移模式下也可以拖動視圖進行平移。"
+      "description": "在此處調整每秒對應高度、下載譜面圖片、調整縮放、進入全螢幕。\n\n譜面瀏覽區域使用滾輪水平捲動，Shift+滾輪垂直捲動，Ctrl+滾輪縮放。\n\n在平移模式下也可以拖動視圖進行平移。"
     },
     "panMode": {
       "title": "平移模式",
@@ -195,7 +196,12 @@
     "moveSelect": "移動（選擇並拖動）",
     "editHs": "編輯（切換長按/編輯變速）",
     "pxPerSecond": "像素/秒",
-    "pxRange": "範圍: {{min}} – {{max}}"
+    "pxRange": "範圍: {{min}} – {{max}}",
+    "exportChart": "匯出譜面",
+    "startMeasure": "起始小節",
+    "endMeasure": "結束小節",
+    "measureRange": "小節範圍: 1 - {{max}}",
+    "export": "匯出"
   },
   "playback": {
     "play": "播放",
@@ -214,5 +220,11 @@
     "infinite": "INF",
     "maximum": "MXM",
     "ultimate": "ULT"
+  },
+  "install": {
+    "title": "新增至主畫面",
+    "description": "將應用程式新增至主畫面，獲得更好的使用體驗",
+    "install": "立即安裝",
+    "iosInstructions": "點擊分享按鈕 ，然後選擇「加入主畫面」"
   }
 }

@@ -208,7 +208,7 @@ export function SongDetailPage() {
       />
 
       {/* ── Top bar ── */}
-      <header className="shrink-0 relative z-20 flex items-center gap-2 px-3 py-4 border-b border-cosmos-600/20 bg-cosmos-900/40 backdrop-blur-sm">
+      <header className="shrink-0 relative z-20 flex items-center gap-2 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-cosmos-600/20 bg-cosmos-900/40 backdrop-blur-sm">
         <button
           onClick={() => navigate("/")}
           className="p-1.5 rounded text-text-muted hover:text-gold-400 transition-colors shrink-0"

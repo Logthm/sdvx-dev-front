@@ -101,7 +101,7 @@ export function computeLayout(
 
   const numColumns = spans.length > 0 ? spans[spans.length - 1].col + 1 : 1;
   const canvasWidth =
-    numColumns * (TRACK_WIDTH + GUTTER_WIDTH) - GUTTER_WIDTH + 2 * MARGIN + LEFT_GUTTER;
+    numColumns * (TRACK_WIDTH + GUTTER_WIDTH) + 2 * MARGIN + LEFT_GUTTER;
 
   return {
     spans,

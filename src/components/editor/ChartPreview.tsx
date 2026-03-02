@@ -6,12 +6,13 @@
  * drag to pan freely.
  */
 
-import { useChartImage, useEditedChartImage } from "@/api/chart";
+import { useChartImage, useEditedChartImage, exportChartImage } from "@/api/chart";
 import type { RenderOptions } from "@/lib/editor-store";
 import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import { PxPerSecondButton } from "./PxPerSecondButton";
-import { Loader2, Maximize, Minimize, UnfoldVertical } from "lucide-react";
+import { ExportDialog } from "./ExportDialog";
+import { Download, Loader2, Maximize, Minimize, UnfoldVertical } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -54,6 +55,7 @@ export function ChartPreview({
   const setPan = useEditorStore((s) => s.setPan);
   const setViewInitialized = useEditorStore((s) => s.setViewInitialized);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   const clampedPan = useCallback((x: number, y: number, z: number) => {
     const img = imgRef.current;
@@ -128,6 +130,47 @@ export function ChartPreview({
       else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
     }
   }, [toggleMobileFs]);
+
+  // For ChartPreview, we need to get max measure from chartData if available
+  const getMaxMeasure = useCallback(() => {
+    if (!chartData) return 100; // Default fallback
+
+    let maxMeasure = 0;
+
+    // Check end_position
+    if (chartData.end_position) {
+      maxMeasure = Math.max(maxMeasure, chartData.end_position.measure);
+    }
+
+    // Check all events in tracks
+    Object.values(chartData.tracks).forEach((events) => {
+      events.forEach((event) => {
+        if (event.time && Array.isArray(event.time)) {
+          maxMeasure = Math.max(maxMeasure, event.time[0]);
+        }
+      });
+    });
+
+    // Check beat_info and bpm_info
+    chartData.beat_info?.forEach((beat) => {
+      maxMeasure = Math.max(maxMeasure, beat.measure);
+    });
+    chartData.bpm_info?.forEach((bpm) => {
+      maxMeasure = Math.max(maxMeasure, bpm.measure);
+    });
+
+    return Math.max(1, maxMeasure);
+  }, [chartData]);
+
+  // Export chart image (for preview mode, we call the backend API with measure range)
+  const handleExport = useCallback(async (startMeasure: number, endMeasure: number) => {
+    try {
+      await exportChartImage(musicId, difstr, renderOptions, startMeasure, endMeasure);
+    } catch (error) {
+      console.error('Failed to export chart:', error);
+      // You could add a toast notification here
+    }
+  }, [musicId, difstr, renderOptions]);
 
   // Wheel: horizontal scroll by default, Ctrl+wheel to zoom
   useEffect(() => {
@@ -333,8 +376,7 @@ export function ChartPreview({
 
       {/* Zoom indicator */}
       {isReady && (
-        <div className="absolute top-3 right-3 flex flex-col sm:flex-row items-end sm:items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
-          <div className="flex items-center gap-1 order-1 sm:order-2">
+        <div className="absolute top-3 right-3 flex flex-row items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted" data-tutorial="chart-zoom-controls">
           <button
             onClick={() => {
               const { zoom: z, panX: px, panY: py } = useEditorStore.getState();
@@ -347,11 +389,11 @@ export function ChartPreview({
               }
               setZoom(next);
             }}
-            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors hidden md:block"
           >
             −
           </button>
-          <span className="w-10 text-center">{Math.round(zoom * 100)}%</span>
+          <span className="w-10 text-center hidden md:block">{Math.round(zoom * 100)}%</span>
           <button
             onClick={() => {
               const { zoom: z, panX: px, panY: py } = useEditorStore.getState();
@@ -364,33 +406,44 @@ export function ChartPreview({
               }
               setZoom(next);
             }}
-            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors hidden md:block"
           >
             +
           </button>
-          </div>
-          <span className="w-px h-4 bg-border mx-0.5 hidden sm:block order-none sm:order-1" />
-          <span className="w-px h-4 bg-border mx-0.5 hidden sm:block order-none sm:order-3" />
-          <div className="flex items-center gap-1 order-2 sm:order-none">
-            <PxPerSecondButton />
-            <span className="w-px h-4 bg-border mx-0.5 sm:hidden" />
-            <button
-              onClick={fitHeight}
-              className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-              title={t('chart.fitHeight')}
-            >
-              <UnfoldVertical size={14} />
-            </button>
-            <button
-              onClick={toggleFullscreen}
-              className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-              title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
-            >
-              {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
-            </button>
-          </div>
+          <span className="w-px h-4 bg-border mx-0.5 hidden md:block" />
+          <PxPerSecondButton />
+          <span className="w-px h-4 bg-border mx-0.5" />
+          <button
+            onClick={() => setExportDialogOpen(true)}
+            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            title={t('chart.exportChart')}
+          >
+            <Download size={14} />
+          </button>
+          <button
+            onClick={fitHeight}
+            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            title={t('chart.fitHeight')}
+          >
+            <UnfoldVertical size={14} />
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
+            title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
+          >
+            {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
+          </button>
         </div>
       )}
+
+      {/* Export dialog */}
+      <ExportDialog
+        isOpen={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+        onExport={handleExport}
+        maxMeasure={getMaxMeasure()}
+      />
     </div>
   );
 }
