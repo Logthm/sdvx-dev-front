@@ -25,7 +25,7 @@ interface PlaybackCanvasProps {
   className?: string;
 }
 
-const PLAYHEAD_RATIO = 0.7; // playhead at 70% from top
+const PLAYHEAD_RATIO = 0.85; // playhead at 85% from top (15% from bottom)
 
 export function PlaybackCanvas({ chartData, className }: PlaybackCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);

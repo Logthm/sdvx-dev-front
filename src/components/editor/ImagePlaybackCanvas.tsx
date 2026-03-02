@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 3.0;
 const ZOOM_STEP = 0.1;
-const PLAYHEAD_RATIO = 0.7;
+const PLAYHEAD_RATIO = 0.85;
 
 interface ImagePlaybackCanvasProps {
   musicId: number;
@@ -304,8 +304,13 @@ export function ImagePlaybackCanvas({
 
       {/* Playhead line */}
       <div
-        className="absolute left-0 right-0 h-px bg-gold-400/80 pointer-events-none z-10"
-        style={{ top: `${PLAYHEAD_RATIO * 100}%` }}
+        className="absolute left-0 right-0 pointer-events-none z-10"
+        style={{
+          top: `${PLAYHEAD_RATIO * 100}%`,
+          height: "2px",
+          backgroundColor: "#00ffcc",
+          boxShadow: "0 0 8px #00ffcc",
+        }}
       />
 
       {/* Zoom controls */}
