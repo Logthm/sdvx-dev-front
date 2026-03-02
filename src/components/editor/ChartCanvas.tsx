@@ -16,13 +16,13 @@ import {
 } from "@/lib/chart-renderer/layout";
 import { resolveEvent, drawLasers } from "@/lib/chart-renderer/laser-drawer";
 import { noteX, CHIP_HEIGHT, TAIL_HEIGHT, drawNotes } from "@/lib/chart-renderer/note-drawer";
-import { drawGridWithBpm } from "@/lib/chart-renderer/grid-drawer";
+import { drawGridWithBpm, drawHiSpeedMarks } from "@/lib/chart-renderer/grid-drawer";
 import { calculateInterval } from "@/lib/chart-edit";
 import {
   renderChart,
   type ViewState,
 } from "@/lib/chart-renderer/renderer";
-import { DRAG_RANGE_MS, useEditorStore } from "@/lib/editor-store";
+import { DRAG_RANGE_MS, useEditorStore, type HiSpeedMark } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import type { ButtonEvent, ChartData, LaserEvent } from "@/types/chart";
 import type { Time3 } from "@/lib/chart-renderer/time-mapper";
@@ -436,19 +436,39 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
     }
 
     // Filter and remap hi-speed marks to start from measure 1
-    const filteredHsMarks = hiSpeedMarks
-      .filter(mark => {
-        const [measure] = mark.time as [number, number, number];
-        // measure is already 1-indexed
-        return measure >= startMeasure && measure <= endMeasure;
-      })
-      .map(mark => {
-        const [measure, beat, cell] = mark.time as [number, number, number];
-        return {
-          ...mark,
-          time: [measure - measureOffset, beat, cell] as [number, number, number],
-        };
-      });
+    // Include marks that:
+    // 1. Start within the export range, OR
+    // 2. Start before the range but end within or after the range (their effect carries over)
+    const filteredHsMarks: HiSpeedMark[] = [];
+
+    for (const mark of hiSpeedMarks) {
+      const [measure] = mark.time as [number, number, number];
+      const markStartSec = fullLayout.timeMapper.secondsOf(mark.time as Time3);
+      const markEndSec = markStartSec + mark.durationMs / 1000;
+
+      // Get the start and end times of the export range
+      const rangeStartTime: Time3 = [startMeasure, 1, 0];
+      const rangeStartSec = fullLayout.timeMapper.secondsOf(rangeStartTime);
+
+      // Include mark if it ends at or after the range start
+      // (meaning its effect will be active during the exported range)
+      if (markEndSec >= rangeStartSec) {
+        if (measure < startMeasure) {
+          // Mark starts before range - clamp its start to the range start
+          filteredHsMarks.push({
+            ...mark,
+            time: [1, 1, 0] as [number, number, number], // Start at measure 1 in exported chart
+            durationMs: Math.max(0, (markEndSec - rangeStartSec) * 1000), // Adjust duration
+          });
+        } else if (measure <= endMeasure) {
+          // Mark starts within range - remap normally
+          filteredHsMarks.push({
+            ...mark,
+            time: [measure - measureOffset, (mark.time as [number, number, number])[1], (mark.time as [number, number, number])[2]] as [number, number, number],
+          });
+        }
+      }
+    }
 
     // Calculate the new end position
     // Note: measure N means content from measure line N to measure line N+1
@@ -548,25 +568,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       }
     }
 
-    // Draw hi-speed marks
+    // Draw hi-speed marks using the standard renderer
     if (filteredHsMarks.length > 0) {
-      filteredHsMarks.forEach(mark => {
-        const sec = exportLayout.timeMapper.secondsOf(mark.time as [number, number, number]);
-        const origSpan = exportLayout.spans.find(s => sec >= s.sec0 && sec <= s.sec1);
-        if (!origSpan) return;
-
-        const adjustedSpan = adjustedSpans.find(s => s.measure === origSpan.measure && s.col === origSpan.col);
-        if (!adjustedSpan) return;
-
-        const y = adjustedSpan.y1 - (sec - origSpan.sec0) * renderOptions.pxPerSecond;
-        const xBase = colXBase(adjustedSpan.col);
-        const oobWidth = (TRACK_WIDTH - 96.5) / 2;
-        const laneLeft = xBase + oobWidth;
-        const laneWidth = 96.5;
-
-        ctx.fillStyle = 'rgba(255, 200, 0, 0.15)';
-        ctx.fillRect(laneLeft, y, laneWidth, -50);
-      });
+      drawHiSpeedMarks(ctx, finalExportLayout, filteredHsMarks);
     }
 
     // Draw grid and BPM markers (with original measure numbers for display)
