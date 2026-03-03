@@ -46,6 +46,8 @@ export interface FilterState {
   difficulties: Set<DifficultyName>;
   infVers: Set<number>;
   versions: Set<number>;
+  bpmMinRaw: string;
+  bpmMaxRaw: string;
   bpmMin: number | null;
   bpmMax: number | null;
   radarPeaks: Set<RadarPeakKey>;
@@ -62,6 +64,8 @@ export function createDefaultFilters(): FilterState {
     difficulties: new Set<DifficultyName>(),
     infVers: new Set<number>(),
     versions: new Set<number>(),
+    bpmMinRaw: '',
+    bpmMaxRaw: '',
     bpmMin: null,
     bpmMax: null,
     radarPeaks: new Set<RadarPeakKey>(),
@@ -163,35 +167,127 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
   }
 
   function updateLevelMin(raw: string) {
-    if (raw === "") { onChange({ ...filters, levelMinRaw: '', levelMin: null }); return; }
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) { onChange({ ...filters, levelMinRaw: raw }); return; }
-    onChange({ ...filters, levelMinRaw: raw, levelMin: clampLevel(parsed) });
+    onChange({ ...filters, levelMinRaw: raw });
   }
 
   function updateLevelMax(raw: string) {
-    if (raw === "") { onChange({ ...filters, levelMaxRaw: '', levelMax: null }); return; }
+    onChange({ ...filters, levelMaxRaw: raw });
+  }
+
+  function handleLevelMinBlur() {
+    const raw = filters.levelMinRaw;
+    if (raw === "") {
+      onChange({ ...filters, levelMin: null });
+      return;
+    }
     const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) { onChange({ ...filters, levelMaxRaw: raw }); return; }
-    onChange({ ...filters, levelMaxRaw: raw, levelMax: clampLevel(parsed) });
+    if (!Number.isFinite(parsed)) {
+      onChange({ ...filters, levelMinRaw: '' });
+      return;
+    }
+    const clamped = clampLevel(parsed);
+
+    // If both values exist and min > max, swap them
+    if (filters.levelMax !== null && clamped > filters.levelMax) {
+      onChange({
+        ...filters,
+        levelMinRaw: String(filters.levelMax),
+        levelMin: filters.levelMax,
+        levelMaxRaw: String(clamped),
+        levelMax: clamped
+      });
+    } else {
+      onChange({ ...filters, levelMinRaw: String(clamped), levelMin: clamped });
+    }
+  }
+
+  function handleLevelMaxBlur() {
+    const raw = filters.levelMaxRaw;
+    if (raw === "") {
+      onChange({ ...filters, levelMax: null });
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) {
+      onChange({ ...filters, levelMaxRaw: '' });
+      return;
+    }
+    const clamped = clampLevel(parsed);
+
+    // If both values exist and max < min, swap them
+    if (filters.levelMin !== null && clamped < filters.levelMin) {
+      onChange({
+        ...filters,
+        levelMinRaw: String(clamped),
+        levelMin: clamped,
+        levelMaxRaw: String(filters.levelMin),
+        levelMax: filters.levelMin
+      });
+    } else {
+      onChange({ ...filters, levelMaxRaw: String(clamped), levelMax: clamped });
+    }
   }
 
   function updateBpmMin(raw: string) {
-    if (raw === "") { onChange({ ...filters, bpmMin: null }); return; }
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) return;
-    const clamped = Math.max(0, Math.min(parsed, 400));
-    const nextMax = filters.bpmMax !== null && filters.bpmMax < clamped ? clamped : filters.bpmMax;
-    onChange({ ...filters, bpmMin: clamped, bpmMax: nextMax });
+    onChange({ ...filters, bpmMinRaw: raw });
   }
 
   function updateBpmMax(raw: string) {
-    if (raw === "") { onChange({ ...filters, bpmMax: null }); return; }
+    onChange({ ...filters, bpmMaxRaw: raw });
+  }
+
+  function handleBpmMinBlur() {
+    const raw = filters.bpmMinRaw;
+    if (raw === "") {
+      onChange({ ...filters, bpmMin: null });
+      return;
+    }
     const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) return;
+    if (!Number.isFinite(parsed)) {
+      onChange({ ...filters, bpmMinRaw: '' });
+      return;
+    }
     const clamped = Math.max(0, Math.min(parsed, 400));
-    const nextMin = filters.bpmMin !== null && filters.bpmMin > clamped ? clamped : filters.bpmMin;
-    onChange({ ...filters, bpmMin: nextMin, bpmMax: clamped });
+
+    // If both values exist and min > max, swap them
+    if (filters.bpmMax !== null && clamped > filters.bpmMax) {
+      onChange({
+        ...filters,
+        bpmMinRaw: String(filters.bpmMax),
+        bpmMin: filters.bpmMax,
+        bpmMaxRaw: String(clamped),
+        bpmMax: clamped
+      });
+    } else {
+      onChange({ ...filters, bpmMinRaw: String(clamped), bpmMin: clamped });
+    }
+  }
+
+  function handleBpmMaxBlur() {
+    const raw = filters.bpmMaxRaw;
+    if (raw === "") {
+      onChange({ ...filters, bpmMax: null });
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) {
+      onChange({ ...filters, bpmMaxRaw: '' });
+      return;
+    }
+    const clamped = Math.max(0, Math.min(parsed, 400));
+
+    // If both values exist and max < min, swap them
+    if (filters.bpmMin !== null && clamped < filters.bpmMin) {
+      onChange({
+        ...filters,
+        bpmMinRaw: String(clamped),
+        bpmMin: clamped,
+        bpmMaxRaw: String(filters.bpmMin),
+        bpmMax: filters.bpmMin
+      });
+    } else {
+      onChange({ ...filters, bpmMaxRaw: String(clamped), bpmMax: clamped });
+    }
   }
 
   function toggleDif(d: DifficultyName) {
@@ -376,9 +472,9 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
         </div>
         {filters.levelMode === 'range' ? (
           <div className="flex items-center gap-1.5">
-            <input type="text" inputMode="decimal" value={filters.levelMinRaw} onChange={(e) => updateLevelMin(e.target.value)} placeholder={t('filter.placeholder.min')} className={inputCls} />
+            <input type="text" inputMode="decimal" value={filters.levelMinRaw} onChange={(e) => updateLevelMin(e.target.value)} onBlur={handleLevelMinBlur} placeholder={t('filter.placeholder.min')} className={inputCls} />
             <span className="text-xs text-cosmos-600 shrink-0">—</span>
-            <input type="text" inputMode="decimal" value={filters.levelMaxRaw} onChange={(e) => updateLevelMax(e.target.value)} placeholder={t('filter.placeholder.max')} className={inputCls} />
+            <input type="text" inputMode="decimal" value={filters.levelMaxRaw} onChange={(e) => updateLevelMax(e.target.value)} onBlur={handleLevelMaxBlur} placeholder={t('filter.placeholder.max')} className={inputCls} />
           </div>
         ) : (
           <input
@@ -395,12 +491,12 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
       {/* BPM range */}
       <div className="obs-panel-section">
         <SectionLabel
-          action={<ClearBtn hasSelection={filters.bpmMin !== null || filters.bpmMax !== null} onClear={() => onChange({ ...filters, bpmMin: null, bpmMax: null })} />}
+          action={<ClearBtn hasSelection={filters.bpmMin !== null || filters.bpmMax !== null} onClear={() => onChange({ ...filters, bpmMinRaw: '', bpmMaxRaw: '', bpmMin: null, bpmMax: null })} />}
         >{t('filter.bpm')}</SectionLabel>
         <div className="flex items-center gap-1.5">
-          <input type="text" inputMode="numeric" value={filters.bpmMin ?? ""} onChange={(e) => updateBpmMin(e.target.value)} placeholder={t('filter.placeholder.min')} className={inputCls} />
+          <input type="text" inputMode="numeric" value={filters.bpmMinRaw} onChange={(e) => updateBpmMin(e.target.value)} onBlur={handleBpmMinBlur} placeholder={t('filter.placeholder.min')} className={inputCls} />
           <span className="text-xs text-cosmos-600 shrink-0">—</span>
-          <input type="text" inputMode="numeric" value={filters.bpmMax ?? ""} onChange={(e) => updateBpmMax(e.target.value)} placeholder={t('filter.placeholder.max')} className={inputCls} />
+          <input type="text" inputMode="numeric" value={filters.bpmMaxRaw} onChange={(e) => updateBpmMax(e.target.value)} onBlur={handleBpmMaxBlur} placeholder={t('filter.placeholder.max')} className={inputCls} />
         </div>
       </div>
 

@@ -6,7 +6,7 @@
  * drag to pan freely.
  */
 
-import { useChartImage, useEditedChartImage, exportChartImage } from "@/api/chart";
+import { useChartImage, useEditedChartImage, exportChartImage, exportEditedChartImage } from "@/api/chart";
 import type { RenderOptions } from "@/lib/editor-store";
 import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
@@ -165,12 +165,18 @@ export function ChartPreview({
   // Export chart image (for preview mode, we call the backend API with measure range)
   const handleExport = useCallback(async (startMeasure: number, endMeasure: number) => {
     try {
-      await exportChartImage(musicId, difstr, renderOptions, startMeasure, endMeasure);
+      if (hasEdits && chartData) {
+        // Export edited chart data
+        await exportEditedChartImage(musicId, difstr, chartData, renderOptions, startMeasure, endMeasure);
+      } else {
+        // Export original chart
+        await exportChartImage(musicId, difstr, renderOptions, startMeasure, endMeasure);
+      }
     } catch (error) {
       console.error('Failed to export chart:', error);
       // You could add a toast notification here
     }
-  }, [musicId, difstr, renderOptions]);
+  }, [musicId, difstr, renderOptions, hasEdits, chartData]);
 
   // Wheel: horizontal scroll by default, Ctrl+wheel to zoom
   useEffect(() => {
@@ -210,6 +216,12 @@ export function ChartPreview({
     if (!container) return;
 
     function handleMouseDown(e: MouseEvent) {
+      // Don't interfere with dialog interactions
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-export-dialog]')) {
+        return;
+      }
+
       if (e.button === 0 || e.button === 1) {
         e.preventDefault();
         dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY };

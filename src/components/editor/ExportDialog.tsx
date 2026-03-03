@@ -29,8 +29,31 @@ export function ExportDialog({ isOpen, onClose, onExport, maxMeasure }: ExportDi
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-20">
-      <div className="bg-cosmos-800 border border-cosmos-600 rounded-lg p-4 flex flex-col gap-3 min-w-[280px] max-w-[90vw]">
+    <div
+      data-export-dialog
+      className="absolute inset-0 flex items-center justify-center bg-black/40 z-50"
+      style={{ cursor: 'default' }}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      onMouseMove={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
+      <div
+        className="bg-cosmos-800 border border-cosmos-600 rounded-lg p-4 flex flex-col gap-3 min-w-[280px] max-w-[90vw]"
+        style={{ cursor: 'default' }}
+        onMouseDown={(e) => e.stopPropagation()}
+        onMouseMove={(e) => e.stopPropagation()}
+        onMouseUp={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium text-text-primary">{t('chart.exportChart')}</div>
           <button
@@ -42,9 +65,12 @@ export function ExportDialog({ isOpen, onClose, onExport, maxMeasure }: ExportDi
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-text-muted">{t('chart.startMeasure')}</span>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="start-measure" className="text-xs text-text-muted pointer-events-none">
+              {t('chart.startMeasure')}
+            </label>
             <input
+              id="start-measure"
               type="number"
               inputMode="numeric"
               min="1"
@@ -53,11 +79,14 @@ export function ExportDialog({ isOpen, onClose, onExport, maxMeasure }: ExportDi
               onChange={(e) => setStartMeasure(e.target.value)}
               className="px-2 py-1.5 rounded bg-cosmos-900 border border-cosmos-600 text-base font-mono text-text-primary outline-none focus:border-blue-400/50"
             />
-          </label>
+          </div>
 
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-text-muted">{t('chart.endMeasure')}</span>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="end-measure" className="text-xs text-text-muted pointer-events-none">
+              {t('chart.endMeasure')}
+            </label>
             <input
+              id="end-measure"
               type="number"
               inputMode="numeric"
               min="1"
@@ -66,7 +95,7 @@ export function ExportDialog({ isOpen, onClose, onExport, maxMeasure }: ExportDi
               onChange={(e) => setEndMeasure(e.target.value)}
               className="px-2 py-1.5 rounded bg-cosmos-900 border border-cosmos-600 text-base font-mono text-text-primary outline-none focus:border-blue-400/50"
             />
-          </label>
+          </div>
 
           <div className="text-xs text-text-muted">
             {t('chart.measureRange', { max: maxMeasure })}
