@@ -264,15 +264,19 @@ export function ImagePlaybackCanvas({
   // Calculate playhead line position when layout or zoom changes
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !layout) return;
+    const img = imgRef.current;
+    if (!container || !img) return;
 
     const updatePlayheadPosition = () => {
       const containerRect = container.getBoundingClientRect();
       const containerWidth = containerRect.width;
 
+      // Get actual image width from the loaded image
+      const imageWidth = img.naturalWidth || layout?.canvasWidth || 800;
+
       // Image is centered: left-1/2 -translate-x-1/2
-      // So image left edge is at: containerWidth/2 - (layout.canvasWidth * zoom)/2
-      const imageLeftEdge = containerWidth / 2 - (layout.canvasWidth * zoom) / 2;
+      // So image left edge is at: containerWidth/2 - (imageWidth * zoom)/2
+      const imageLeftEdge = containerWidth / 2 - (imageWidth * zoom) / 2;
 
       // Playhead starts at: imageLeftEdge + colXBase(0) * zoom
       const playheadLeftPos = imageLeftEdge + colXBase(0) * zoom;
@@ -288,7 +292,7 @@ export function ImagePlaybackCanvas({
     resizeObserver.observe(container);
 
     return () => resizeObserver.disconnect();
-  }, [layout, zoom]);
+  }, [layout, zoom, imageSrc]);
 
   // Loading states
   const isLoading = timingQuery.isLoading || imageQuery.isLoading;
