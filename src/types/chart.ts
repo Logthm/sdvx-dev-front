@@ -46,6 +46,7 @@ export interface ChartData {
   bpm_info: BpmEntry[];
   beat_info: BeatEntry[];
   end_position: TimePosObj | null;
+  max_measure: number;
   tracks: Record<string, ChartEvent[]>;
 }
 

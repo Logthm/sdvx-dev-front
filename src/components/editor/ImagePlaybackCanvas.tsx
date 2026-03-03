@@ -264,8 +264,7 @@ export function ImagePlaybackCanvas({
   // Calculate playhead line position when layout or zoom changes
   useEffect(() => {
     const container = containerRef.current;
-    const img = imgRef.current;
-    if (!container || !img || !layout) return;
+    if (!container || !layout) return;
 
     const updatePlayheadPosition = () => {
       const containerRect = container.getBoundingClientRect();
@@ -337,17 +336,19 @@ export function ImagePlaybackCanvas({
       )}
 
       {/* Playhead line - matches PlaybackCanvas implementation */}
-      <div
-        className="absolute pointer-events-none z-10"
-        style={{
-          top: `${PLAYHEAD_RATIO * 100}%`,
-          left: `${playheadLeft}px`,
-          height: "2px",
-          width: `${playheadWidth}px`,
-          backgroundColor: "#00ffcc",
-          boxShadow: "0 0 8px #00ffcc",
-        }}
-      />
+      {playheadWidth > 0 && (
+        <div
+          className="absolute pointer-events-none z-10"
+          style={{
+            top: `${PLAYHEAD_RATIO * 100}%`,
+            left: `${playheadLeft}px`,
+            height: "2px",
+            width: `${playheadWidth}px`,
+            backgroundColor: "#00ffcc",
+            boxShadow: "0 0 8px #00ffcc",
+          }}
+        />
+      )}
 
       {/* Zoom controls */}
       <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-md bg-surface/80 backdrop-blur-sm border border-border text-xs font-mono text-text-muted z-20">
