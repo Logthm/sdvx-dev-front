@@ -1242,7 +1242,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
             const layout = computeLayout(chart, s.renderOptions.pxPerSecond, s.renderOptions.columnHeight);
             const span = findSpanAtPoint(layout.spans, x, y);
             if (span) {
-              const lane = xToTrackName(x, span.col);
+              const lane = xToTrackName(x, span.col, s.mouseTool === "add-fx");
               if (lane) {
                 // Check if lane matches tool mode
                 const isBt = lane.trackName.startsWith("BT-");

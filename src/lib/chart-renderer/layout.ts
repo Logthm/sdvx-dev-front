@@ -354,25 +354,44 @@ export function findSpanByYInCol(spans: MeasureSpan[], y: number, col: number): 
 }
 
 /** Given chart-space X and column index, return the BT/FX track name hit, or null. */
-export function xToTrackName(x: number, col: number): { trackName: string; trackNum: number } | null {
+export function xToTrackName(
+  x: number,
+  col: number,
+  prioritizeFx = false
+): { trackName: string; trackNum: number } | null {
   const cx = trackCenterX(col);
-  // Check BT lanes
-  for (const [key, offset] of Object.entries(BT_POSITIONS)) {
-    const left = cx + offset - BT_WIDTH / 2;
-    if (x >= left && x <= left + BT_WIDTH) {
-      const name = `BT-${key}`;
-      const num = { A: 3, B: 4, C: 5, D: 6 }[key]!;
-      return { trackName: name, trackNum: num };
+
+  // When prioritizeFx is true, check FX lanes first (for add-fx mode)
+  // Otherwise check BT lanes first (for add-bt mode)
+  const checkFxFirst = prioritizeFx;
+
+  const checkBt = () => {
+    for (const [key, offset] of Object.entries(BT_POSITIONS)) {
+      const left = cx + offset - BT_WIDTH / 2;
+      if (x >= left && x <= left + BT_WIDTH) {
+        const name = `BT-${key}`;
+        const num = { A: 3, B: 4, C: 5, D: 6 }[key]!;
+        return { trackName: name, trackNum: num };
+      }
     }
-  }
-  // Check FX lanes
-  for (const [key, offset] of Object.entries(FX_POSITIONS)) {
-    const left = cx + offset - FX_WIDTH / 2;
-    if (x >= left && x <= left + FX_WIDTH) {
-      const name = `FX-${key}`;
-      const num = key === "L" ? 2 : 7;
-      return { trackName: name, trackNum: num };
+    return null;
+  };
+
+  const checkFx = () => {
+    for (const [key, offset] of Object.entries(FX_POSITIONS)) {
+      const left = cx + offset - FX_WIDTH / 2;
+      if (x >= left && x <= left + FX_WIDTH) {
+        const name = `FX-${key}`;
+        const num = key === "L" ? 2 : 7;
+        return { trackName: name, trackNum: num };
+      }
     }
+    return null;
+  };
+
+  if (checkFxFirst) {
+    return checkFx() || checkBt();
+  } else {
+    return checkBt() || checkFx();
   }
-  return null;
 }
