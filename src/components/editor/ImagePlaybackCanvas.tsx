@@ -7,7 +7,7 @@
  */
 
 import { usePlaybackImage, useChartTimingData } from "@/api/chart";
-import { computeSingleColumnLayout } from "@/lib/chart-renderer/layout";
+import { computeSingleColumnLayout, colXBase, TRACK_WIDTH } from "@/lib/chart-renderer/layout";
 import { usePlaybackStore } from "@/lib/playback-store";
 import { useEditorStore } from "@/lib/editor-store";
 import { useMetronome } from "@/lib/use-metronome";
@@ -15,7 +15,7 @@ import { useAudioPlayer } from "@/lib/use-audio-player";
 import { PxPerSecondButton } from "./PxPerSecondButton";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const MIN_ZOOM = 0.2;
@@ -39,6 +39,10 @@ export function ImagePlaybackCanvas({
   const imgRef = useRef<HTMLImageElement>(null);
   const rafRef = useRef<number>(0);
   const playStartRef = useRef<{ perfTime: number; chartTime: number } | null>(null);
+
+  // Calculate playhead line position based on container and image dimensions
+  const [playheadLeft, setPlayheadLeft] = useState(0);
+  const [playheadWidth, setPlayheadWidth] = useState(0);
 
   // Playback state
   const isPlaying = usePlaybackStore((s) => s.isPlaying);
@@ -257,6 +261,36 @@ export function ImagePlaybackCanvas({
     };
   }, [setZoom]);
 
+  // Calculate playhead line position when layout or zoom changes
+  useEffect(() => {
+    const container = containerRef.current;
+    const img = imgRef.current;
+    if (!container || !img || !layout) return;
+
+    const updatePlayheadPosition = () => {
+      const containerRect = container.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+
+      // Image is centered: left-1/2 -translate-x-1/2
+      // So image left edge is at: containerWidth/2 - (layout.canvasWidth * zoom)/2
+      const imageLeftEdge = containerWidth / 2 - (layout.canvasWidth * zoom) / 2;
+
+      // Playhead starts at: imageLeftEdge + colXBase(0) * zoom
+      const playheadLeftPos = imageLeftEdge + colXBase(0) * zoom;
+      const playheadWidthScaled = TRACK_WIDTH * zoom;
+
+      setPlayheadLeft(playheadLeftPos);
+      setPlayheadWidth(playheadWidthScaled);
+    };
+
+    updatePlayheadPosition();
+
+    const resizeObserver = new ResizeObserver(updatePlayheadPosition);
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, [layout, zoom]);
+
   // Loading states
   const isLoading = timingQuery.isLoading || imageQuery.isLoading;
   const isError = timingQuery.isError || imageQuery.isError;
@@ -302,12 +336,14 @@ export function ImagePlaybackCanvas({
         />
       )}
 
-      {/* Playhead line */}
+      {/* Playhead line - matches PlaybackCanvas implementation */}
       <div
-        className="absolute left-0 right-0 pointer-events-none z-10"
+        className="absolute pointer-events-none z-10"
         style={{
           top: `${PLAYHEAD_RATIO * 100}%`,
+          left: `${playheadLeft}px`,
           height: "2px",
+          width: `${playheadWidth}px`,
           backgroundColor: "#00ffcc",
           boxShadow: "0 0 8px #00ffcc",
         }}

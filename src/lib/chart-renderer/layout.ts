@@ -124,8 +124,7 @@ export function computeSingleColumnLayout(
   const endMeasure = chartData.end_position?.measure ?? 1;
 
   // First pass: compute total height
-  // Only top margin — no bottom margin so chart content starts at the
-  // very bottom of the image (important for playback scroll alignment).
+  // Top margin + bottom margin (for measure number display at the bottom)
   let totalHeight = MARGIN;
   const heights: number[] = [];
   for (let m = 1; m <= endMeasure; m++) {
@@ -136,9 +135,12 @@ export function computeSingleColumnLayout(
     totalHeight += h;
   }
 
-  // Second pass: build spans bottom-to-top (start from very bottom)
+  // Add bottom margin for measure number display
+  totalHeight += MARGIN;
+
+  // Second pass: build spans bottom-to-top (start from bottom - margin)
   const spans: MeasureSpan[] = [];
-  let currentY = totalHeight;
+  let currentY = totalHeight - MARGIN;
 
   for (let m = 1; m <= endMeasure; m++) {
     const sec0 = tm.secondsOf([m, 1, 0]);

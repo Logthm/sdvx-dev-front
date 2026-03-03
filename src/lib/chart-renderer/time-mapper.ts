@@ -5,8 +5,8 @@
  * handling BPM and time-signature changes via an internal breakpoint system.
  *
  * Grid rules:
- *   - Traditional (format < 13): ticks per beat = 192 / denominator
- *   - v13+ (beat_resolution set):  ticks per beat = beat_resolution (fixed)
+ *   - ticks per beat = beat_res * 4 / denominator
+ *   - default beat_res = 48 (can be overridden via beat_resolution)
  *
  * Duration rule: beat_length = 60/bpm * (4/denominator)
  */
@@ -15,10 +15,10 @@ import type { BeatEntry, BpmEntry, ChartTimingData } from "@/types/chart";
 
 export type Time3 = [number, number, number]; // [measure, beat, cell]
 
-const WHOLE_UNITS = 192;
+const DEFAULT_BEAT_RESOLUTION = 48;
 
-function unitsPerBeatDefault(denominator: number): number {
-  return WHOLE_UNITS / Math.max(1, denominator);
+function unitsPerBeat(beatRes: number, denominator: number): number {
+  return (beatRes * 4) / Math.max(1, denominator);
 }
 
 function cmpTime(a: Time3, b: Time3): number {
@@ -41,11 +41,11 @@ interface Breakpoint {
 export class TimeMapper {
   private beatInfo: Array<{ time: Time3; numerator: number; denominator: number }>;
   private bpmInfo: Array<{ time: Time3; bpm: number }>;
-  private beatResolution: number | null;
+  private beatRes: number;
   private breakpoints: Breakpoint[];
 
   constructor(chartData: ChartTimingData) {
-    this.beatResolution = chartData.beat_resolution;
+    this.beatRes = chartData.beat_resolution ?? DEFAULT_BEAT_RESOLUTION;
 
     this.beatInfo = chartData.beat_info
       .map((e: BeatEntry) => ({
@@ -66,8 +66,7 @@ export class TimeMapper {
   }
 
   private upb(denominator: number): number {
-    if (this.beatResolution !== null) return this.beatResolution;
-    return unitsPerBeatDefault(denominator);
+    return unitsPerBeat(this.beatRes, denominator);
   }
 
   getTimeSigAt(time: Time3): [number, number] {
