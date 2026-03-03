@@ -6,7 +6,7 @@
  * drag to pan freely.
  */
 
-import { useChartImage, useEditedChartImage, exportChartImage, exportEditedChartImage } from "@/api/chart";
+import { useChartImage, useEditedChartImage, exportChartImage, exportEditedChartImage, useChartTimingData } from "@/api/chart";
 import type { RenderOptions } from "@/lib/editor-store";
 import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,9 @@ export function ChartPreview({
   // Only use editedQuery when manual edits exist — chartData then contains
   // both arrangement and edits, sent to POST /chart/render_data.
   const imageQuery = hasEdits ? editedQuery : normalQuery;
+
+  // Fetch timing data to get max_measure for non-editable charts
+  const timingQuery = useChartTimingData(musicId, difstr);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -133,6 +136,12 @@ export function ChartPreview({
 
   // For ChartPreview, we need to get max measure from chartData if available
   const getMaxMeasure = useCallback(() => {
+    // If we have timing data with max_measure, use it (works for non-editable charts)
+    if (timingQuery.data?.max_measure) {
+      return timingQuery.data.max_measure;
+    }
+
+    // Fallback: calculate from chartData if available (for editable charts)
     if (!chartData) return 100; // Default fallback
 
     let maxMeasure = 0;
@@ -160,7 +169,7 @@ export function ChartPreview({
     });
 
     return Math.max(1, maxMeasure);
-  }, [chartData]);
+  }, [chartData, timingQuery.data]);
 
   // Export chart image (for preview mode, we call the backend API with measure range)
   const handleExport = useCallback(async (startMeasure: number, endMeasure: number) => {

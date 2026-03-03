@@ -56,6 +56,7 @@ export interface ChartTimingData {
   bpm_info: BpmEntry[];
   beat_info: BeatEntry[];
   end_position: TimePosObj | null;
+  max_measure: number;
 }
 
 // Track layout constants

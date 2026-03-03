@@ -1,5 +1,5 @@
 import { Download, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ExportDialogProps {
@@ -13,6 +13,14 @@ export function ExportDialog({ isOpen, onClose, onExport, maxMeasure }: ExportDi
   const { t } = useTranslation();
   const [startMeasure, setStartMeasure] = useState("1");
   const [endMeasure, setEndMeasure] = useState(maxMeasure.toString());
+
+  // Reset to default values whenever dialog opens or maxMeasure changes
+  useEffect(() => {
+    if (isOpen) {
+      setStartMeasure("1");
+      setEndMeasure(maxMeasure.toString());
+    }
+  }, [isOpen, maxMeasure]);
 
   if (!isOpen) return null;
 
