@@ -136,39 +136,44 @@ export function ChartPreview({
 
   // For ChartPreview, we need to get max measure from chartData if available
   const getMaxMeasure = useCallback(() => {
-    // If we have timing data with max_measure, use it (works for non-editable charts)
+    // Priority 1: Use timing data if available (works for non-editable charts)
     if (timingQuery.data?.max_measure) {
       return timingQuery.data.max_measure;
     }
 
-    // Fallback: calculate from chartData if available (for editable charts)
-    if (!chartData) return 100; // Default fallback
+    // Priority 2: Calculate from chartData if available (for editable charts)
+    if (chartData) {
+      let maxMeasure = 0;
 
-    let maxMeasure = 0;
+      // Check end_position
+      if (chartData.end_position) {
+        maxMeasure = Math.max(maxMeasure, chartData.end_position.measure);
+      }
 
-    // Check end_position
-    if (chartData.end_position) {
-      maxMeasure = Math.max(maxMeasure, chartData.end_position.measure);
+      // Check all events in tracks
+      Object.values(chartData.tracks).forEach((events) => {
+        events.forEach((event) => {
+          if (event.time && Array.isArray(event.time)) {
+            maxMeasure = Math.max(maxMeasure, event.time[0]);
+          }
+        });
+      });
+
+      // Check beat_info and bpm_info
+      chartData.beat_info?.forEach((beat) => {
+        maxMeasure = Math.max(maxMeasure, beat.measure);
+      });
+      chartData.bpm_info?.forEach((bpm) => {
+        maxMeasure = Math.max(maxMeasure, bpm.measure);
+      });
+
+      if (maxMeasure > 0) {
+        return maxMeasure;
+      }
     }
 
-    // Check all events in tracks
-    Object.values(chartData.tracks).forEach((events) => {
-      events.forEach((event) => {
-        if (event.time && Array.isArray(event.time)) {
-          maxMeasure = Math.max(maxMeasure, event.time[0]);
-        }
-      });
-    });
-
-    // Check beat_info and bpm_info
-    chartData.beat_info?.forEach((beat) => {
-      maxMeasure = Math.max(maxMeasure, beat.measure);
-    });
-    chartData.bpm_info?.forEach((bpm) => {
-      maxMeasure = Math.max(maxMeasure, bpm.measure);
-    });
-
-    return Math.max(1, maxMeasure);
+    // Priority 3: Default fallback
+    return 100;
   }, [chartData, timingQuery.data]);
 
   // Export chart image (for preview mode, we call the backend API with measure range)
