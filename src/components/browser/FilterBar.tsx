@@ -325,7 +325,27 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
   function toggleSearchField(field: SearchField) {
     const next = new Set(filters.searchFields);
     if (next.has(field)) next.delete(field); else next.add(field);
-    onChange({ ...filters, searchFields: next });
+
+    // If enabling reading or alias, disable exact match
+    if ((field === 'reading' || field === 'alias') && next.has(field)) {
+      onChange({ ...filters, searchFields: next, exactMatch: false });
+    } else {
+      onChange({ ...filters, searchFields: next });
+    }
+  }
+
+  function toggleExactMatch() {
+    const newExactMatch = !filters.exactMatch;
+
+    // If enabling exact match, disable reading and alias
+    if (newExactMatch) {
+      const next = new Set(filters.searchFields);
+      next.delete('reading');
+      next.delete('alias');
+      onChange({ ...filters, searchFields: next, exactMatch: true });
+    } else {
+      onChange({ ...filters, exactMatch: false });
+    }
   }
 
   const inputCls =
@@ -355,7 +375,7 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
         </div>
         <button
           type="button"
-          onClick={() => onChange({ ...filters, exactMatch: !filters.exactMatch })}
+          onClick={toggleExactMatch}
           className={cn(
             "w-full h-8 rounded text-[11px] font-semibold border transition-colors touch-manipulation mt-1",
             filters.exactMatch
