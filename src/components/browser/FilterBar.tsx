@@ -36,6 +36,8 @@ const VERSION_LABELS: Record<number, string> = {
 
 export type LevelMode = 'exact' | 'int' | 'range';
 
+export type SearchField = 'title' | 'artist' | 'reading' | 'alias';
+
 export interface FilterState {
   levelMode: LevelMode;
   levelInput: string;
@@ -51,6 +53,7 @@ export interface FilterState {
   bpmMin: number | null;
   bpmMax: number | null;
   radarPeaks: Set<RadarPeakKey>;
+  searchFields: Set<SearchField>;
 }
 
 export function createDefaultFilters(): FilterState {
@@ -69,6 +72,7 @@ export function createDefaultFilters(): FilterState {
     bpmMin: null,
     bpmMax: null,
     radarPeaks: new Set<RadarPeakKey>(),
+    searchFields: new Set<SearchField>(['title', 'artist', 'reading', 'alias']),
   };
 }
 
@@ -129,6 +133,8 @@ function ClearBtn({
     </button>
   );
 }
+
+const SEARCH_FIELD_OPTIONS: SearchField[] = ['title', 'artist', 'reading', 'alias'];
 
 const SORT_OPTIONS: [SortField, string][] = [
   ["difficulty", "filter.sortBy.difficulty"],
@@ -314,11 +320,39 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
     onChange({ ...filters, radarPeaks: next });
   }
 
+  function toggleSearchField(field: SearchField) {
+    const next = new Set(filters.searchFields);
+    if (next.has(field)) next.delete(field); else next.add(field);
+    onChange({ ...filters, searchFields: next });
+  }
+
   const inputCls =
     "w-full h-8 rounded border border-cosmos-600/40 bg-cosmos-950/60 px-2.5 text-base text-text-primary font-mono outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/30";
 
   return (
     <div className={cn("flex flex-col md:pt-4", className)}>
+      {/* Search Fields */}
+      <div className="obs-panel-section">
+        <SectionLabel>{t('filter.searchFields')}</SectionLabel>
+        <div className="grid grid-cols-2 gap-1">
+          {SEARCH_FIELD_OPTIONS.map((field) => (
+            <button
+              key={field}
+              type="button"
+              onClick={() => toggleSearchField(field)}
+              className={cn(
+                "h-8 rounded text-[11px] font-semibold border transition-colors touch-manipulation",
+                filters.searchFields.has(field)
+                  ? "bg-gold-400/15 border-gold-400/35 text-gold-300 hover:bg-gold-400/25"
+                  : "bg-transparent border-cosmos-600/30 text-text-muted hover:text-text-primary hover:border-cosmos-600/60 hover:bg-cosmos-800/40",
+              )}
+            >
+              {t(`filter.searchField.${field}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Sort */}
       <div className="obs-panel-section">
         <SectionLabel

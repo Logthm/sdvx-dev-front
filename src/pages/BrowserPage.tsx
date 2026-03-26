@@ -49,6 +49,7 @@ export function BrowserPage() {
     bpmMin: filters.bpmMin,
     bpmMax: filters.bpmMax,
     radarPeaks: filters.radarPeaks,
+    searchFields: filters.searchFields,
     sortField,
     sortDirection,
   });
@@ -183,7 +184,10 @@ export function BrowserPage() {
                 difstr ? `/song/${music.id}?dif=${difstr}` : `/song/${music.id}`,
               )
             }
-            onArtistClick={setQuery}
+            onArtistClick={(artist) => {
+              setQuery(artist);
+              setFilters({ ...filters, searchFields: new Set(['artist']) });
+            }}
             isLoading={isLoading}
             hasMore={browserMusicQuery.hasNextPage}
             onLoadMore={() => browserMusicQuery.fetchNextPage()}

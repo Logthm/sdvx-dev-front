@@ -13,11 +13,18 @@
   },
   "filter": {
     "sort": "排序",
+    "searchFields": "搜索字段",
     "version": "版本",
     "difficulty": "难度",
     "radarPeak": "雷达峰值",
     "level": "等级",
     "bpm": "BPM",
+    "searchField": {
+      "title": "曲名",
+      "artist": "艺术家",
+      "reading": "读音",
+      "alias": "别名"
+    },
     "sortBy": {
       "difficulty": "难度",
       "date": "日期",
@@ -44,7 +51,7 @@
       "oneHand": "ONE-HAND"
     },
     "title": "筛选器",
-    "description": "点击筛选按钮可以打开高级筛选面板。\n\n你可以按难度等级、版本、BPM、雷达图等条件筛选歌曲。\n\n还可以对结果进行排序！"
+    "description": "点击筛选按钮可以打开高级筛选面板。\n\n顶部可以切换搜索字段（曲名、作者、读音、别名）来控制匹配范围。\n\n你可以按难度等级、版本、BPM、雷达图等条件筛选歌曲。\n\n还可以对结果进行排序！"
   },
   "tutorial": {
     "viewTutorial": "查看新手教程",

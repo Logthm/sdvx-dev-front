@@ -13,11 +13,18 @@
   },
   "filter": {
     "sort": "Sort",
+    "searchFields": "Search Fields",
     "version": "Version",
     "difficulty": "Difficulty",
     "radarPeak": "Radar Peak",
     "level": "Level",
     "bpm": "BPM",
+    "searchField": {
+      "title": "Title",
+      "artist": "Artist",
+      "reading": "Reading",
+      "alias": "Alias"
+    },
     "sortBy": {
       "difficulty": "Difficulty",
       "date": "Date",
@@ -44,7 +51,7 @@
       "oneHand": "ONE-HAND"
     },
     "title": "Filters",
-    "description": "Click the filter button to open the advanced filter panel.\n\nYou can filter songs by difficulty level, version, BPM, radar chart, and more.\n\nYou can also sort the results!"
+    "description": "Click the filter button to open the advanced filter panel.\n\nToggle search fields (title, artist, reading, alias) at the top to control what gets matched.\n\nYou can filter songs by difficulty level, version, BPM, radar chart, and more.\n\nYou can also sort the results!"
   },
   "tutorial": {
     "viewTutorial": "View Tutorial",

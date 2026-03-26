@@ -58,6 +58,7 @@ export interface BrowserMusicParams {
   radarPeaks?: Set<string>;
   sortField?: SortField | null;
   sortDirection?: SortDirection;
+  searchFields?: Set<string>;
 }
 
 export function useBrowserMusic(params: BrowserMusicParams) {
@@ -79,6 +80,7 @@ export function useBrowserMusic(params: BrowserMusicParams) {
   const radarPeaks = params.radarPeaks ? [...params.radarPeaks].sort() : [];
   const sortField = params.sortField ?? null;
   const sortDirection = params.sortDirection ?? "desc";
+  const searchFields = params.searchFields ? [...params.searchFields].sort() : [];
 
   return useInfiniteQuery({
     queryKey: [
@@ -97,6 +99,7 @@ export function useBrowserMusic(params: BrowserMusicParams) {
         radarPeaks,
         sortField,
         sortDirection,
+        searchFields,
       },
     ] as const,
     queryFn: async ({ pageParam = 0 }) => {
@@ -113,6 +116,7 @@ export function useBrowserMusic(params: BrowserMusicParams) {
       if (bpmMin !== null) sp.set("bpm_min", String(bpmMin));
       if (bpmMax !== null) sp.set("bpm_max", String(bpmMax));
       if (radarPeaks.length) sp.set("radar_peaks", radarPeaks.join(","));
+      if (searchFields.length) sp.set("fields", searchFields.join(","));
       if (sortField) {
         sp.set("sort_field", sortField);
         sp.set("sort_direction", sortDirection);
