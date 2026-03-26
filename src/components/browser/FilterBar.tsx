@@ -54,6 +54,7 @@ export interface FilterState {
   bpmMax: number | null;
   radarPeaks: Set<RadarPeakKey>;
   searchFields: Set<SearchField>;
+  exactMatch: boolean;
 }
 
 export function createDefaultFilters(): FilterState {
@@ -73,6 +74,7 @@ export function createDefaultFilters(): FilterState {
     bpmMax: null,
     radarPeaks: new Set<RadarPeakKey>(),
     searchFields: new Set<SearchField>(['title', 'artist', 'reading', 'alias']),
+    exactMatch: false,
   };
 }
 
@@ -351,6 +353,18 @@ export function FilterBar({ filters, onChange, sortField, sortDirection, onToggl
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          onClick={() => onChange({ ...filters, exactMatch: !filters.exactMatch })}
+          className={cn(
+            "w-full h-8 rounded text-[11px] font-semibold border transition-colors touch-manipulation mt-1",
+            filters.exactMatch
+              ? "bg-lavender-400/20 border-lavender-400/35 text-lavender-300 hover:bg-lavender-400/30"
+              : "bg-transparent border-cosmos-600/30 text-text-muted hover:text-text-primary hover:border-cosmos-600/60 hover:bg-cosmos-800/40",
+          )}
+        >
+          {t('filter.exactMatch')}
+        </button>
       </div>
 
       {/* Sort */}

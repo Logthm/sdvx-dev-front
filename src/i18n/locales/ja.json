@@ -14,6 +14,7 @@
   "filter": {
     "sort": "並び替え",
     "searchFields": "検索フィールド",
+    "exactMatch": "完全一致",
     "version": "バージョン",
     "difficulty": "難易度",
     "radarPeak": "レーダーピーク",

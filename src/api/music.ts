@@ -59,6 +59,7 @@ export interface BrowserMusicParams {
   sortField?: SortField | null;
   sortDirection?: SortDirection;
   searchFields?: Set<string>;
+  exactMatch?: boolean;
 }
 
 export function useBrowserMusic(params: BrowserMusicParams) {
@@ -81,6 +82,7 @@ export function useBrowserMusic(params: BrowserMusicParams) {
   const sortField = params.sortField ?? null;
   const sortDirection = params.sortDirection ?? "desc";
   const searchFields = params.searchFields ? [...params.searchFields].sort() : [];
+  const exactMatch = params.exactMatch ?? false;
 
   return useInfiniteQuery({
     queryKey: [
@@ -100,6 +102,7 @@ export function useBrowserMusic(params: BrowserMusicParams) {
         sortField,
         sortDirection,
         searchFields,
+        exactMatch,
       },
     ] as const,
     queryFn: async ({ pageParam = 0 }) => {
@@ -117,6 +120,7 @@ export function useBrowserMusic(params: BrowserMusicParams) {
       if (bpmMax !== null) sp.set("bpm_max", String(bpmMax));
       if (radarPeaks.length) sp.set("radar_peaks", radarPeaks.join(","));
       if (searchFields.length) sp.set("fields", searchFields.join(","));
+      if (!exactMatch) sp.set("enable_fuzzy", "true");
       if (sortField) {
         sp.set("sort_field", sortField);
         sp.set("sort_direction", sortDirection);

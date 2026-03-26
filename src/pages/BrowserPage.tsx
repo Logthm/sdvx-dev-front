@@ -50,6 +50,7 @@ export function BrowserPage() {
     bpmMax: filters.bpmMax,
     radarPeaks: filters.radarPeaks,
     searchFields: filters.searchFields,
+    exactMatch: filters.exactMatch,
     sortField,
     sortDirection,
   });
@@ -186,7 +187,7 @@ export function BrowserPage() {
             }
             onArtistClick={(artist) => {
               setQuery(artist);
-              setFilters({ ...filters, searchFields: new Set(['artist']) });
+              setFilters({ ...filters, searchFields: new Set(['artist']), exactMatch: true });
             }}
             isLoading={isLoading}
             hasMore={browserMusicQuery.hasNextPage}

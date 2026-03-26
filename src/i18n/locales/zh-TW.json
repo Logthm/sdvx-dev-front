@@ -14,6 +14,7 @@
   "filter": {
     "sort": "排序",
     "searchFields": "搜尋欄位",
+    "exactMatch": "精確匹配",
     "version": "版本",
     "difficulty": "難度",
     "radarPeak": "雷達峰值",
