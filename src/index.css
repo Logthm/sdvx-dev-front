@@ -66,6 +66,7 @@
   --color-diff-hvn: oklch(0.72 0.13 230);
   --color-diff-vvd: oklch(0.76 0.16 350);
   --color-diff-xcd: oklch(0.50 0.18 260);
+  --color-diff-nbl: oklch(0.78 0.20 145);
 
   /* ── Typography ── */
   --font-sans: "Inter", sans-serif;

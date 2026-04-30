@@ -87,6 +87,7 @@ export const INF_VER_LABELS: Record<number, string> = {
   4: "HVN",
   5: "VVD",
   6: "XCD",
+  7: "NBL",
 };
 
 export function getInfLabel(infVer: number): string {
@@ -99,6 +100,7 @@ export const INF_VER_COLORS: Record<number, string> = {
   4: "var(--color-diff-hvn)",
   5: "var(--color-diff-vvd)",
   6: "var(--color-diff-xcd)",
+  7: "var(--color-diff-nbl)",
 };
 
 export const DIFFICULTY_COLORS: Record<DifficultyName, string> = {
