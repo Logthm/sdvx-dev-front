@@ -159,10 +159,10 @@ export interface EditorState {
   previewSimplifyLasers: boolean;
   setPreviewSimplifyLasers: (v: boolean) => void;
 
-  intervalPosA: [number, number, number] | null;
-  intervalPosB: [number, number, number] | null;
-  setIntervalPosA: (pos: [number, number, number] | null) => void;
-  setIntervalPosB: (pos: [number, number, number] | null) => void;
+  previewIntervalActive: boolean;
+  setPreviewIntervalActive: (v: boolean) => void;
+  previewIntervalFirstTime: [number, number, number] | null;
+  setPreviewIntervalFirstTime: (t: [number, number, number] | null) => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -419,8 +419,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   previewSimplifyLasers: false,
   setPreviewSimplifyLasers: (v) => set({ previewSimplifyLasers: v }),
 
-  intervalPosA: null,
-  intervalPosB: null,
-  setIntervalPosA: (pos) => set({ intervalPosA: pos, intervalInfo: null }),
-  setIntervalPosB: (pos) => set({ intervalPosB: pos, intervalInfo: null }),
+  previewIntervalActive: false,
+  setPreviewIntervalActive: (v) => set({ previewIntervalActive: v, previewIntervalFirstTime: null, intervalInfo: null }),
+  previewIntervalFirstTime: null,
+  setPreviewIntervalFirstTime: (t) => set({ previewIntervalFirstTime: t }),
 }));

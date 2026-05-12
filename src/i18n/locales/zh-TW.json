@@ -212,11 +212,8 @@
     "measureRange": "小節範圍: 1 - {{max}}",
     "export": "匯出",
     "simplifyLasersPreview": "簡化雷射",
-    "hsCalculator": "Hi-Speed 計算器",
-    "position": "位置",
-    "effectiveSpeed": "有效速度",
-    "duration": "持續時間",
     "intervalPreview": "間隔測量",
+    "clickTwoPoints": "點擊譜面上的兩個點",
     "calculate": "計算",
     "estimateOnly": "⚠ 僅為估計值",
     "notAvailableRandom": "隨機 / S隨機 配置下不可用"

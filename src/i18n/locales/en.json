@@ -212,11 +212,8 @@
     "measureRange": "Measure range: 1 - {{max}}",
     "export": "Export",
     "simplifyLasersPreview": "Simplify Lasers",
-    "hsCalculator": "Hi-Speed Calculator",
-    "position": "Position",
-    "effectiveSpeed": "Eff. Speed",
-    "duration": "Duration",
     "intervalPreview": "Interval Measurement",
+    "clickTwoPoints": "Click two points on the chart",
     "calculate": "Calculate",
     "estimateOnly": "⚠ Estimate only",
     "notAvailableRandom": "Not available for Random / S-Random"

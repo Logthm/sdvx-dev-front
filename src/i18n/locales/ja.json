@@ -212,11 +212,8 @@
     "measureRange": "小節範囲: 1 - {{max}}",
     "export": "エクスポート",
     "simplifyLasersPreview": "レーザー簡略化",
-    "hsCalculator": "Hi-Speed 計算",
-    "position": "位置",
-    "effectiveSpeed": "実効速度",
-    "duration": "持続時間",
     "intervalPreview": "間隔測定",
+    "clickTwoPoints": "譜面上の2点をクリック",
     "calculate": "計算",
     "estimateOnly": "⚠ 推定値のみ",
     "notAvailableRandom": "Random / S-Random では利用不可"

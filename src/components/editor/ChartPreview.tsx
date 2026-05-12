@@ -13,8 +13,11 @@ import { cn } from "@/lib/utils";
 import { PxPerSecondButton } from "./PxPerSecondButton";
 import { ExportDialog } from "./ExportDialog";
 import { Download, Loader2, Maximize, Minimize, UnfoldVertical } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { computeLayout, findSpanAtPoint, yToSec } from "@/lib/chart-renderer/layout";
+import { calculateInterval } from "@/lib/chart-edit";
+import type { ChartData } from "@/types/chart";
 
 interface ChartPreviewProps {
   musicId: number;
@@ -74,7 +77,17 @@ export function ChartPreview({
     active: boolean;
     lastX: number;
     lastY: number;
-  }>({ active: false, lastX: 0, lastY: 0 });
+    startX: number;
+    startY: number;
+  }>({ active: false, lastX: 0, lastY: 0, startX: 0, startY: 0 });
+
+  const previewIntervalActive = useEditorStore((s) => s.previewIntervalActive);
+
+  const layout = useMemo(() => {
+    const td = timingQuery.data;
+    if (!td) return null;
+    return computeLayout(td as unknown as ChartData, renderOptions.pxPerSecond, renderOptions.columnHeight);
+  }, [timingQuery.data, renderOptions.pxPerSecond, renderOptions.columnHeight]);
 
   // Fit image height to container height on first load
   const onImageLoad = useCallback(
@@ -238,7 +251,7 @@ export function ChartPreview({
 
       if (e.button === 0 || e.button === 1) {
         e.preventDefault();
-        dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY };
+        dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY };
       }
     }
 
@@ -253,8 +266,31 @@ export function ChartPreview({
       clampedPan(px - dx / z, py - dy / z, z);
     }
 
-    function handleMouseUp() {
+    function handleMouseUp(e: MouseEvent) {
+      if (!dragRef.current.active) return;
+      const moved = Math.hypot(e.clientX - dragRef.current.startX, e.clientY - dragRef.current.startY);
       dragRef.current.active = false;
+
+      const state = useEditorStore.getState();
+      if (moved < 5 && state.previewIntervalActive && layout) {
+        const rect = container!.getBoundingClientRect();
+        const { zoom: z, panX: px, panY: py } = state;
+        const chartX = px + (e.clientX - rect.left) / z;
+        const chartY = py + (e.clientY - rect.top) / z;
+        const span = findSpanAtPoint(layout.spans, chartX, chartY);
+        if (!span) return;
+        const sec = yToSec(chartY, span, layout.pxPerSecond);
+        const time3 = layout.timeMapper.secToTime3(sec, span.measure);
+        const firstTime = state.previewIntervalFirstTime;
+        if (!firstTime) {
+          state.setPreviewIntervalFirstTime(time3);
+        } else {
+          const td = timingQuery.data;
+          const result = calculateInterval(firstTime, time3, layout.timeMapper, td?.beat_resolution ?? null);
+          state.setIntervalInfo(result);
+          state.setPreviewIntervalFirstTime(null);
+        }
+      }
     }
 
     container.addEventListener("mousedown", handleMouseDown);
@@ -265,7 +301,7 @@ export function ChartPreview({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [clampedPan]);
+  }, [clampedPan, layout, timingQuery.data]);
 
   // Touch: pan + pinch-to-zoom
   useEffect(() => {
@@ -356,7 +392,7 @@ export function ChartPreview({
         "relative overflow-hidden bg-[#080c18] select-none",
         className,
       )}
-      style={{ cursor: isReady ? "grab" : "default", touchAction: "none" }}
+      style={{ cursor: isReady ? (previewIntervalActive ? "crosshair" : "grab") : "default", touchAction: "none" }}
       onDragStart={(e) => e.preventDefault()}
     >
       {imageQuery.isLoading && (
