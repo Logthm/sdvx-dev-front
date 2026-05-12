@@ -210,7 +210,16 @@
     "startMeasure": "開始小節",
     "endMeasure": "終了小節",
     "measureRange": "小節範囲: 1 - {{max}}",
-    "export": "エクスポート"
+    "export": "エクスポート",
+    "simplifyLasersPreview": "レーザー簡略化",
+    "hsCalculator": "Hi-Speed 計算",
+    "position": "位置",
+    "effectiveSpeed": "実効速度",
+    "duration": "持続時間",
+    "intervalPreview": "間隔測定",
+    "calculate": "計算",
+    "estimateOnly": "⚠ 推定値のみ",
+    "notAvailableRandom": "Random / S-Random では利用不可"
   },
   "playback": {
     "play": "再生",

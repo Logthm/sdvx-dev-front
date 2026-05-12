@@ -155,6 +155,14 @@ export interface EditorState {
 
   bpmDisplayMode: BpmDisplayMode;
   setBpmDisplayMode: (mode: BpmDisplayMode) => void;
+
+  previewSimplifyLasers: boolean;
+  setPreviewSimplifyLasers: (v: boolean) => void;
+
+  intervalPosA: [number, number, number] | null;
+  intervalPosB: [number, number, number] | null;
+  setIntervalPosA: (pos: [number, number, number] | null) => void;
+  setIntervalPosB: (pos: [number, number, number] | null) => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -407,4 +415,12 @@ export const useEditorStore = create<EditorState>((set) => ({
 
   bpmDisplayMode: "bpm" as BpmDisplayMode,
   setBpmDisplayMode: (mode) => set({ bpmDisplayMode: mode }),
+
+  previewSimplifyLasers: false,
+  setPreviewSimplifyLasers: (v) => set({ previewSimplifyLasers: v }),
+
+  intervalPosA: null,
+  intervalPosB: null,
+  setIntervalPosA: (pos) => set({ intervalPosA: pos, intervalInfo: null }),
+  setIntervalPosB: (pos) => set({ intervalPosB: pos, intervalInfo: null }),
 }));

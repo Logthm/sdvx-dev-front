@@ -102,6 +102,7 @@ export function useChartImage(
   options: RenderOptions,
 ) {
   const hasCustomMapping = isCustomBtOrder(options.btOrder) || options.fxSwap;
+  const simplifyLasers = useEditorStore((s) => s.previewSimplifyLasers);
 
   return useQuery({
     queryKey: [
@@ -118,6 +119,7 @@ export function useChartImage(
       options.laserRColor,
       options.pxPerSecond,
       options.columnHeight,
+      simplifyLasers,
     ] as const,
     queryFn: async () => {
       const body: Record<string, unknown> = {
@@ -143,6 +145,10 @@ export function useChartImage(
 
       if (options.mirrorLaser) {
         body.mirror_laser = true;
+      }
+
+      if (simplifyLasers) {
+        body.simplify_lasers = true;
       }
 
       const res = await fetch(`${BASE_URL}/chart`, {

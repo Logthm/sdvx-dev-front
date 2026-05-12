@@ -210,7 +210,16 @@
     "startMeasure": "起始小节",
     "endMeasure": "结束小节",
     "measureRange": "小节范围: 1 - {{max}}",
-    "export": "导出"
+    "export": "导出",
+    "simplifyLasersPreview": "简化激光",
+    "hsCalculator": "Hi-Speed 计算器",
+    "position": "位置",
+    "effectiveSpeed": "有效速度",
+    "duration": "持续时间",
+    "intervalPreview": "间隔测量",
+    "calculate": "计算",
+    "estimateOnly": "⚠ 仅为估计值",
+    "notAvailableRandom": "随机 / S随机 配置下不可用"
   },
   "playback": {
     "play": "播放",

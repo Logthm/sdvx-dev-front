@@ -8,6 +8,7 @@ import { PlaybackCanvas } from "@/components/editor/PlaybackCanvas";
 import { ImagePlaybackCanvas } from "@/components/editor/ImagePlaybackCanvas";
 import { PlaybackToolbar } from "@/components/editor/PlaybackToolbar";
 import { RenderOptionsBar } from "@/components/editor/RenderOptionsBar";
+import { ViewToolsBar } from "@/components/editor/ViewToolsBar";
 import { Astrolabe } from "@/components/ui/Astrolabe";
 import { DifficultyBadge } from "@/components/ui/DifficultyBadge";
 import { RadarChart } from "@/components/ui/RadarChart";
@@ -594,7 +595,14 @@ export function SongDetailPage() {
                 </button>
               </div>
               <div className={cn(toolbarCollapsed ? "hidden md:block" : "block")} data-tutorial="chart-render-options">
-                {mode === "preview" && <RenderOptionsBar />}
+                {mode === "preview" && (
+                  <>
+                    <RenderOptionsBar />
+                    {numericId && activeDif && (
+                      <ViewToolsBar musicId={numericId} difstr={activeDif.difstr} />
+                    )}
+                  </>
+                )}
                 {mode === "edit" && <EditorToolbar />}
                 {mode === "play" && <PlaybackToolbar />}
               </div>

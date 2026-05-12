@@ -161,7 +161,7 @@ function drawBpmMarkersFromData(
   }
 }
 
-function effectiveHiSpeedAt(
+export function effectiveHiSpeedAt(
   time: Time3,
   tm: LayoutResult["timeMapper"],
   baseHiSpeed: number | undefined,
