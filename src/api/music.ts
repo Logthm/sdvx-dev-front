@@ -41,6 +41,26 @@ export function useSearchMusic(params: SearchParams) {
   });
 }
 
+// ── Search suggestions (lightweight, for autocomplete) ──────────
+export function useSearchSuggestions(query: string) {
+  const trimmed = query.trim();
+  return useQuery({
+    queryKey: ["search", "suggestions", trimmed] as const,
+    queryFn: () => {
+      const sp = new URLSearchParams({
+        query: trimmed,
+        size: "8",
+        offset: "0",
+        enable_fuzzy: "true",
+        sources: "canonical",
+      });
+      return apiFetch<SearchResponse>(`/search?${sp}`);
+    },
+    enabled: trimmed.length > 0,
+    staleTime: 60_000,
+  });
+}
+
 // ── Frontend browser music feed ─────────────────────────────────
 export type SortField = "difficulty" | "distribution_date" | "title_name" | "artist_name";
 export type SortDirection = "asc" | "desc";

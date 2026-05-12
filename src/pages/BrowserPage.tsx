@@ -1,4 +1,5 @@
 import { useBrowserMusic, type SortField } from "@/api/music";
+import type { SearchResultItem } from "@/types/music";
 import { FilterBar } from "@/components/browser/FilterBar";
 import { MusicGrid } from "@/components/browser/MusicGrid";
 import { SearchBar } from "@/components/browser/SearchBar";
@@ -9,16 +10,20 @@ import { useGridPageSize } from "@/hooks/useGridPageSize";
 import { useTutorial } from "@/hooks/useTutorial";
 import { useBrowserStore } from "@/lib/browser-store";
 import { cn } from "@/lib/utils";
-import { SlidersHorizontal, X, HelpCircle } from "lucide-react";
+import { DiscordIcon } from "@/components/ui/DiscordIcon";
+import { SlidersHorizontal, X, HelpCircle, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+
+const DISCORD_URL = "https://discord.gg/swaypVHHgC";
 
 export function BrowserPage() {
   const { t } = useTranslation();
   const tutorialSteps = useTutorialSteps();
   const { query, setQuery, filters, setFilters, sortField, setSortField, sortDirection, setSortDirection } = useBrowserStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const navigate = useNavigate();
   const { ref: gridContainerRef, pageSize } = useGridPageSize();
 
@@ -37,6 +42,11 @@ export function BrowserPage() {
     }
   }
 
+
+  function handleSuggestionSelect(item: SearchResultItem) {
+    setMobileSearchOpen(false);
+    navigate(`/song/${item.id}`);
+  }
 
   const browserMusicQuery = useBrowserMusic({
     query,
@@ -128,6 +138,32 @@ export function BrowserPage() {
         </div>
       )}
 
+      {/* ── Mobile search overlay ── */}
+      {mobileSearchOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-cosmos-950/70 backdrop-blur-sm"
+            onClick={() => setMobileSearchOpen(false)}
+          />
+          <div className="relative px-4 pt-4 animate-fade-in flex items-center gap-2">
+            <SearchBar
+              value={query}
+              onChange={setQuery}
+              onSuggestionSelect={handleSuggestionSelect}
+              className="flex-1"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen(false)}
+              className="shrink-0 p-2 rounded-lg bg-cosmos-900/80 border border-cosmos-600/40 text-text-muted hover:text-text-primary transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Main content ── */}
       <div className="flex-1 flex flex-col min-w-0 relative z-10 coord-grid">
         {/* Astrolabe watermark */}
@@ -149,16 +185,38 @@ export function BrowserPage() {
             <SlidersHorizontal size={16} />
           </button>
 
-<SearchBar
+<button
+            type="button"
+            onClick={() => setMobileSearchOpen(true)}
+            className="md:hidden flex-1 min-w-0 flex items-center gap-2 h-9 px-3 rounded-lg bg-cosmos-900/80 border border-cosmos-600/40 text-text-muted transition-colors hover:border-cosmos-600/70"
+            data-tutorial="search-bar"
+          >
+            <Search size={16} className="shrink-0" />
+            <span className="truncate text-sm">{query || t('search.placeholder')}</span>
+          </button>
+
+          <SearchBar
             value={query}
             onChange={setQuery}
-            className="flex-1 min-w-0"
+            onSuggestionSelect={handleSuggestionSelect}
+            className="hidden md:block flex-1 min-w-0"
             data-tutorial="search-bar"
           />
 
           <span className="hidden sm:block ml-3 text-xs font-mono text-text-muted whitespace-nowrap">
             {total} {t('common.records')}
           </span>
+
+          {/* Discord feedback */}
+          <a
+            href={DISCORD_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 p-1.5 rounded-md border border-cosmos-600/30 text-text-muted hover:text-[#5865F2] hover:border-[#5865F2]/30 transition-colors"
+            title={t('discord.feedback')}
+          >
+            <DiscordIcon size={16} />
+          </a>
 
           {/* Language switcher */}
           <LanguageSwitcher />

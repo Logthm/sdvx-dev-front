@@ -8,6 +8,7 @@
   },
   "search": {
     "placeholder": "Search music...",
+    "searchFor": "Search \"{{query}}\"",
     "title": "Search Function",
     "description": "Use the search bar to quickly find songs.\n\n• Searches both song title and artist name\n• Use romaji or Japanese kana to match readings\n• Chinese simplified/traditional can match Japanese kanji (\u201c东云\u201d -> \u201c東雲\u201d)\n• Normal characters can match special symbols (\u201cembryO\u201d -> \u201cΣmbryØ\u201d)\n\nTry typing your favorite song name!"
   },
@@ -234,5 +235,8 @@
     "description": "Install the app for a better experience",
     "install": "Install Now",
     "iosInstructions": "Tap the Share button , then select \"Add to Home Screen\""
+  },
+  "discord": {
+    "feedback": "Bug Report / Feature Request"
   }
 }
