@@ -1,5 +1,6 @@
 import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
+import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import {
   ChevronLeft,
   ChevronRight,
@@ -465,6 +466,13 @@ export function useTutorialSteps() {
       icon: <Grid3x3 size={20} />,
       highlightSelector: "[data-tutorial='music-grid']",
       position: "top" as const,
+    },
+    {
+      title: t("tutorial.discord.title"),
+      description: t("tutorial.discord.description"),
+      icon: <DiscordIcon size={20} />,
+      highlightSelector: "[data-tutorial='discord-button']",
+      position: "bottom" as const,
     },
     {
       title: t("tutorial.finish.title"),

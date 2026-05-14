@@ -212,6 +212,7 @@ export function BrowserPage() {
             href={DISCORD_URL}
             target="_blank"
             rel="noopener noreferrer"
+            data-tutorial="discord-button"
             className="shrink-0 p-1.5 rounded-md border border-cosmos-600/30 text-text-muted hover:text-[#5865F2] hover:border-[#5865F2]/30 transition-colors"
             title={t('discord.feedback')}
           >

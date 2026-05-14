@@ -69,6 +69,10 @@
       "title": "Music List",
       "description": "All songs matching your criteria are displayed as cards.\n\nClick the artist name to quickly search for songs by the same artist.\n\nClick a difficulty to view detailed information and chart view.\n\nScroll down to automatically load more songs."
     },
+    "discord": {
+      "title": "Join Discord",
+      "description": "Click this button to join our Discord server.\n\nYou can report bugs, suggest features, and find more detailed tutorials!"
+    },
     "finish": {
       "title": "View Tutorial",
       "description": "Click this button to view this tutorial again."
