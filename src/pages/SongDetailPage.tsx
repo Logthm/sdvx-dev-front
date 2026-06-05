@@ -86,6 +86,9 @@ export function SongDetailPage() {
   }, [numericId, selectedDif?.difstr]);
 
   const activeDif = selectedDif ?? sortedDiffs[sortedDiffs.length - 1] ?? null;
+  // Duration is a per-song audio property shared by all difficulties.
+  const songDurationLabel =
+    (activeDif?.duration ?? sortedDiffs.find((d) => d.duration)?.duration) ?? "—";
   const editabilityQuery = useChartEditability(numericId);
   const canEdit =
     editabilityQuery.data?.editable_difficulties?.includes(activeDif?.difstr ?? "") ?? false;
@@ -353,6 +356,7 @@ export function SongDetailPage() {
                     {music.genre_name.length > 0 ? music.genre_name.map((g, i) => <div key={i}>{g}</div>) : "—"}
                   </span>
                 </div>
+                <DataRow label={t('chart.duration')} value={songDurationLabel} />
 {/* DRAWER_CONTENT_PLACEHOLDER_3 */}
                 {activeDif && (
                   <>
@@ -517,6 +521,7 @@ export function SongDetailPage() {
                   {music.genre_name.length > 0 ? music.genre_name.map((g, i) => <div key={i}>{g}</div>) : "—"}
                 </span>
               </div>
+              <DataRow label={t('chart.duration')} value={songDurationLabel} />
               {activeDif && (
                 <>
                   <DataRow label={t('chart.exScore')} value={activeDif.max_exscore.toLocaleString()} />

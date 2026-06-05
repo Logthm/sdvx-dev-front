@@ -23,6 +23,10 @@ export interface DifficultySchema {
   chip_count: number;
   hold_count: number;
   tsumami_count: number;
+  /** Total song audio playtime in milliseconds (per-song; null when unknown). */
+  duration_ms: number | null;
+  /** Total song audio playtime formatted as "M:SS" (null when unknown). */
+  duration: string | null;
   radar: RadarSchema;
   cover_url: string;
   chart_url: string;
