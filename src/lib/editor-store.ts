@@ -163,6 +163,9 @@ export interface EditorState {
   setPreviewIntervalActive: (v: boolean) => void;
   previewIntervalFirstTime: [number, number, number] | null;
   setPreviewIntervalFirstTime: (t: [number, number, number] | null) => void;
+
+  showHoldJudgement: boolean;
+  setShowHoldJudgement: (v: boolean) => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -423,4 +426,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   setPreviewIntervalActive: (v) => set({ previewIntervalActive: v, previewIntervalFirstTime: null, intervalInfo: null }),
   previewIntervalFirstTime: null,
   setPreviewIntervalFirstTime: (t) => set({ previewIntervalFirstTime: t }),
+
+  showHoldJudgement: false,
+  setShowHoldJudgement: (v) => set({ showHoldJudgement: v }),
 }));

@@ -96,8 +96,8 @@ export function SongDetailPage() {
   // Combined tutorial: preview steps + edit steps (if canEdit), one continuous flow
   const chartTutorial = useTutorial("sdvx-chart-tutorial");
   const chartTutorialSteps = canEdit
-    ? [...allChartSteps.slice(0, 5), allChartSteps[6], allChartSteps[5], ...allChartSteps.slice(7)]
-    : [...allChartSteps.slice(0, 5), allChartSteps[6], ...allChartSteps.slice(14)];
+    ? [...allChartSteps.slice(0, 5), allChartSteps[7], allChartSteps[5], allChartSteps[6], ...allChartSteps.slice(8)]
+    : [...allChartSteps.slice(0, 5), allChartSteps[7], ...allChartSteps.slice(15)];
 
   const chartQuery = useChartData(
     canEdit ? numericId : null,
@@ -158,7 +158,7 @@ export function SongDetailPage() {
   }, [arrangedQuery.data, renderOptions.arrangementMode, setArrangedBaseData, clearArrangedBaseData]);
 
   // Auto-switch mode/arrangement/mouseTool based on tutorial step
-  // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=pan,8=move,9=move2,10=editPointer,11=add,12=reset,13=delete,14=playMode,15=playTransport,16=playRate,17=playMetronome,18=playBgm,19=playKeyboard,20=finish
+  // canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=editMode,7=holdJudgement,8=pan,9=move,10=move2,11=editPointer,12=add,13=reset,14=delete,15=playMode,16=playTransport,17=playRate,18=playMetronome,19=playBgm,20=playKeyboard,21=finish
   // !canEdit: 0=welcome,1=difficulty,2=sidebar,3=modeToggle,4=previewOptions,5=drawArea,6=playMode,7=playTransport,8=playRate,9=playMetronome,10=playBgm,11=playKeyboard,12=finish
   useEffect(() => {
     if (!chartTutorial.isOpen) return;
@@ -174,17 +174,17 @@ export function SongDetailPage() {
       setInfoDrawerOpen(false);
     }
     // Mode & tools
-    if (canEdit && step >= 14 && step <= 19) {
+    if (canEdit && step >= 15 && step <= 20) {
       if (mode !== "play") setMode("play");
     } else if (!canEdit && step >= 6 && step <= 11) {
       if (mode !== "play") setMode("play");
-    } else if (canEdit && step >= 6 && step <= 13) {
+    } else if (canEdit && step >= 6 && step <= 14) {
       if (mode !== "edit") setMode("edit");
-      if (step === 7) { setMouseTool("pan"); setExpandedTool(null); }
-      else if (step === 8 || step === 9) { setMouseTool("move"); setExpandedTool("drag"); }
-      else if (step === 10) { setMouseTool("edit-hs"); setExpandedTool(null); }
-      else if (step === 11) { setMouseTool("add-bt"); setExpandedTool("add"); }
-      else if (step === 12 || step === 13) { setMouseTool("move"); setExpandedTool(null); }
+      if (step === 8) { setMouseTool("pan"); setExpandedTool(null); }
+      else if (step === 9 || step === 10) { setMouseTool("move"); setExpandedTool("drag"); }
+      else if (step === 11) { setMouseTool("edit-hs"); setExpandedTool(null); }
+      else if (step === 12) { setMouseTool("add-bt"); setExpandedTool("add"); }
+      else if (step === 13 || step === 14) { setMouseTool("move"); setExpandedTool(null); }
       else { setExpandedTool(null); }
     } else if (step === 4) {
       setMode("preview");

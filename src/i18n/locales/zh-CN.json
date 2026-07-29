@@ -101,7 +101,11 @@
     },
     "editMode": {
       "title": "编辑模式",
-      "description": "• 变速计算器：在此处输入游戏设置中的 Speed 后，可以查看变速谱面不同变速点的 BPM / 速度乘数（Hi-Speed） / 实际速度\n• 简化 & 编辑激光：开启后自动化简弧线激光，并允许在移动模式下编辑激光的起止点和拐点\n• 间隔计算器：在移动模式下选择两个物件可以计算两个物件的间隔时间和拍号"
+      "description": "• 变速计算器：在此处输入游戏设置中的 Speed 后，可以查看变速谱面不同变速点的 BPM / 速度乘数（Hi-Speed） / 实际速度\n• 简化 & 编辑激光：开启后自动化简弧线激光，并允许在移动模式下编辑激光的起止点和拐点\n• HOLD 判定点显示：查看所有 HOLD 的判定点和范围\n• 间隔计算器：在移动模式下选择两个物件可以计算两个物件的间隔时间和拍号"
+    },
+    "holdJudgement": {
+      "title": "HOLD 判定点显示",
+      "description": "开启后，会在所有 HOLD 上显示游戏实际使用的判定点与判定范围。\n\n• 蓝色：HEAD 起点判定，范围为提前 133.333 ms 至延后 100 ms\n• 绿色：SUSTAIN 持续判定点，范围为 ±16.667 ms，在该段内**按住时长达到75%以上（即33.334 ms内按住≥25 ms）**就算CRITICAL"
     },
     "drawArea": {
       "title": "查看控件",
@@ -221,7 +225,13 @@
     "clickTwoPoints": "点击谱面上的两个点",
     "calculate": "计算",
     "estimateOnly": "⚠ 仅为估计值",
-    "notAvailableRandom": "随机 / S随机 配置下不可用"
+    "notAvailableRandom": "随机 / S随机 配置下不可用",
+    "holdJudgement": "Hold 判定点显示",
+    "holdJudgementDesc": "显示所有 Hold 音符的判定点和判定窗口信息",
+    "totalHolds": "Hold 总数",
+    "judgeWindow": "判定窗口",
+    "holdDetails": "详细列表",
+    "points": "个判定点"
   },
   "playback": {
     "play": "播放",

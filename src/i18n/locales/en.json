@@ -101,7 +101,11 @@
     },
     "editMode": {
       "title": "Edit Mode",
-      "description": "• Speed Calculator: Enter your in-game Speed setting to view BPM / Hi-Speed multiplier / actual speed at different speed change points\n• Simplify & Edit Lasers: Simplifies curved lasers and allows editing laser start/end points and inflection points in move mode\n• Interval Calculator: Select two objects in move mode to calculate interval time and beat notation"
+      "description": "• Speed Calculator: Enter your in-game Speed setting to view BPM / Hi-Speed multiplier / actual speed at different speed change points\n• Simplify & Edit Lasers: Simplifies curved lasers and allows editing laser start/end points and inflection points in move mode\n• HOLD Judgement Display: View every HOLD HEAD and SUSTAIN judgement point and window\n• Interval Calculator: Select two objects in move mode to calculate interval time and beat notation"
+    },
+    "holdJudgement": {
+      "title": "HOLD Judgement Display",
+      "description": "Turn this on to show the judgement points and windows the game uses for every HOLD.\n\n• Blue: HEAD judgement, from 133.333 ms early to 100 ms late\n• Green: SUSTAIN judgement points, each with a ±16.667 ms window\n\nUse it to inspect HOLD Chain distribution and see how BPM changes, time-signature changes, and high BPM affect SUSTAIN density."
     },
     "drawArea": {
       "title": "View Controls",
@@ -221,7 +225,13 @@
     "clickTwoPoints": "Click two points on the chart",
     "calculate": "Calculate",
     "estimateOnly": "⚠ Estimate only",
-    "notAvailableRandom": "Not available for Random / S-Random"
+    "notAvailableRandom": "Not available for Random / S-Random",
+    "holdJudgement": "Hold Judgement Display",
+    "holdJudgementDesc": "Display judgement points and windows for all Hold notes",
+    "totalHolds": "Total Holds",
+    "judgeWindow": "Judge Window",
+    "holdDetails": "Detailed List",
+    "points": "points"
   },
   "playback": {
     "play": "Play",

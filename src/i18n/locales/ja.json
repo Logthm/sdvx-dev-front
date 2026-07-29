@@ -101,7 +101,11 @@
     },
     "editMode": {
       "title": "編集モード",
-      "description": "• 変速計算機：ゲーム設定の Speed を入力すると、変速譜面の各変速ポイントの BPM / 速度倍率（Hi-Speed） / 実際の速度を確認できます\n• レーザー簡略化 & 編集：曲線レーザーを簡略化し、移動モードでレーザーの始終点や屈折点を編集可能に\n• 間隔計算：移動モードで2つのオブジェクトを選択して間隔時間と拍子を計算"
+      "description": "• 変速計算機：ゲーム設定の Speed を入力すると、変速譜面の各変速ポイントの BPM / 速度倍率（Hi-Speed） / 実際の速度を確認できます\n• レーザー簡略化 & 編集：曲線レーザーを簡略化し、移動モードでレーザーの始終点や屈折点を編集可能に\n• HOLD 判定ポイント表示：すべての HOLD の HEAD / SUSTAIN 判定ポイントと範囲を表示\n• 間隔計算：移動モードで2つのオブジェクトを選択して間隔時間と拍子を計算"
+    },
+    "holdJudgement": {
+      "title": "HOLD 判定ポイント表示",
+      "description": "オンにすると、すべての HOLD にゲームが実際に使用する判定ポイントと判定範囲を表示します。\n\n• 青：HEAD の開始判定。133.333 ms 早い位置から 100 ms 遅い位置まで\n• 緑：SUSTAIN の継続判定ポイント。各ポイントの範囲は ±16.667 ms\n\nHOLD の Chain 分布や、BPM・拍子の変化、高 BPM が SUSTAIN 密度に与える影響を確認できます。"
     },
     "drawArea": {
       "title": "ビューコントロール",
@@ -221,7 +225,13 @@
     "clickTwoPoints": "譜面上の2点をクリック",
     "calculate": "計算",
     "estimateOnly": "⚠ 推定値のみ",
-    "notAvailableRandom": "Random / S-Random では利用不可"
+    "notAvailableRandom": "Random / S-Random では利用不可",
+    "holdJudgement": "Hold判定ポイント表示",
+    "holdJudgementDesc": "すべてのHoldノーツの判定ポイントと判定ウィンドウ情報を表示",
+    "totalHolds": "Hold総数",
+    "judgeWindow": "判定ウィンドウ",
+    "holdDetails": "詳細リスト",
+    "points": "個の判定ポイント"
   },
   "playback": {
     "play": "再生",

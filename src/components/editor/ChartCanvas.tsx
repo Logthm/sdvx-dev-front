@@ -22,6 +22,11 @@ import {
   renderChart,
   type ViewState,
 } from "@/lib/chart-renderer/renderer";
+import {
+  calculateHoldJudgements,
+  HOLD_HEAD_WINDOW,
+  HOLD_SUSTAIN_WINDOW,
+} from "@/lib/chart-renderer/hold-judgement";
 import { DRAG_RANGE_MS, useEditorStore, type HiSpeedMark } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import type { ButtonEvent, ChartData, LaserEvent } from "@/types/chart";
@@ -29,7 +34,7 @@ import type { Time3 } from "@/lib/chart-renderer/time-mapper";
 import { PxPerSecondButton } from "./PxPerSecondButton";
 import { ExportDialog } from "./ExportDialog";
 import { Download, Hand, Maximize, Minimize, Move, Pencil, Plus, RotateCcw, Trash2, UnfoldVertical } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ChartCanvasProps {
@@ -40,6 +45,83 @@ interface ChartCanvasProps {
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 3.0;
 const ZOOM_STEP = 0.1;
+
+interface HoldWindowStyle {
+  fill: string;
+  stroke: string;
+  point: string;
+  dash: number[];
+  lineWidth: number;
+}
+
+const HEAD_WINDOW_STYLE: HoldWindowStyle = {
+  fill: "rgba(96, 165, 250, 0.22)",
+  stroke: "rgba(96, 165, 250, 0.8)",
+  point: "rgba(191, 219, 254, 0.95)",
+  dash: [3, 3],
+  lineWidth: 1,
+};
+
+const SUSTAIN_WINDOW_STYLE: HoldWindowStyle = {
+  fill: "rgba(74, 222, 128, 0.18)",
+  stroke: "rgba(74, 222, 128, 0.72)",
+  point: "rgba(187, 247, 208, 0.95)",
+  dash: [2, 2],
+  lineWidth: 0.75,
+};
+
+/** Draw a time window in every measure/column it crosses. */
+function drawHoldWindow(
+  ctx: CanvasRenderingContext2D,
+  layout: LayoutResult,
+  trackName: string,
+  time: Time3,
+  earlySeconds: number,
+  lateSeconds: number,
+  style: HoldWindowStyle,
+) {
+  const centerSeconds = layout.timeMapper.secondsOf(time);
+  const windowStart = centerSeconds - earlySeconds;
+  const windowEnd = centerSeconds + lateSeconds;
+
+  for (const span of layout.spans) {
+    const segmentStart = Math.max(windowStart, span.sec0);
+    const segmentEnd = Math.min(windowEnd, span.sec1);
+    if (segmentEnd <= segmentStart) continue;
+
+    const geo = noteX(span, trackName);
+    if (!geo) continue;
+    const top = span.y1 - (segmentEnd - span.sec0) * layout.pxPerSecond;
+    const bottom = span.y1 - (segmentStart - span.sec0) * layout.pxPerSecond;
+
+    ctx.fillStyle = style.fill;
+    ctx.fillRect(geo.x, top, geo.w, bottom - top);
+    ctx.strokeStyle = style.stroke;
+    ctx.lineWidth = style.lineWidth;
+    ctx.setLineDash(style.dash);
+    ctx.strokeRect(geo.x, top, geo.w, bottom - top);
+  }
+
+  // Keep the exact judgement point visible inside its translucent range.
+  const pointSpan = findSpanByMeasure(layout.spans, time[0]);
+  const pointGeo = pointSpan ? noteX(pointSpan, trackName) : null;
+  if (pointSpan && pointGeo) {
+    const y = yInMeasure(
+      pointSpan,
+      time,
+      layout.timeMapper,
+      layout.pxPerSecond,
+    );
+    ctx.setLineDash([]);
+    ctx.strokeStyle = style.point;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pointGeo.x, y);
+    ctx.lineTo(pointGeo.x + pointGeo.w, y);
+    ctx.stroke();
+  }
+}
+
 
 export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   const { t } = useTranslation();
@@ -82,6 +164,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   const hiSpeedMarks = useEditorStore((s) => s.hiSpeedMarks);
   const bpmDisplayMode = useEditorStore((s) => s.bpmDisplayMode);
   const renderOptions = useEditorStore((s) => s.renderOptions);
+  const showHoldJudgement = useEditorStore((s) => s.showHoldJudgement);
 
   const resetSelectedPoint = useEditorStore((s) => s.resetSelectedPoint);
   const deleteSelectedPoint = useEditorStore((s) => s.deleteSelectedPoint);
@@ -95,6 +178,10 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   const activeChart = editorChartData ?? chartData;
+  const holdJudgements = useMemo(
+    () => calculateHoldJudgements(activeChart),
+    [activeChart],
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const clampedPan = useCallback((x: number, y: number, z: number) => {
@@ -661,7 +748,43 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       renderOptions.laserRColor,
     );
 
+    // Blue = HEAD (-133.333 ms / +100 ms), green = SUSTAIN (±16.667 ms).
+    // This layer sits above the notes but below edit handles and selection marks.
+    if (mode === "edit" && showHoldJudgement) {
+      const layout = computeLayout(activeChart, renderOptions.pxPerSecond, renderOptions.columnHeight);
+      ctx.save();
+      ctx.translate(-panX * zoom, -panY * zoom);
+      ctx.scale(zoom, zoom);
+
+      for (const run of holdJudgements) {
+        drawHoldWindow(
+          ctx,
+          layout,
+          run.trackName,
+          run.head,
+          HOLD_HEAD_WINDOW.earlySeconds,
+          HOLD_HEAD_WINDOW.lateSeconds,
+          HEAD_WINDOW_STYLE,
+        );
+        for (const sustain of run.sustain) {
+          drawHoldWindow(
+            ctx,
+            layout,
+            run.trackName,
+            sustain,
+            HOLD_SUSTAIN_WINDOW.earlySeconds,
+            HOLD_SUSTAIN_WINDOW.lateSeconds,
+            SUSTAIN_WINDOW_STYLE,
+          );
+        }
+      }
+
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
     // Draw gold outlines for modified button notes
+
     const store = useEditorStore.getState();
     if (mode === "edit" && store.originalChartData) {
       const orig = store.originalChartData;
@@ -847,7 +970,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       }
       ctx.restore();
     }
-  }, [activeChart, zoom, panX, panY, mode, selectedPoint, simplifyLasers, dragRange, speed, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor, renderOptions.pxPerSecond, renderOptions.columnHeight]);
+  }, [activeChart, zoom, panX, panY, mode, selectedPoint, simplifyLasers, dragRange, speed, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor, renderOptions.pxPerSecond, renderOptions.columnHeight, showHoldJudgement, holdJudgements]);
 
   const requestDraw = useCallback(() => {
     cancelAnimationFrame(rafRef.current);

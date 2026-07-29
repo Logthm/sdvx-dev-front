@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useEditorStore, type BpmDisplayMode } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { HoldJudgementDisplay } from "./HoldJudgementDisplay";
 
 export function EditorToolbar() {
   const { t } = useTranslation();
@@ -74,6 +75,8 @@ export function EditorToolbar() {
       >
         {t('chart.simplifyLasers')}
       </button>
+      {/* Hold 判定点显示 */}
+      <HoldJudgementDisplay />
       {/* Interval info display - fixed height container */}
       <div className="h-[60px] overflow-hidden">
         {!firstSelectedNote && !intervalInfo && (

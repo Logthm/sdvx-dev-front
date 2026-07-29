@@ -27,6 +27,8 @@ export interface ButtonEvent {
   track_name: string;
   time: TimePos;
   hold_len: number;
+  /** Optional VOX override for the HOLD judgement-point grid step. */
+  step_param?: number;
 }
 
 export interface LaserEvent {

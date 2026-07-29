@@ -62,6 +62,17 @@ function queryVisible(selector: string): Element | null {
   return document.querySelector(selector);
 }
 
+/** Render the small amount of emphasis used in tutorial copy. */
+function renderTutorialText(text: string) {
+  return text.split(/(\*\*.*?\*\*)/g).map((part, index) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={index} className="font-semibold text-text-primary">
+        {part.slice(2, -2)}
+      </strong>
+    ) : part,
+  );
+}
+
 export function Tutorial({
   isOpen,
   currentStep,
@@ -381,13 +392,13 @@ export function Tutorial({
         <div className="px-6 py-4 md:py-6">
           <div className="hidden md:block">
             <p className="text-text-secondary leading-relaxed whitespace-pre-line">
-              {step.description}
+              {renderTutorialText(step.description)}
             </p>
           </div>
           <div className="flex flex-col gap-2 md:hidden">
             {step.description.split("\n\n").map((para, i) => (
               <p key={i} className="text-text-secondary leading-snug whitespace-pre-line">
-                {para}
+                {renderTutorialText(para)}
               </p>
             ))}
           </div>
@@ -545,6 +556,15 @@ export function useChartTutorialSteps() {
       icon: <Pencil size={20} />,
       highlightSelector: "[data-tutorial='chart-render-options']",
       position: "right" as const,
+    },
+    {
+      title: t("chartTutorial.holdJudgement.title"),
+      description: t("chartTutorial.holdJudgement.description"),
+      icon: <Grid3x3 size={20} />,
+      highlightSelector: "[data-tutorial='chart-hold-judgement']",
+      position: "right" as const,
+      positionDelay: 20,
+      onEnter: () => useEditorStore.getState().setShowHoldJudgement(true),
     },
     {
       title: t("chartTutorial.drawArea.title"),
