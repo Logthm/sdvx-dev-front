@@ -2,6 +2,7 @@ import {
   computeLayout,
   findSpanAtPoint,
   findSpanByMeasure,
+  findSpanBySec,
   findSpanByYInCol,
   lanLeftX,
   xToLaserOffset,
@@ -27,7 +28,7 @@ import {
   HOLD_HEAD_WINDOW,
   HOLD_SUSTAIN_WINDOW,
 } from "@/lib/chart-renderer/hold-judgement";
-import { DRAG_RANGE_MS, useEditorStore, type HiSpeedMark } from "@/lib/editor-store";
+import { DRAG_RANGE_BOUNDS, clampDragSec, useEditorStore, type DragRange, type HiSpeedMark } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 import type { ButtonEvent, ChartData, LaserEvent } from "@/types/chart";
 import type { Time3 } from "@/lib/chart-renderer/time-mapper";
@@ -45,6 +46,43 @@ interface ChartCanvasProps {
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 3.0;
 const ZOOM_STEP = 0.1;
+
+/**
+ * Convert a timestamp to Time3, resolving the measure from the timestamp itself.
+ *
+ * `secToTime3` clamps its delta at zero, so passing a measure that starts after
+ * `sec` collapses the result to that measure's first cell. When a drag-range
+ * clamp pulls `sec` out of the span the pointer is hovering, the measure must be
+ * looked up again from the clamped value.
+ */
+function secToTime3At(sec: number, layout: LayoutResult, fallbackMeasure: number): Time3 {
+  const span = findSpanBySec(layout.spans, sec);
+  return layout.timeMapper.secToTime3(sec, span?.measure ?? fallbackMeasure);
+}
+
+/** Blue marker line used for both selected notes and notes moved off their original time. */
+const MARKER_RGB = "120, 175, 255";
+
+/**
+ * Horizontal marker line centered in a note, inset slightly from both edges
+ * so the underlying chip/tail stays readable.
+ */
+function drawNoteMarker(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  w: number,
+  cy: number,
+  alpha: number,
+  lineWidth: number,
+) {
+  const pad = Math.min(3, w * 0.15);
+  ctx.strokeStyle = `rgba(${MARKER_RGB}, ${alpha})`;
+  ctx.lineWidth = lineWidth;
+  ctx.beginPath();
+  ctx.moveTo(x + pad, cy);
+  ctx.lineTo(x + w - pad, cy);
+  ctx.stroke();
+}
 
 interface HoldWindowStyle {
   fill: string;
@@ -122,6 +160,20 @@ function drawHoldWindow(
   }
 }
 
+/** Canvas colors for the drag-range bands, matching the toolbar accent of each step. */
+const DRAG_RANGE_RGB: Record<Exclude<DragRange, "off">, string> = {
+  "s-critical": "240, 200, 120",
+  "critical": "190, 140, 50",
+  "near": "74, 222, 128",
+  "error": "248, 113, 113",
+};
+/** Widest band first, so tighter bands land on top of it. */
+const DRAG_RANGE_DRAW_ORDER: Exclude<DragRange, "off">[] = [
+  "error",
+  "near",
+  "critical",
+  "s-critical",
+];
 
 export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
   const { t } = useTranslation();
@@ -783,8 +835,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       ctx.restore();
     }
 
-    // Draw gold outlines for modified button notes
-
+    // Mark button notes that no longer sit at their original position
     const store = useEditorStore.getState();
     if (mode === "edit" && store.originalChartData) {
       const orig = store.originalChartData;
@@ -801,9 +852,6 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         }
       }
 
-      // Stroke modified notes + modified hold tails
-      ctx.strokeStyle = "rgba(100, 160, 255, 0.8)";
-      ctx.lineWidth = 1;
       // Build original hold_len map
       const origHoldLen = new Map<string, number>();
       for (const t of ["2", "3", "4", "5", "6", "7"]) {
@@ -815,18 +863,18 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         for (const ev of activeChart.tracks[t] ?? []) {
           if (ev.type !== "button") continue;
           const key = `${t}:${ev.time[0]},${ev.time[1]},${ev.time[2]}`;
-          // Gold border on chip head if position is new
+          // Marker line on chip head if position is new
           if (!origKeys.has(key)) {
             const span = findSpanByMeasure(layout.spans, ev.time[0]);
             if (span) {
               const geo = noteX(span, ev.track_name);
               if (geo) {
                 const ey = yInMeasure(span, ev.time as Time3, layout.timeMapper, layout.pxPerSecond);
-                ctx.strokeRect(geo.x - 1, ey - CHIP_HEIGHT / 2 - 1, geo.w + 2, CHIP_HEIGHT + 2);
+                drawNoteMarker(ctx, geo.x, geo.w, ey, 0.8, 1);
               }
             }
           }
-          // Gold border on hold tail if hold_len changed
+          // Marker line on hold tail if hold_len changed
           if (ev.hold_len > 0) {
             const origHL = origHoldLen.get(key);
             if (origHL === undefined || origHL !== ev.hold_len) {
@@ -836,7 +884,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                 const geo = noteX(span, ev.track_name);
                 if (geo) {
                   const ey = yInMeasure(span, endTime, layout.timeMapper, layout.pxPerSecond);
-                  ctx.strokeRect(geo.x - 1, ey - 1, geo.w + 2, TAIL_HEIGHT + 2);
+                  drawNoteMarker(ctx, geo.x, geo.w, ey + TAIL_HEIGHT / 2, 0.8, 1);
                 }
               }
             }
@@ -901,26 +949,11 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
           if (span) {
             const geo = noteX(span, bev.track_name);
             if (geo) {
-              // Highlight at tail or head
-              ctx.strokeStyle = "#fff";
-              ctx.lineWidth = 2;
-              if (tailSelectedRef.current && bev.hold_len > 0) {
-                const endTime = layout.timeMapper.advanceUnits(bev.time as Time3, bev.hold_len);
-                const tailSpan = findSpanByMeasure(layout.spans, endTime[0]);
-                const tailGeo = tailSpan ? noteX(tailSpan, bev.track_name) : null;
-                if (tailSpan && tailGeo) {
-                  const ty = yInMeasure(tailSpan, endTime, layout.timeMapper, layout.pxPerSecond);
-                  ctx.strokeRect(tailGeo.x - 2, ty - 2, tailGeo.w + 4, TAIL_HEIGHT + 4);
-                }
-              } else {
-                const by = yInMeasure(span, bev.time as Time3, layout.timeMapper, layout.pxPerSecond);
-                ctx.strokeRect(geo.x - 2, by - CHIP_HEIGHT / 2 - 2, geo.w + 4, CHIP_HEIGHT + 4);
-              }
-
-              // Draw drag range overlay based on original position
+              // Draw all drag range bands based on original position, with the
+              // active limit brighter than the rest. Bands come first so the
+              // selection marker stays crisp on top of them.
               const dr = useEditorStore.getState().dragRange;
-              if (dr !== "off") {
-                const limitSec = DRAG_RANGE_MS[dr] / 1000;
+              if (useEditorStore.getState().mouseTool === "move") {
                 // Always use original position from originalChartData
                 // When events were added/removed, indices shift so index-based lookup is unreliable
                 let origSec: number;
@@ -935,20 +968,50 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                   origSec = layout.timeMapper.secondsOf(origTime);
                 }
                 const origY = span.y1 - (origSec - span.sec0) * layout.pxPerSecond;
-                const yTop = origY - limitSec * layout.pxPerSecond;
-                const yBot = origY + limitSec * layout.pxPerSecond;
-                ctx.fillStyle = "rgba(255, 255, 0, 0.10)";
-                ctx.fillRect(geo.x - 4, yTop, geo.w + 8, yBot - yTop);
-                ctx.strokeStyle = "rgba(255, 255, 0, 0.5)";
-                ctx.lineWidth = 1;
-                ctx.setLineDash([4, 4]);
-                ctx.beginPath();
-                ctx.moveTo(geo.x - 4, yTop);
-                ctx.lineTo(geo.x + geo.w + 4, yTop);
-                ctx.moveTo(geo.x - 4, yBot);
-                ctx.lineTo(geo.x + geo.w + 4, yBot);
-                ctx.stroke();
-                ctx.setLineDash([]);
+                const bandX = geo.x - 4;
+                const bandW = geo.w + 8;
+
+                // Active band goes last so its brighter fill and border win
+                const order = [
+                  ...DRAG_RANGE_DRAW_ORDER.filter((r) => r !== dr),
+                  ...DRAG_RANGE_DRAW_ORDER.filter((r) => r === dr),
+                ];
+                for (const range of order) {
+                  const bounds = DRAG_RANGE_BOUNDS[range];
+                  const rgb = DRAG_RANGE_RGB[range];
+                  const active = range === dr;
+                  // Later time is up the lane, earlier time is down the lane
+                  const yTop = origY - (bounds.late / 1000) * layout.pxPerSecond;
+                  const yBot = origY + (bounds.early / 1000) * layout.pxPerSecond;
+
+                  ctx.fillStyle = `rgba(${rgb}, ${active ? 0.22 : 0.08})`;
+                  ctx.fillRect(bandX, yTop, bandW, yBot - yTop);
+
+                  ctx.strokeStyle = `rgba(${rgb}, ${active ? 0.9 : 0.35})`;
+                  ctx.lineWidth = active ? 1.5 : 1;
+                  ctx.setLineDash([4, 4]);
+                  ctx.beginPath();
+                  ctx.moveTo(bandX, yTop);
+                  ctx.lineTo(bandX + bandW, yTop);
+                  ctx.moveTo(bandX, yBot);
+                  ctx.lineTo(bandX + bandW, yBot);
+                  ctx.stroke();
+                  ctx.setLineDash([]);
+                }
+              }
+
+              // Marker line at tail or head
+              if (tailSelectedRef.current && bev.hold_len > 0) {
+                const endTime = layout.timeMapper.advanceUnits(bev.time as Time3, bev.hold_len);
+                const tailSpan = findSpanByMeasure(layout.spans, endTime[0]);
+                const tailGeo = tailSpan ? noteX(tailSpan, bev.track_name) : null;
+                if (tailSpan && tailGeo) {
+                  const ty = yInMeasure(tailSpan, endTime, layout.timeMapper, layout.pxPerSecond);
+                  drawNoteMarker(ctx, tailGeo.x, tailGeo.w, ty + TAIL_HEIGHT / 2, 1, 1.5);
+                }
+              } else {
+                const by = yInMeasure(span, bev.time as Time3, layout.timeMapper, layout.pxPerSecond);
+                drawNoteMarker(ctx, geo.x, geo.w, by, 1, 1.5);
               }
             }
           }
@@ -970,7 +1033,8 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
       }
       ctx.restore();
     }
-  }, [activeChart, zoom, panX, panY, mode, selectedPoint, simplifyLasers, dragRange, speed, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor, renderOptions.pxPerSecond, renderOptions.columnHeight, showHoldJudgement, holdJudgements]);
+
+  }, [activeChart, zoom, panX, panY, mode, selectedPoint, simplifyLasers, dragRange, mouseTool, speed, hiSpeedMarks, bpmDisplayMode, renderOptions.laserLColor, renderOptions.laserRColor, renderOptions.pxPerSecond, renderOptions.columnHeight, showHoldJudgement, holdJudgements]);
 
   const requestDraw = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -1435,14 +1499,10 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const span = findSpanByYInCol(layout.spans, y, col);
         if (!span) return;
         let sec = yToSec(y, span, layout.pxPerSecond);
-        // Clamp to drag range
-        const limitMs = DRAG_RANGE_MS[s.dragRange];
-        if (limitMs !== Infinity) {
-          const limitSec = limitMs / 1000;
-          const orig = btnDragRef.current.origSec;
-          sec = Math.max(orig - limitSec, Math.min(orig + limitSec, sec));
-        }
-        const newTime = layout.timeMapper.secToTime3(sec, span.measure);
+        // Clamp to drag range (asymmetric for "error")
+        sec = clampDragSec(sec, btnDragRef.current.origSec, s.dragRange);
+        // Clamping can push sec outside the hovered span, so re-resolve the measure
+        const newTime = secToTime3At(sec, layout, span.measure);
         s.updateButtonTime(btnDragRef.current.track, btnDragRef.current.index, newTime);
         if (btnDragRef.current.origHoldLen > 0) {
           const delta = layout.timeMapper.unitsBetween(btnDragRef.current.origTime as Time3, newTime);
@@ -1656,13 +1716,9 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
         const span = findSpanByYInCol(layout.spans, y, col);
         if (!span) return;
         let sec = yToSec(y, span, layout.pxPerSecond);
-        const limitMs = DRAG_RANGE_MS[s.dragRange];
-        if (limitMs !== Infinity) {
-          const limitSec = limitMs / 1000;
-          const orig = btnDragRef.current.origSec;
-          sec = Math.max(orig - limitSec, Math.min(orig + limitSec, sec));
-        }
-        const newTime = layout.timeMapper.secToTime3(sec, span.measure);
+        sec = clampDragSec(sec, btnDragRef.current.origSec, s.dragRange);
+        // Clamping can push sec outside the hovered span, so re-resolve the measure
+        const newTime = secToTime3At(sec, layout, span.measure);
         s.updateButtonTime(btnDragRef.current.track, btnDragRef.current.index, newTime);
         if (btnDragRef.current.origHoldLen > 0) {
           const delta = layout.timeMapper.unitsBetween(btnDragRef.current.origTime as Time3, newTime);
@@ -1800,6 +1856,7 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
                 ? dragRange === "s-critical" ? "bg-gold-300/15 text-gold-300"
                   : dragRange === "critical" ? "bg-gold-600/15 text-gold-600"
                   : dragRange === "near" ? "bg-green-400/15 text-green-400"
+                  : dragRange === "error" ? "bg-red-400/15 text-red-400"
                   : "bg-gold-400/15 text-gold-400"
                 : "text-text-muted hover:text-text-primary hover:bg-cosmos-700",
             )}
@@ -1812,9 +1869,10 @@ export function ChartCanvas({ chartData, className }: ChartCanvasProps) {
               dragRange === "s-critical" ? "border-gold-300/30"
                 : dragRange === "critical" ? "border-gold-600/30"
                 : dragRange === "near" ? "border-green-400/30"
+                : dragRange === "error" ? "border-red-400/30"
                 : "border-gold-400/30",
             )}>
-              {([["off", "Off", "bg-gold-400/15 text-gold-400"], ["s-critical", "S-Crit", "bg-gold-300/15 text-gold-300"], ["critical", "Crit", "bg-gold-600/15 text-gold-600"], ["near", "Near", "bg-green-400/15 text-green-400"]] as const).map(([v, l, ac]) => (
+              {([["off", "Off", "bg-gold-400/15 text-gold-400"], ["s-critical", "S-Crit", "bg-gold-300/15 text-gold-300"], ["critical", "Crit", "bg-gold-600/15 text-gold-600"], ["near", "Near", "bg-green-400/15 text-green-400"], ["error", "Error", "bg-red-400/15 text-red-400"]] as const).map(([v, l, ac]) => (
                 <button
                   key={v}
                   onClick={() => setDragRange(v)}

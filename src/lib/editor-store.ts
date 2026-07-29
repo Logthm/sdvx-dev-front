@@ -54,14 +54,37 @@ export const DEFAULT_RENDER_OPTIONS: RenderOptions = {
 
 export type { EditFlags };
 
-export type DragRange = "off" | "s-critical" | "critical" | "near";
+export type DragRange = "off" | "s-critical" | "critical" | "near" | "error";
 
-export const DRAG_RANGE_MS: Record<DragRange, number> = {
-  "off": Infinity,
-  "s-critical": 20.833,
-  "critical": 41.667,
-  "near": 150,
+/**
+ * Allowed drag window relative to a note's original position, in milliseconds.
+ *
+ * `early` = how far the note may move to an earlier time (dragging down the lane),
+ * `late`  = how far it may move to a later time (dragging up).
+ *
+ * "error" is asymmetric on purpose: only early errors are reproducible by
+ * dragging, so the note can be pulled up to 233.33ms earlier and never later.
+ */
+export interface DragBounds {
+  early: number;
+  late: number;
+}
+
+export const DRAG_RANGE_BOUNDS: Record<DragRange, DragBounds> = {
+  "off": { early: Infinity, late: Infinity },
+  "s-critical": { early: 20.833, late: 20.833 },
+  "critical": { early: 41.667, late: 41.667 },
+  "near": { early: 133.33333, late: 133.33333 },
+  "error": { early: 233.33333, late: 0 },
 };
+
+/** Clamp a dragged timestamp (seconds) to the active drag range around `origSec`. */
+export function clampDragSec(sec: number, origSec: number, range: DragRange): number {
+  const { early, late } = DRAG_RANGE_BOUNDS[range];
+  const lo = early === Infinity ? -Infinity : origSec - early / 1000;
+  const hi = late === Infinity ? Infinity : origSec + late / 1000;
+  return Math.max(lo, Math.min(hi, sec));
+}
 
 export type MouseTool = "pan" | "add-bt" | "add-fx" | "add-hispeed" | "move" | "edit-hs";
 
