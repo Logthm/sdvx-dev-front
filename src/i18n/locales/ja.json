@@ -105,7 +105,7 @@
     },
     "holdJudgement": {
       "title": "HOLD 判定ポイント表示",
-      "description": "オンにすると、すべての HOLD にゲームが実際に使用する判定ポイントと判定範囲を表示します。\n\n• 青：HEAD の開始判定。133.333 ms 早い位置から 100 ms 遅い位置まで\n• 緑：SUSTAIN の継続判定ポイント。各ポイントの範囲は ±16.667 ms\n\nHOLD の Chain 分布や、BPM・拍子の変化、高 BPM が SUSTAIN 密度に与える影響を確認できます。"
+      "description": "オンにすると、すべての HOLD にゲームが実際に使用する判定ポイントと判定範囲を表示します。\n\n• 青：HEAD の開始判定。133.333 ms 早い位置から 100 ms 遅い位置まで\n• 緑：SUSTAIN の継続判定ポイント。各ポイントの範囲は ±16.667 ms。**その範囲内で75%以上（33.334 ms中≥25 ms）押し続けるとCRITICAL判定**\n\nHOLD の Chain 分布や、BPM・拍子の変化、高 BPM が SUSTAIN 密度に与える影響を確認できます。"
     },
     "drawArea": {
       "title": "ビューコントロール",

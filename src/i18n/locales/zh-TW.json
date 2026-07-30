@@ -105,7 +105,7 @@
     },
     "holdJudgement": {
       "title": "HOLD 判定點顯示",
-      "description": "開啟後，會在所有 HOLD 上顯示遊戲實際使用的判定點與判定範圍。\n\n• 藍色：HEAD 起點判定，範圍為提前 133.333 ms 至延後 100 ms\n• 綠色：SUSTAIN 持續判定點，範圍為 ±16.667 ms\n\n可用於確認 HOLD 的 Chain 分布，並觀察變速、變拍和高 BPM 對持續判定點密度的影響。"
+      "description": "開啟後，會在所有 HOLD 上顯示遊戲實際使用的判定點與判定範圍。\n\n• 藍色：HEAD 起點判定，範圍為提前 133.333 ms 至延後 100 ms\n• 綠色：SUSTAIN 持續判定點，範圍為 ±16.667 ms，在該段內**按住時長達到75%以上（即33.334 ms內按住≥25 ms）**就算CRITICAL\n\n可用於確認 HOLD 的 Chain 分布，並觀察變速、變拍和高 BPM 對持續判定點密度的影響。"
     },
     "drawArea": {
       "title": "查看控件",
