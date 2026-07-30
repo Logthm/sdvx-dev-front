@@ -105,7 +105,7 @@
     },
     "holdJudgement": {
       "title": "HOLD Judgement Display",
-      "description": "Turn this on to show the judgement points and windows the game uses for every HOLD.\n\n• Blue: HEAD judgement, from 133.333 ms early to 100 ms late\n• Green: SUSTAIN judgement points, each with a ±16.667 ms window. **Holding for 75% or more of the window (≥25 ms out of 33.334 ms) counts as CRITICAL**\n\nUse it to inspect HOLD Chain distribution and see how BPM changes, time-signature changes, and high BPM affect SUSTAIN density."
+      "description": "When enabled, displays the judgement points and windows used by the game for all HOLDs.\n\n• Blue: HEAD start judgement, window from 133.333 ms early to 100 ms late\n• Green: SUSTAIN continuous judgement points, window of ±16.667 ms. **Holding for 75% or more within this window (i.e., ≥25 ms out of 33.334 ms) counts as CRITICAL**"
     },
     "drawArea": {
       "title": "View Controls",
