@@ -11,8 +11,10 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     tailwindcss(),
-    compression({ algorithm: "gzip", threshold: 1024 }),
-    compression({ algorithm: "brotliCompress", threshold: 1024 }),
+    compression({
+      algorithms: ["gzip", "brotliCompress"],
+      threshold: 1024,
+    }),
   ],
   resolve: {
     alias: {

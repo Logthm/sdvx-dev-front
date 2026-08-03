@@ -15,7 +15,7 @@ import {
   yInMeasure,
   type LayoutResult,
 } from "./layout";
-import type { Time3 } from "./time-mapper";
+import type { TimePosition } from "@/types/chart-domain";
 
 export function drawGrid(ctx: CanvasRenderingContext2D, layout: LayoutResult, measureOffset: number = 0) {
   const { spans, timeMapper: tm } = layout;
@@ -134,7 +134,7 @@ function drawBpmMarkersFromData(
     const span = spans.find((s) => s.measure === bpm.measure);
     if (!span) continue;
 
-    const time: Time3 = [bpm.measure, bpm.beat, bpm.cell];
+    const time: TimePosition = [bpm.measure, bpm.beat, bpm.cell];
     const y = yInMeasure(span, time, tm, pxPerSecond);
 
     // Green line across the full track
@@ -162,7 +162,7 @@ function drawBpmMarkersFromData(
 }
 
 export function effectiveHiSpeedAt(
-  time: Time3,
+  time: TimePosition,
   tm: LayoutResult["timeMapper"],
   baseHiSpeed: number | undefined,
   marks: HiSpeedMark[],
@@ -172,7 +172,7 @@ export function effectiveHiSpeedAt(
   let hs = baseHiSpeed;
   let latestSec = -Infinity;
   for (const m of marks) {
-    const mEnd = tm.secondsOf(m.time as Time3) + m.durationMs / 1000;
+    const mEnd = tm.secondsOf(m.time) + m.durationMs / 1000;
     if (sec >= mEnd && mEnd > latestSec) {
       latestSec = mEnd;
       hs = m.hiSpeed;
@@ -189,7 +189,7 @@ export function drawHiSpeedMarks(
   const { spans, timeMapper: tm, pxPerSecond } = layout;
 
   for (const mark of marks) {
-    const markSec = tm.secondsOf(mark.time as Time3);
+    const markSec = tm.secondsOf(mark.time);
     const endSec = markSec + mark.durationMs / 1000;
 
     for (const span of spans) {

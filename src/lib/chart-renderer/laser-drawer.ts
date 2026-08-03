@@ -19,7 +19,8 @@ import {
   type LayoutResult,
   type MeasureSpan,
 } from "./layout";
-import type { Time3, TimeMapper } from "./time-mapper";
+import type { TimePosition } from "@/types/chart-domain";
+import type { TimeMapper } from "./time-mapper";
 
 // ── Column boundary helpers ─────────────────────────────────────
 
@@ -101,7 +102,7 @@ export function resolveEvent(
   spans: MeasureSpan[],
   pxPerSecond: number,
 ): ResolvedPoint | null {
-  const time = ev.time as Time3;
+  const time = ev.time as TimePosition;
   const sec = tm.secondsOf(time);
   const span = findSpanByMeasure(spans, time[0]);
   if (!span) return null;

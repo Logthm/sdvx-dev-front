@@ -4,7 +4,13 @@
     "clear": "クリア",
     "resetAll": "すべてリセット",
     "records": "件",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "ok": "OK"
+  },
+  "browser": {
+    "noMusicFound": "楽曲が見つかりません",
+    "adjustSearch": "検索条件またはフィルターを調整してください",
+    "endOfArchive": "アーカイブ終端"
   },
   "search": {
     "placeholder": "楽曲を検索...",
@@ -231,7 +237,12 @@
     "totalHolds": "Hold総数",
     "judgeWindow": "判定ウィンドウ",
     "holdDetails": "詳細リスト",
-    "points": "個の判定ポイント"
+    "points": "個の判定ポイント",
+    "hiSpeed": "ハイスピード",
+    "speedChangeDuration": "速度変更時間（ms）",
+    "durationPlaceholder": "例：500",
+    "editSpeedChangeMark": "速度変更マークを編集",
+    "addSpeedChangeMark": "速度変更マークを追加"
   },
   "playback": {
     "play": "再生",

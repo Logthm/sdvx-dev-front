@@ -7,7 +7,7 @@
  * recreating it, so there is no audible gap on speed change.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePlaybackStore } from "./playback-store";
 import { getAudioContext } from "./use-metronome";
 
@@ -19,42 +19,36 @@ export function useAudioPlayer(
   bgmOffset: number,
   bgmVolume: number,
 ): { audioReady: boolean; duration: number } {
-  const [audioReady, setAudioReady] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const bufferRef = useRef<AudioBuffer | null>(null);
+  const [decodedAudio, setDecodedAudio] = useState<{
+    file: File;
+    buffer: AudioBuffer;
+  } | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+  const buffer = decodedAudio?.file === bgmFile ? decodedAudio.buffer : null;
 
   const seekVersion = usePlaybackStore((s) => s.seekVersion);
 
   // Decode file when it changes
   useEffect(() => {
     if (!bgmFile) {
-      bufferRef.current = null;
-      setAudioReady(false);
-      setDuration(0);
+      setDecodedAudio(null);
       return;
     }
 
     let cancelled = false;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      if (cancelled) return;
+    const decodeFile = async () => {
       try {
         const ctx = getAudioContext();
-        const buffer = await ctx.decodeAudioData(
-          reader.result as ArrayBuffer,
-        );
+        const fileData = await bgmFile.arrayBuffer();
+        const decodedBuffer = await ctx.decodeAudioData(fileData);
         if (cancelled) return;
-        bufferRef.current = buffer;
-        setDuration(buffer.duration);
-        setAudioReady(true);
+        setDecodedAudio({ file: bgmFile, buffer: decodedBuffer });
       } catch {
-        bufferRef.current = null;
-        setAudioReady(false);
+        if (!cancelled) setDecodedAudio(null);
       }
     };
-    reader.readAsArrayBuffer(bgmFile);
+    void decodeFile();
 
     return () => {
       cancelled = true;
@@ -62,7 +56,7 @@ export function useAudioPlayer(
   }, [bgmFile]);
 
   // Stop any playing source
-  const stopSource = () => {
+  const stopSource = useCallback(() => {
     if (sourceRef.current) {
       try {
         sourceRef.current.stop();
@@ -72,18 +66,18 @@ export function useAudioPlayer(
       sourceRef.current.disconnect();
       sourceRef.current = null;
     }
-  };
+    gainRef.current = null;
+  }, []);
 
   // Create / destroy audio source on play, pause, seek, or offset change.
   // Does NOT depend on currentTimeSec (animation-frame updates) or playbackRate.
   useEffect(() => {
-    if (!isPlaying || !bufferRef.current) {
+    if (!isPlaying || !buffer) {
       stopSource();
       return;
     }
 
     const ctx = getAudioContext();
-    const buffer = bufferRef.current;
     const currentTimeSec = usePlaybackStore.getState().currentTimeSec;
     const rate = usePlaybackStore.getState().playbackRate;
 
@@ -111,7 +105,7 @@ export function useAudioPlayer(
     return () => {
       stopSource();
     };
-  }, [isPlaying, seekVersion, bgmOffset]);
+  }, [isPlaying, seekVersion, bgmOffset, buffer, stopSource]);
 
   // Update playback rate on the live source — no recreation, no gap.
   useEffect(() => {
@@ -130,7 +124,10 @@ export function useAudioPlayer(
   // Cleanup on unmount
   useEffect(() => {
     return () => stopSource();
-  }, []);
+  }, [stopSource]);
 
-  return { audioReady, duration };
+  return {
+    audioReady: buffer !== null,
+    duration: buffer?.duration ?? 0,
+  };
 }

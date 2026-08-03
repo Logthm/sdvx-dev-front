@@ -7,8 +7,14 @@
  * All pixel constants match the backend's chart_drawer.py exactly.
  */
 
-import type { ChartData, ChartTimingData } from "@/types/chart";
-import { TimeMapper, type Time3 } from "./time-mapper";
+import type { ChartTimingData } from "@/types/chart";
+import type {
+  BtTrackName,
+  ButtonTrackName,
+  FxTrackName,
+  TimePosition,
+} from "@/types/chart-domain";
+import { TimeMapper } from "./time-mapper";
 
 // ── Layout constants (matching backend) ─────────────────────────
 
@@ -64,7 +70,7 @@ export interface LayoutResult {
 // ── Compute layout ──────────────────────────────────────────────
 
 export function computeLayout(
-  chartData: ChartData,
+  chartData: ChartTimingData,
   pxPerSecond: number = DEFAULT_PX_PER_SECOND,
   columnHeight: number = DEFAULT_COLUMN_HEIGHT,
 ): LayoutResult {
@@ -76,8 +82,8 @@ export function computeLayout(
   let currentY = columnHeight - MARGIN;
 
   for (let m = 1; m <= endMeasure; m++) {
-    const startTime: Time3 = [m, 1, 0];
-    const endTime: Time3 = [m + 1, 1, 0];
+    const startTime: TimePosition = [m, 1, 0];
+    const endTime: TimePosition = [m + 1, 1, 0];
     const sec0 = tm.secondsOf(startTime);
     const sec1 = tm.secondsOf(endTime);
     const measureHeight = (sec1 - sec0) * pxPerSecond;
@@ -192,7 +198,7 @@ export function trackCenterX(col: number): number {
 /** Y position within a measure span for a given time */
 export function yInMeasure(
   span: MeasureSpan,
-  time: Time3,
+  time: TimePosition,
   tm: TimeMapper,
   pxPerSecond: number,
 ): number {
@@ -280,7 +286,7 @@ function countColumns(
  * If chart data is unavailable or all measures are zero-length, returns Infinity.
  */
 export function computeMaxPxPerSecond(
-  chartData: ChartData,
+  chartData: ChartTimingData,
   columnHeight: number = DEFAULT_COLUMN_HEIGHT,
 ): number {
   const tm = new TimeMapper(chartData);
@@ -360,7 +366,7 @@ export function xToTrackName(
   x: number,
   col: number,
   prioritizeFx = false
-): { trackName: string; trackNum: number } | null {
+): { trackName: ButtonTrackName; trackNum: number } | null {
   const cx = trackCenterX(col);
 
   // When prioritizeFx is true, check FX lanes first (for add-fx mode)
@@ -371,7 +377,7 @@ export function xToTrackName(
     for (const [key, offset] of Object.entries(BT_POSITIONS)) {
       const left = cx + offset - BT_WIDTH / 2;
       if (x >= left && x <= left + BT_WIDTH) {
-        const name = `BT-${key}`;
+        const name = `BT-${key}` as BtTrackName;
         const num = { A: 3, B: 4, C: 5, D: 6 }[key]!;
         return { trackName: name, trackNum: num };
       }
@@ -383,7 +389,7 @@ export function xToTrackName(
     for (const [key, offset] of Object.entries(FX_POSITIONS)) {
       const left = cx + offset - FX_WIDTH / 2;
       if (x >= left && x <= left + FX_WIDTH) {
-        const name = `FX-${key}`;
+        const name = `FX-${key}` as FxTrackName;
         const num = key === "L" ? 2 : 7;
         return { trackName: name, trackNum: num };
       }

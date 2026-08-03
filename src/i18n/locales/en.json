@@ -4,7 +4,13 @@
     "clear": "Clear",
     "resetAll": "Reset All",
     "records": "records",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "ok": "OK"
+  },
+  "browser": {
+    "noMusicFound": "No music found",
+    "adjustSearch": "Adjust your search parameters or filters",
+    "endOfArchive": "END OF ARCHIVE"
   },
   "search": {
     "placeholder": "Search music...",
@@ -231,7 +237,12 @@
     "totalHolds": "Total Holds",
     "judgeWindow": "Judge Window",
     "holdDetails": "Detailed List",
-    "points": "points"
+    "points": "points",
+    "hiSpeed": "Hi-Speed",
+    "speedChangeDuration": "Speed Change Duration (ms)",
+    "durationPlaceholder": "e.g. 500",
+    "editSpeedChangeMark": "Edit Speed Change Mark",
+    "addSpeedChangeMark": "Add Speed Change Mark"
   },
   "playback": {
     "play": "Play",

@@ -1,5 +1,9 @@
-/** Time position in VOX format: [measure, beat, cell] */
-export type TimePos = [number, number, number];
+import type {
+  ButtonTrackName,
+  LaserTrackName,
+  TimePosition,
+  TrackName,
+} from "./chart-domain";
 
 export interface BpmEntry {
   measure: number;
@@ -24,8 +28,8 @@ export interface TimePosObj {
 
 export interface ButtonEvent {
   type: "button";
-  track_name: string;
-  time: TimePos;
+  track_name: ButtonTrackName;
+  time: TimePosition;
   hold_len: number;
   /** Optional VOX override for the HOLD judgement-point grid step. */
   step_param?: number;
@@ -33,8 +37,8 @@ export interface ButtonEvent {
 
 export interface LaserEvent {
   type: "laser";
-  track_name: string;
-  time: TimePos;
+  track_name: LaserTrackName;
+  time: TimePosition;
   offset: number;
   flag: number; // 0=relay, 1=start, 2=terminate
   is_out_of_bounds: boolean;
@@ -63,7 +67,7 @@ export interface ChartTimingData {
 }
 
 // Track layout constants
-export const TRACK_NAMES: Record<number, string> = {
+export const TRACK_NAMES: Record<number, TrackName> = {
   1: "LASER-L",
   2: "FX-L",
   3: "BT-A",

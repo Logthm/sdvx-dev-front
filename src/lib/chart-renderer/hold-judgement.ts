@@ -1,5 +1,5 @@
 import type { ButtonEvent, ChartData } from "@/types/chart";
-import type { Time3 } from "./time-mapper";
+import type { TimePosition } from "@/types/chart-domain";
 
 const DEFAULT_RESOLUTION = 48;
 const DEFAULT_BPM = 120;
@@ -19,8 +19,8 @@ export const HOLD_SUSTAIN_WINDOW = {
 
 export interface HoldJudgementRun {
   trackName: string;
-  head: Time3;
-  sustain: Time3[];
+  head: TimePosition;
+  sustain: TimePosition[];
 }
 
 interface TimedButtonEvent {
@@ -36,11 +36,11 @@ interface TimedButtonEvent {
 class HoldTickGrid {
   private readonly resolution: number;
   private readonly sections: Array<{
-    time: Time3;
+    time: TimePosition;
     numerator: number;
     denominator: number;
   }>;
-  private readonly endPosition: Time3 | null;
+  private readonly endPosition: TimePosition | null;
   private readonly measureStarts = new Map<number, number>([[1, 0]]);
   private readonly grids = new Map<number, number[]>();
   private readonly bpmTicks: number[] = [];
@@ -52,7 +52,7 @@ class HoldTickGrid {
     this.sections = chart.beat_info.length > 0
       ? chart.beat_info
         .map((entry) => ({
-          time: [entry.measure, entry.beat, entry.cell] as Time3,
+          time: [entry.measure, entry.beat, entry.cell] as TimePosition,
           numerator: entry.numerator,
           denominator: entry.denominator,
         }))
@@ -78,7 +78,7 @@ class HoldTickGrid {
     this.sectionTicks = this.sections.map((section) => this.tickOf(section.time));
   }
 
-  tickOf(time: Time3): number {
+  tickOf(time: TimePosition): number {
     const [measure, beat, cell] = time;
     const [, denominator] = this.signatureAtMeasure(measure);
     return this.measureStart(measure)
@@ -86,7 +86,7 @@ class HoldTickGrid {
       + cell;
   }
 
-  timeOf(tick: number): Time3 {
+  timeOf(tick: number): TimePosition {
     let measure = 1;
     while (this.measureStart(measure + 1) <= tick) measure++;
 
@@ -188,7 +188,7 @@ export function calculateHoldJudgements(chart: ChartData): HoldJudgementRun[] {
       .map((event) => ({ event, tick: grid.tickOf(event.time) }))
       .sort((a, b) => a.tick - b.tick);
 
-    let pendingHead: Time3 | null = null;
+    let pendingHead: TimePosition | null = null;
     let pendingPoints: number[][] = [];
 
     for (let index = 0; index < entries.length; index++) {
@@ -210,7 +210,7 @@ export function calculateHoldJudgements(chart: ChartData): HoldJudgementRun[] {
       );
 
       if (!continuesPrevious || pendingHead === null) {
-        pendingHead = [...event.time] as Time3;
+        pendingHead = [...event.time] as TimePosition;
         pendingPoints = [];
       }
 

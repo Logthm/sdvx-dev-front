@@ -17,7 +17,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { computeLayout, findSpanAtPoint, yToSec } from "@/lib/chart-renderer/layout";
 import { calculateInterval } from "@/lib/chart-edit";
-import type { ChartData } from "@/types/chart";
+import { useResponsiveFullscreen } from "@/hooks/useResponsiveFullscreen";
+import { useObjectUrl } from "@/hooks/useObjectUrl";
 
 interface ChartPreviewProps {
   musicId: number;
@@ -48,6 +49,7 @@ export function ChartPreview({
   // Only use editedQuery when manual edits exist — chartData then contains
   // both arrangement and edits, sent to POST /chart/render_data.
   const imageQuery = hasEdits ? editedQuery : normalQuery;
+  const imageSrc = useObjectUrl(imageQuery.data);
 
   // Fetch timing data to get max_measure for non-editable charts
   const timingQuery = useChartTimingData(musicId, difstr);
@@ -60,7 +62,6 @@ export function ChartPreview({
   const setZoom = useEditorStore((s) => s.setZoom);
   const setPan = useEditorStore((s) => s.setPan);
   const setViewInitialized = useEditorStore((s) => s.setViewInitialized);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   const clampedPan = useCallback((x: number, y: number, z: number) => {
@@ -86,7 +87,7 @@ export function ChartPreview({
   const layout = useMemo(() => {
     const td = timingQuery.data;
     if (!td) return null;
-    return computeLayout(td as unknown as ChartData, renderOptions.pxPerSecond, renderOptions.columnHeight);
+    return computeLayout(td, renderOptions.pxPerSecond, renderOptions.columnHeight);
   }, [timingQuery.data, renderOptions.pxPerSecond, renderOptions.columnHeight]);
 
   // Fit image height to container height on first load
@@ -120,32 +121,10 @@ export function ChartPreview({
 
   const mobileFs = useEditorStore((s) => s.mobileFullscreen);
   const toggleMobileFs = useEditorStore((s) => s.toggleMobileFullscreen);
-
-  useEffect(() => {
-    const handler = () => setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
-    document.addEventListener("fullscreenchange", handler);
-    document.addEventListener("webkitfullscreenchange", handler);
-    return () => {
-      document.removeEventListener("fullscreenchange", handler);
-      document.removeEventListener("webkitfullscreenchange", handler);
-    };
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    if (window.innerWidth < 768) {
-      toggleMobileFs();
-      return;
-    }
-    const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement;
-    if (!fsEl) {
-      const el = document.documentElement;
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if ((el as any).webkitRequestFullscreen) (el as any).webkitRequestFullscreen();
-    } else {
-      if (document.exitFullscreen) document.exitFullscreen();
-      else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
-    }
-  }, [toggleMobileFs]);
+  const { isFullscreen, toggleFullscreen } = useResponsiveFullscreen(
+    mobileFs,
+    toggleMobileFs,
+  );
 
   // For ChartPreview, we need to get max measure from chartData if available
   const getMaxMeasure = useCallback(() => {
@@ -383,7 +362,7 @@ export function ChartPreview({
     };
   }, [clampedPan, setZoom]);
 
-  const isReady = imageQuery.data && !imageQuery.isLoading;
+  const isReady = imageSrc && !imageQuery.isLoading;
 
   return (
     <div
@@ -416,7 +395,7 @@ export function ChartPreview({
         </div>
       )}
 
-      {imageQuery.data && (
+      {imageSrc && (
         <div
           style={{
             transform: `translate(${-panX * zoom}px, ${-panY * zoom}px) scale(${zoom})`,
@@ -427,7 +406,7 @@ export function ChartPreview({
         >
           <img
             ref={imgRef}
-            src={imageQuery.data}
+            src={imageSrc}
             alt={t('chart.chartPreview')}
             onLoad={onImageLoad}
             draggable={false}
@@ -492,9 +471,9 @@ export function ChartPreview({
           <button
             onClick={toggleFullscreen}
             className="px-2 py-1 rounded hover:text-text-primary hover:bg-cosmos-700 transition-colors"
-            title={isFullscreen || mobileFs ? t('chart.exitFullscreen') : t('chart.fullscreen')}
+            title={isFullscreen ? t('chart.exitFullscreen') : t('chart.fullscreen')}
           >
-            {isFullscreen || mobileFs ? <Minimize size={14} /> : <Maximize size={14} />}
+            {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
           </button>
         </div>
       )}

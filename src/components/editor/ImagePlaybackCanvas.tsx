@@ -12,6 +12,7 @@ import { usePlaybackStore } from "@/lib/playback-store";
 import { useEditorStore } from "@/lib/editor-store";
 import { useMetronome } from "@/lib/use-metronome";
 import { useAudioPlayer } from "@/lib/use-audio-player";
+import { useObjectUrl } from "@/hooks/useObjectUrl";
 import { PxPerSecondButton } from "./PxPerSecondButton";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
@@ -70,7 +71,7 @@ export function ImagePlaybackCanvas({
 
   // Fetch single-column image
   const imageQuery = usePlaybackImage(musicId, difstr, renderOptions, true);
-  const imageSrc = imageQuery.data ?? null;
+  const imageSrc = useObjectUrl(imageQuery.data);
 
   // Compute layout for time→Y mapping
   const layout = useMemo(

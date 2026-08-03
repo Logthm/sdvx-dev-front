@@ -41,25 +41,22 @@ export function ExportDialog({ isOpen, onClose, onExport, maxMeasure }: ExportDi
       data-export-dialog
       className="absolute inset-0 flex items-center justify-center bg-black/40 z-50"
       style={{ cursor: 'default' }}
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         e.stopPropagation();
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
-      onMouseMove={(e) => e.stopPropagation()}
-      onMouseUp={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
-      onTouchMove={(e) => e.stopPropagation()}
-      onTouchEnd={(e) => e.stopPropagation()}
+      onPointerMove={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
       <div
         className="bg-cosmos-800 border border-cosmos-600 rounded-lg p-4 flex flex-col gap-3 min-w-[280px] max-w-[90vw]"
         style={{ cursor: 'default' }}
-        onMouseDown={(e) => e.stopPropagation()}
-        onMouseMove={(e) => e.stopPropagation()}
-        onMouseUp={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerMove={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">

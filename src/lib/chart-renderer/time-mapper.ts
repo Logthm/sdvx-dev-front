@@ -12,8 +12,10 @@
  */
 
 import type { BeatEntry, BpmEntry, ChartTimingData } from "@/types/chart";
-
-export type Time3 = [number, number, number]; // [measure, beat, cell]
+import {
+  compareTimePositions,
+  type TimePosition,
+} from "@/types/chart-domain";
 
 const DEFAULT_BEAT_RESOLUTION = 48;
 
@@ -21,26 +23,20 @@ function unitsPerBeat(beatRes: number, denominator: number): number {
   return (beatRes * 4) / Math.max(1, denominator);
 }
 
-function cmpTime(a: Time3, b: Time3): number {
-  if (a[0] !== b[0]) return a[0] - b[0];
-  if (a[1] !== b[1]) return a[1] - b[1];
-  return a[2] - b[2];
-}
-
-function timeLe(a: Time3, b: Time3): boolean {
-  return cmpTime(a, b) <= 0;
+function timeLe(a: TimePosition, b: TimePosition): boolean {
+  return compareTimePositions(a, b) <= 0;
 }
 
 interface Breakpoint {
-  time: Time3;
+  time: TimePosition;
   seconds: number;
   bpm: number;
   timeSig: [number, number];
 }
 
 export class TimeMapper {
-  private beatInfo: Array<{ time: Time3; numerator: number; denominator: number }>;
-  private bpmInfo: Array<{ time: Time3; bpm: number }>;
+  private beatInfo: Array<{ time: TimePosition; numerator: number; denominator: number }>;
+  private bpmInfo: Array<{ time: TimePosition; bpm: number }>;
   private beatRes: number;
   private breakpoints: Breakpoint[];
 
@@ -49,18 +45,18 @@ export class TimeMapper {
 
     this.beatInfo = chartData.beat_info
       .map((e: BeatEntry) => ({
-        time: [e.measure, e.beat, e.cell] as Time3,
+        time: [e.measure, e.beat, e.cell] as TimePosition,
         numerator: e.numerator,
         denominator: e.denominator,
       }))
-      .sort((a, b) => cmpTime(a.time, b.time));
+      .sort((a, b) => compareTimePositions(a.time, b.time));
 
     this.bpmInfo = chartData.bpm_info
       .map((e: BpmEntry) => ({
-        time: [e.measure, e.beat, e.cell] as Time3,
+        time: [e.measure, e.beat, e.cell] as TimePosition,
         bpm: e.bpm,
       }))
-      .sort((a, b) => cmpTime(a.time, b.time));
+      .sort((a, b) => compareTimePositions(a.time, b.time));
 
     this.breakpoints = this.buildBreakpoints();
   }
@@ -69,10 +65,10 @@ export class TimeMapper {
     return unitsPerBeat(this.beatRes, denominator);
   }
 
-  getTimeSigAt(time: Time3): [number, number] {
+  getTimeSigAt(time: TimePosition): [number, number] {
     let ts: [number, number] = [4, 4];
     for (const entry of this.beatInfo) {
-      if (cmpTime(entry.time, time) <= 0) {
+      if (compareTimePositions(entry.time, time) <= 0) {
         ts = [entry.numerator, entry.denominator];
       } else {
         break;
@@ -82,10 +78,10 @@ export class TimeMapper {
   }
 
   private nextTimeSigChangeAfter(
-    time: Time3,
-  ): { time: Time3; numerator: number; denominator: number } | null {
+    time: TimePosition,
+  ): { time: TimePosition; numerator: number; denominator: number } | null {
     for (const entry of this.beatInfo) {
-      if (cmpTime(entry.time, time) > 0) return entry;
+      if (compareTimePositions(entry.time, time) > 0) return entry;
     }
     return null;
   }
@@ -96,7 +92,7 @@ export class TimeMapper {
     let currentBpm = 120;
     let currentTimeSig: [number, number] = [4, 4];
 
-    type Event = { time: Time3; kind: "beat" | "bpm"; value: unknown };
+    type Event = { time: TimePosition; kind: "beat" | "bpm"; value: unknown };
     const events: Event[] = [];
 
     for (const e of this.beatInfo) {
@@ -111,12 +107,12 @@ export class TimeMapper {
     }
 
     events.sort((a, b) => {
-      const tc = cmpTime(a.time, b.time);
+      const tc = compareTimePositions(a.time, b.time);
       if (tc !== 0) return tc;
       return (a.kind === "beat" ? 0 : 1) - (b.kind === "beat" ? 0 : 1);
     });
 
-    let prevTime: Time3 = [1, 1, 0];
+    let prevTime: TimePosition = [1, 1, 0];
 
     for (const ev of events) {
       const delta = this.calculateInterval(
@@ -158,7 +154,7 @@ export class TimeMapper {
     return breakpoints;
   }
 
-  private toTotalUnits(time: Time3, timeSig: [number, number]): number {
+  private toTotalUnits(time: TimePosition, timeSig: [number, number]): number {
     const [measure, beat, cell] = time;
     const [numerator, denominator] = timeSig;
     const u = this.upb(denominator);
@@ -169,8 +165,8 @@ export class TimeMapper {
   }
 
   private calculateInterval(
-    start: Time3,
-    end: Time3,
+    start: TimePosition,
+    end: TimePosition,
     bpm: number,
     timeSig: [number, number],
   ): number {
@@ -194,9 +190,9 @@ export class TimeMapper {
     return deltaBeats * quarterDuration * (4 / beatValue);
   }
 
-  /** Inverse of secondsOf: convert seconds to a cell-snapped Time3 within a known measure. */
-  secToTime3(sec: number, measure: number): Time3 {
-    const start: Time3 = [measure, 1, 0];
+  /** Inverse of secondsOf: convert seconds to a cell-snapped chart time within a known measure. */
+  secToTime3(sec: number, measure: number): TimePosition {
+    const start: TimePosition = [measure, 1, 0];
     const sec0 = this.secondsOf(start);
     const ts = this.getTimeSigAt(start);
     const [, den] = ts;
@@ -204,7 +200,7 @@ export class TimeMapper {
 
     let bpm = 120;
     for (const bp of this.breakpoints) {
-      if (cmpTime(bp.time, start) <= 0) bpm = bp.bpm;
+      if (compareTimePositions(bp.time, start) <= 0) bpm = bp.bpm;
       else break;
     }
 
@@ -217,7 +213,7 @@ export class TimeMapper {
     return [measure, beat + 1, cell];
   }
 
-  secondsOf(time: Time3): number {
+  secondsOf(time: TimePosition): number {
     let prevBp: Breakpoint | null = null;
     for (const bp of this.breakpoints) {
       if (timeLe(bp.time, time)) {
@@ -240,7 +236,7 @@ export class TimeMapper {
     return prevBp.seconds + delta;
   }
 
-  advanceUnits(time: Time3, deltaUnits: number): Time3 {
+  advanceUnits(time: TimePosition, deltaUnits: number): TimePosition {
     if (deltaUnits <= 0) return [...time];
 
     let [curM, curB, curC] = time;
@@ -284,10 +280,10 @@ export class TimeMapper {
   }
 
   private advanceWithinSig(
-    time: Time3,
+    time: TimePosition,
     du: number,
     timeSig: [number, number],
-  ): Time3 {
+  ): TimePosition {
     const [num, den] = timeSig;
     const u = this.upb(den);
 
@@ -303,8 +299,8 @@ export class TimeMapper {
   }
 
   private unitsBetweenSameSig(
-    start: Time3,
-    end: Time3,
+    start: TimePosition,
+    end: TimePosition,
     timeSig: [number, number],
   ): number {
     const su = this.toTotalUnits(start, timeSig);
@@ -313,7 +309,7 @@ export class TimeMapper {
   }
 
   /** Public: compute signed unit distance from `from` to `to`. */
-  unitsBetween(from: Time3, to: Time3): number {
+  unitsBetween(from: TimePosition, to: TimePosition): number {
     const ts = this.getTimeSigAt(from);
     const su = this.toTotalUnits(from, ts);
     const eu = this.toTotalUnits(to, ts);

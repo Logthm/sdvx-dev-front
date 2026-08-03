@@ -8,7 +8,8 @@
 
 import { applyEdits, applyArrangement, DEFAULT_EDIT_FLAGS, moveLaserPoint, deleteLaserPoint as deleteLP, moveButtonEvent, deleteButtonEvent, addButtonEvent, updateButtonHoldLen as setHoldLen, type EditFlags } from "@/lib/chart-edit";
 import { computeMaxPxPerSecond } from "@/lib/chart-renderer/layout";
-import type { ButtonEvent, ChartData, TimePos } from "@/types/chart";
+import type { ButtonEvent, ChartData } from "@/types/chart";
+import type { TimePosition } from "@/types/chart-domain";
 import { create } from "zustand";
 
 export type ViewMode = "preview" | "edit" | "play";
@@ -91,16 +92,25 @@ export type MouseTool = "pan" | "add-bt" | "add-fx" | "add-hispeed" | "move" | "
 export type BpmDisplayMode = "bpm" | "hispeed" | "speed";
 
 export interface HiSpeedMark {
-  time: [number, number, number];
+  time: TimePosition;
   durationMs: number;
   hiSpeed: number;
 }
 
-export interface SelectedPoint {
-  type: "laser" | "button" | "hispeed";
+export interface EditorHistoryEntry {
+  chartData: ChartData;
+  hiSpeedMarks: HiSpeedMark[];
+}
+
+export type NoteSelection = {
+  type: "laser" | "button";
   track: string;
   index: number;
-}
+};
+
+export type SelectedPoint =
+  | NoteSelection
+  | { type: "hispeed"; index: number };
 
 export interface IntervalInfo {
   ms: number;
@@ -115,7 +125,7 @@ export interface EditorState {
   editFlags: EditFlags;
   mode: ViewMode;
   renderOptions: RenderOptions;
-  history: ChartData[];
+  history: EditorHistoryEntry[];
   /** Increments on every manual chart mutation; reset when original data is loaded or chart is fully reset. */
   editVersion: number;
 
@@ -143,8 +153,8 @@ export interface EditorState {
   selectedPoint: SelectedPoint | null;
   setSelectedPoint: (p: SelectedPoint | null) => void;
   clearSelectedPoint: () => void;
-  firstSelectedNote: SelectedPoint | null;
-  setFirstSelectedNote: (p: SelectedPoint | null) => void;
+  firstSelectedNote: NoteSelection | null;
+  setFirstSelectedNote: (p: NoteSelection | null) => void;
   intervalInfo: IntervalInfo | null;
   setIntervalInfo: (info: IntervalInfo | null) => void;
   dragRange: DragRange;
@@ -154,8 +164,8 @@ export interface EditorState {
   expandedTool: "drag" | "add" | null;
   setExpandedTool: (t: "drag" | "add" | null) => void;
   pushHistory: () => void;
-  updateLaserPoint: (track: string, index: number, newTime: TimePos, newOffset: number) => void;
-  updateButtonTime: (track: string, index: number, newTime: TimePos) => void;
+  updateLaserPoint: (track: string, index: number, newTime: TimePosition, newOffset: number) => void;
+  updateButtonTime: (track: string, index: number, newTime: TimePosition) => void;
   updateButtonHoldLen: (track: string, index: number, holdLen: number) => void;
   deleteSelectedPoint: () => void;
   addButton: (trackNum: number, event: ButtonEvent) => void;
@@ -173,7 +183,7 @@ export interface EditorState {
   hiSpeedMarks: HiSpeedMark[];
   addHiSpeedMark: (mark: HiSpeedMark) => void;
   removeHiSpeedMark: (index: number) => void;
-  updateHiSpeedMarkTime: (index: number, time: [number, number, number]) => void;
+  updateHiSpeedMarkTime: (index: number, time: TimePosition) => void;
   updateHiSpeedMark: (index: number, patch: Partial<HiSpeedMark>) => void;
 
   bpmDisplayMode: BpmDisplayMode;
@@ -184,8 +194,8 @@ export interface EditorState {
 
   previewIntervalActive: boolean;
   setPreviewIntervalActive: (v: boolean) => void;
-  previewIntervalFirstTime: [number, number, number] | null;
-  setPreviewIntervalFirstTime: (t: [number, number, number] | null) => void;
+  previewIntervalFirstTime: TimePosition | null;
+  setPreviewIntervalFirstTime: (t: TimePosition | null) => void;
 
   showHoldJudgement: boolean;
   setShowHoldJudgement: (v: boolean) => void;
@@ -289,7 +299,12 @@ export const useEditorStore = create<EditorState>((set) => ({
   setExpandedTool: (t) => set({ expandedTool: t }),
 
   pushHistory: () =>
-    set((s) => s.chartData ? { history: [...s.history, s.chartData] } : s),
+    set((s) => s.chartData ? {
+      history: [...s.history, {
+        chartData: s.chartData,
+        hiSpeedMarks: s.hiSpeedMarks,
+      }],
+    } : s),
 
   updateLaserPoint: (track, index, newTime, newOffset) =>
     set((s) => {
@@ -307,7 +322,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   updateButtonHoldLen: (track, index, holdLen) =>
     set((s) => {
       if (!s.chartData) return s;
-      return { history: [...s.history, s.chartData], chartData: setHoldLen(s.chartData, track, index, holdLen), editVersion: s.editVersion + 1 };
+      return { chartData: setHoldLen(s.chartData, track, index, holdLen), editVersion: s.editVersion + 1 };
     }),
 
   deleteSelectedPoint: () =>
@@ -323,7 +338,10 @@ export const useEditorStore = create<EditorState>((set) => ({
         ? deleteLP(s.chartData, track, index)
         : deleteButtonEvent(s.chartData, track, index);
       return {
-        history: [...s.history, s.chartData],
+        history: [...s.history, {
+          chartData: s.chartData,
+          hiSpeedMarks: s.hiSpeedMarks,
+        }],
         chartData: updated, selectedPoint: null,
         editVersion: s.editVersion + 1,
       };
@@ -333,7 +351,10 @@ export const useEditorStore = create<EditorState>((set) => ({
     set((s) => {
       if (!s.chartData) return s;
       return {
-        history: [...s.history, s.chartData],
+        history: [...s.history, {
+          chartData: s.chartData,
+          hiSpeedMarks: s.hiSpeedMarks,
+        }],
         chartData: addButtonEvent(s.chartData, trackNum, event),
         editVersion: s.editVersion + 1,
       };
@@ -345,7 +366,9 @@ export const useEditorStore = create<EditorState>((set) => ({
       const prev = s.history[s.history.length - 1];
       return {
         history: s.history.slice(0, -1),
-        chartData: prev, selectedPoint: null,
+        chartData: prev.chartData,
+        hiSpeedMarks: prev.hiSpeedMarks,
+        selectedPoint: null,
         editVersion: s.editVersion + 1,
       };
     }),
@@ -368,14 +391,19 @@ export const useEditorStore = create<EditorState>((set) => ({
     set((s) => {
       if (!s.chartData || !s.selectedPoint || !s.originalChartData) return s;
       const base = s.arrangedBaseData ?? s.originalChartData;
-      const { type, track, index } = s.selectedPoint;
+      const selection = s.selectedPoint;
+      if (selection.type === "hispeed") return s;
+      const { type, track, index } = selection;
       if (type === "button") {
         const origEv = base.tracks[track]?.[index];
         if (!origEv || origEv.type !== "button") return s;
         let cd = moveButtonEvent(s.chartData, track, index, origEv.time);
         cd = setHoldLen(cd, track, index, origEv.hold_len);
         return {
-          history: [...s.history, s.chartData],
+          history: [...s.history, {
+            chartData: s.chartData,
+            hiSpeedMarks: s.hiSpeedMarks,
+          }],
           chartData: cd,
           editVersion: s.editVersion + 1,
         };
@@ -386,7 +414,10 @@ export const useEditorStore = create<EditorState>((set) => ({
         const origEv = origLasers[index];
         if (!origEv || origEv.type !== "laser") return s;
         return {
-          history: [...s.history, s.chartData],
+          history: [...s.history, {
+            chartData: s.chartData,
+            hiSpeedMarks: s.hiSpeedMarks,
+          }],
           chartData: moveLaserPoint(s.chartData, track, index, origEv.time, origEv.offset),
           editVersion: s.editVersion + 1,
         };

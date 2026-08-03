@@ -8,7 +8,7 @@
 
 import type { ButtonEvent, ChartData } from "@/types/chart";
 import { C } from "./colors";
-import type { Time3 } from "./time-mapper";
+import type { TimePosition } from "@/types/chart-domain";
 import {
   BT_POSITIONS,
   BT_WIDTH,
@@ -57,7 +57,7 @@ function drawChip(
 
   const y = yInMeasure(
     span,
-    ev.time as Time3,
+    ev.time,
     layout.timeMapper,
     layout.pxPerSecond,
   );
@@ -72,7 +72,7 @@ function drawHoldSegments(
   layout: LayoutResult,
   fx: boolean,
 ) {
-  const startTime = ev.time as Time3;
+  const startTime = ev.time;
   const endTime = layout.timeMapper.advanceUnits(startTime, ev.hold_len);
   const startMeasure = startTime[0];
   const endMeasure = endTime[0];
@@ -84,9 +84,9 @@ function drawHoldSegments(
     const geo = noteX(span, ev.track_name);
     if (!geo) continue;
 
-    const segStart: Time3 =
+    const segStart: TimePosition =
       m === startMeasure ? startTime : [m, 1, 0];
-    const segEnd: Time3 =
+    const segEnd: TimePosition =
       m === endMeasure ? endTime : [m + 1, 1, 0];
 
     const y1 = yInMeasure(span, segStart, layout.timeMapper, layout.pxPerSecond);
@@ -122,7 +122,7 @@ function drawHoldTail(
   fx: boolean,
 ) {
   if (ev.hold_len <= 0) return;
-  const endTime = layout.timeMapper.advanceUnits(ev.time as Time3, ev.hold_len);
+  const endTime = layout.timeMapper.advanceUnits(ev.time, ev.hold_len);
   const span = findSpanByMeasure(layout.spans, endTime[0]);
   if (!span) return;
   const geo = noteX(span, ev.track_name);

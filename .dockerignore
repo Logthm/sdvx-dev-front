@@ -13,3 +13,9 @@ docs
 .DS_Store
 Thumbs.db
 *.md
+
+# Test / audit artifacts (not needed for production build)
+.audit
+coverage
+*.test.ts
+vitest.config.ts

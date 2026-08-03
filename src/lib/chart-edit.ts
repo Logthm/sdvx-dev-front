@@ -1,5 +1,6 @@
-import type { ButtonEvent, ChartData, ChartEvent, LaserEvent, TimePos } from "@/types/chart";
-import type { TimeMapper, Time3 } from "./chart-renderer/time-mapper";
+import type { ButtonEvent, ChartData, ChartEvent, LaserEvent } from "@/types/chart";
+import type { TimePosition } from "@/types/chart-domain";
+import type { TimeMapper } from "./chart-renderer/time-mapper";
 import type { RenderOptions, BtTrack } from "./editor-store";
 
 export interface EditFlags {
@@ -76,7 +77,7 @@ function simplifySegment(segment: LaserEvent[]): LaserEvent[] {
 
 export function moveLaserPoint(
   chartData: ChartData, track: string, index: number,
-  newTime: TimePos, newOffset: number,
+  newTime: TimePosition, newOffset: number,
 ): ChartData {
   const events = [...(chartData.tracks[track] ?? [])];
   const ev = events[index] as LaserEvent;
@@ -95,7 +96,7 @@ export function deleteLaserPoint(
 // ── Button mutation helpers ──────────────────────────────────────
 
 export function moveButtonEvent(
-  chartData: ChartData, track: string, index: number, newTime: TimePos,
+  chartData: ChartData, track: string, index: number, newTime: TimePosition,
 ): ChartData {
   const events = [...(chartData.tracks[track] ?? [])];
   const ev = events[index] as ButtonEvent;
@@ -141,12 +142,12 @@ function gcd(a: number, b: number): number {
 }
 
 /**
- * Calculate the interval between two Time3 positions.
+ * Calculate the interval between two chart time positions.
  * Returns milliseconds and musical notation (e.g., "1/16", "1/24").
  */
 export function calculateInterval(
-  time1: Time3,
-  time2: Time3,
+  time1: TimePosition,
+  time2: TimePosition,
   timeMapper: TimeMapper,
   beatResolution: number | null,
 ): { ms: number; notation: string } {

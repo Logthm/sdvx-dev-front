@@ -7,7 +7,8 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import type { ChartData, ChartTimingData } from "@/types/chart";
-import { TimeMapper, type Time3 } from "@/lib/chart-renderer/time-mapper";
+import { TimeMapper } from "@/lib/chart-renderer/time-mapper";
+import type { TimePosition } from "@/types/chart-domain";
 
 // ---------------------------------------------------------------------------
 // AudioContext singleton (shared with audio player)
@@ -111,7 +112,7 @@ function generateTicks(chartData: ChartTimingData): MetronomeTick[] {
   const tm = new TimeMapper(chartData);
 
   // Determine chart end in seconds
-  let endTime: Time3;
+  let endTime: TimePosition;
   if (chartData.end_position) {
     const ep = chartData.end_position;
     endTime = [ep.measure, ep.beat, ep.cell];
@@ -130,7 +131,7 @@ function generateTicks(chartData: ChartTimingData): MetronomeTick[] {
   const endSec = tm.secondsOf(endTime);
 
   const ticks: MetronomeTick[] = [];
-  let pos: Time3 = [1, 1, 0];
+  let pos: TimePosition = [1, 1, 0];
 
   // Walk through the chart in steps of UNITS_PER_64TH
   while (true) {

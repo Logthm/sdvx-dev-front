@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import type { MusicSchema } from "@/types/music";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { MusicCard } from "./MusicCard";
 
 interface MusicGridProps {
@@ -26,6 +27,7 @@ export function MusicGrid({
   onLoadMore,
   className,
 }: MusicGridProps) {
+  const { t } = useTranslation();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const onLoadMoreRef = useRef(onLoadMore);
   onLoadMoreRef.current = onLoadMore;
@@ -57,9 +59,11 @@ export function MusicGrid({
         <div className="w-16 h-16 rounded-full border border-cosmos-600/40 flex items-center justify-center mb-4">
           <span className="text-2xl text-gold-600/40">&#9734;</span>
         </div>
-        <p className="text-text-secondary text-sm">No music found</p>
+        <p className="text-text-secondary text-sm">
+          {t("browser.noMusicFound")}
+        </p>
         <p className="text-text-muted text-xs mt-1">
-          Adjust your search parameters or filters
+          {t("browser.adjustSearch")}
         </p>
       </div>
     );
@@ -90,7 +94,7 @@ export function MusicGrid({
           <Loader2 size={24} className="animate-spin text-gold-400" />
         ) : !hasMore && items.length > 0 ? (
           <span className="text-xs text-text-muted font-mono tracking-wider">
-            &#8212; END OF ARCHIVE &#8212;
+            &#8212; {t("browser.endOfArchive")} &#8212;
           </span>
         ) : null}
       </div>

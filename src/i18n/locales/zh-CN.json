@@ -4,7 +4,13 @@
     "clear": "清除",
     "resetAll": "重置全部",
     "records": "条记录",
-    "cancel": "取消"
+    "cancel": "取消",
+    "ok": "确定"
+  },
+  "browser": {
+    "noMusicFound": "未找到音乐",
+    "adjustSearch": "请调整搜索条件或筛选器",
+    "endOfArchive": "档案末尾"
   },
   "search": {
     "placeholder": "搜索音乐...",
@@ -231,7 +237,12 @@
     "totalHolds": "Hold 总数",
     "judgeWindow": "判定窗口",
     "holdDetails": "详细列表",
-    "points": "个判定点"
+    "points": "个判定点",
+    "hiSpeed": "Hi-Speed",
+    "speedChangeDuration": "变速持续时间（毫秒）",
+    "durationPlaceholder": "例如 500",
+    "editSpeedChangeMark": "编辑变速标记",
+    "addSpeedChangeMark": "添加变速标记"
   },
   "playback": {
     "play": "播放",

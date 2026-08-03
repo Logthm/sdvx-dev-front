@@ -24,7 +24,6 @@ import {
     formatBpm,
     getInfLabel,
     type DifficultyName,
-    type DifficultySchema,
 } from "@/types/music";
 import { ArrowLeft, ChevronDown, ChevronUp, Eye, HelpCircle, Info, Loader2, Pencil, Play, Volume2, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -64,28 +63,29 @@ export function SongDetailPage() {
       )
     : [];
 
-  const [selectedDif, setSelectedDif] = useState<DifficultySchema | null>(null);
+  const selectionScope = `${numericId ?? "invalid"}:${initialDif ?? ""}`;
+  const [difficultySelection, setDifficultySelection] = useState<{
+    scope: string;
+    difstr: DifficultyName;
+  } | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [toolbarCollapsed, setToolbarCollapsed] = useState(true);
   const [infoDrawerOpen, setInfoDrawerOpen] = useState(false);
 
-  useEffect(() => {
-    if (sortedDiffs.length > 0 && !selectedDif) {
-      const fromUrl = initialDif
-        ? sortedDiffs.find((d) => d.difstr === initialDif)
-        : undefined;
-      setSelectedDif(fromUrl ?? sortedDiffs[sortedDiffs.length - 1]);
-    }
-  }, [sortedDiffs, selectedDif, initialDif]);
+  const selectedDifstr = difficultySelection?.scope === selectionScope
+    ? difficultySelection.difstr
+    : initialDif;
+  const activeDif =
+    sortedDiffs.find((difficulty) => difficulty.difstr === selectedDifstr) ??
+    sortedDiffs[sortedDiffs.length - 1] ??
+    null;
 
   // Reset playback position when switching song or difficulty
   useEffect(() => {
     const pb = usePlaybackStore.getState();
     if (pb.isPlaying) pb.pause();
     pb.setCurrentTime(0);
-  }, [numericId, selectedDif?.difstr]);
-
-  const activeDif = selectedDif ?? sortedDiffs[sortedDiffs.length - 1] ?? null;
+  }, [numericId, activeDif?.difstr]);
   // Duration is a per-song audio property shared by all difficulties.
   const songDurationLabel =
     (activeDif?.duration ?? sortedDiffs.find((d) => d.duration)?.duration) ?? "—";
@@ -240,7 +240,12 @@ export function SongDetailPage() {
               level={d.difnum}
               infVer={music?.inf_ver}
               selected={activeDif?.difstr === d.difstr}
-              onClick={() => setSelectedDif(d)}
+              onClick={() =>
+                setDifficultySelection({
+                  scope: selectionScope,
+                  difstr: d.difstr,
+                })
+              }
             />
           ))}
         </div>
@@ -342,7 +347,12 @@ export function SongDetailPage() {
                 {sortedDiffs.map((d) => (
                   <DifficultyBadge key={d.difstr} difstr={d.difstr as DifficultyName} level={d.difnum}
                     infVer={music?.inf_ver} selected={activeDif?.difstr === d.difstr}
-                    onClick={() => setSelectedDif(d)} />
+                    onClick={() =>
+                      setDifficultySelection({
+                        scope: selectionScope,
+                        difstr: d.difstr,
+                      })
+                    } />
                 ))}
               </div>
 
@@ -503,7 +513,12 @@ export function SongDetailPage() {
                     level={d.difnum}
                     infVer={music?.inf_ver}
                     selected={activeDif?.difstr === d.difstr}
-                    onClick={() => setSelectedDif(d)}
+                    onClick={() =>
+                      setDifficultySelection({
+                        scope: selectionScope,
+                        difstr: d.difstr,
+                      })
+                    }
                   />
                 ))}
               </div>

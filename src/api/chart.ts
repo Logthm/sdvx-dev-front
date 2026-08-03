@@ -94,7 +94,7 @@ export function useArrangedChartData(
 }
 
 /**
- * Fetch a backend-rendered chart image as a blob URL.
+ * Fetch a backend-rendered chart image as a Blob.
  */
 export function useChartImage(
   musicId: number | null,
@@ -167,8 +167,7 @@ export function useChartImage(
         useEditorStore.getState().setMaxPxPerSecond(parseInt(maxPps, 10));
       }
 
-      const blob = await res.blob();
-      return URL.createObjectURL(blob);
+      return res.blob();
     },
     enabled: musicId !== null && difstr !== null && difstr.length > 0,
     staleTime: 10 * 60_000,
@@ -219,8 +218,7 @@ export function useEditedChartImage(
       if (maxPps) {
         useEditorStore.getState().setMaxPxPerSecond(parseInt(maxPps, 10));
       }
-      const blob = await res.blob();
-      return URL.createObjectURL(blob);
+      return res.blob();
     },
     enabled: (hasEdits || hasArrangement) && chartData !== null && musicId !== null && difstr !== null,
     staleTime: 0,
@@ -246,7 +244,7 @@ export function useChartTimingData(
 }
 
 /**
- * Fetch a single-column playback image as a blob URL.
+ * Fetch a single-column playback image as a Blob.
  */
 export function usePlaybackImage(
   musicId: number | null,
@@ -311,8 +309,7 @@ export function usePlaybackImage(
         useEditorStore.getState().setMaxPxPerSecond(parseInt(maxPps, 10));
       }
 
-      const blob = await res.blob();
-      return URL.createObjectURL(blob);
+      return res.blob();
     },
     enabled:
       enabled &&
