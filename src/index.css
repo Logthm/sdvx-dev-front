@@ -179,12 +179,6 @@ body {
     radial-gradient(1px 1px at 90% 20%, oklch(0.88 0.04 300 / 0.3), transparent);
   pointer-events: none;
   z-index: 0;
-  animation: stardust-drift 60s linear infinite;
-}
-
-@keyframes stardust-drift {
-  0% { background-position: 0 0; }
-  100% { background-position: 100px 200px; }
 }
 
 /* ── Star orbit ring (decorative) ── */
